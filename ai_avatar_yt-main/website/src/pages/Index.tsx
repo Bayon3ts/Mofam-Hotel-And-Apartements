@@ -25,7 +25,8 @@ import {
   MessageCircle,
   Menu,
   Lock,
-  X
+  X,
+  Loader2
 } from "lucide-react";
 import { getRooms, getAvailability, type RoomInventory } from "@/lib/roomStore";
 import { cn } from "@/lib/utils";
@@ -63,6 +64,7 @@ const Index = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [rooms, setRooms] = useState<RoomInventory[]>([]);
+  const [isLoadingRooms, setIsLoadingRooms] = useState(true);
   
   const { scrollY } = useScroll();
   const parallaxY = useTransform(scrollY, [0, 1000], [0, 200]);
@@ -76,8 +78,17 @@ const Index = () => {
     { id: "contact", label: "Contact" }
   ];
   
-  const refreshRooms = () => {
-    setRooms(getRooms());
+  const refreshRooms = async () => {
+    try {
+      const data = await getRooms();
+      console.log("Rooms data received:", data);
+      setRooms(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to refresh rooms:", err);
+      setRooms([]);
+    } finally {
+      setIsLoadingRooms(false);
+    }
   };
 
   useEffect(() => {
@@ -86,8 +97,6 @@ const Index = () => {
     
     // Sync when returning to tab
     window.addEventListener("focus", refreshRooms);
-    // Sync when localStorage changes (cross-tab)
-    window.addEventListener("storage", refreshRooms);
     
     // Dynamic navbar scroll detection
     const handleScroll = () => {
@@ -102,7 +111,6 @@ const Index = () => {
     return () => {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("focus", refreshRooms);
-      window.removeEventListener("storage", refreshRooms);
     };
   }, []);
 
@@ -122,8 +130,11 @@ const Index = () => {
     return index % 2 === 0 ? loungeImage : suiteImage;
   };
 
+  // ── SAFE FILTER GUARDS ───────────────────────────────────────────────────
+  const safeRooms = Array.isArray(rooms) ? rooms : [];
+
   // Select featured rooms (top 3: Royal, Royal Apartment, Presidential/VVIP)
-  const featuredRooms = rooms.filter(r => 
+  const featuredRooms = safeRooms.filter(r => 
     ["royal", "royal-apartment", "presidential", "vvip", "executive-suite"].includes(r.id)
   ).sort((a, b) => {
     const order = ["royal", "royal-apartment", "executive-suite", "vvip", "presidential"];
@@ -131,7 +142,7 @@ const Index = () => {
   });
 
   // Fallback if filter returns empty (show first 3)
-  const displayRooms = featuredRooms.length > 0 ? featuredRooms.slice(0, 3) : rooms.slice(0, 3);
+  const displayRooms = featuredRooms.length > 0 ? featuredRooms.slice(0, 3) : safeRooms.slice(0, 3);
 
   return (
     <div className="min-h-screen bg-background">
@@ -250,75 +261,89 @@ const Index = () => {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {displayRooms.map((room, index) => {
-              const available = getAvailability(room);
-              const isSoldOut = available === 0;
-              
-              return (
-                <motion.div variants={fadeScaleItem} key={room.id}>
-                  <Card className={cn(
-                    "overflow-hidden h-full shadow-luxury hover:shadow-hover transition-all duration-300 group",
-                    isSoldOut && "opacity-80"
-                  )}>
-                  <div className="relative h-64 overflow-hidden">
-                    <img 
-                      src={getRoomImage(room.id, index)} 
-                      alt={room.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute top-4 right-4 bg-accent text-primary px-3 py-1 rounded-full text-sm font-semibold">
-                      {fmt(room.price)}/night
-                    </div>
-                    {isSoldOut && (
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        <span className="bg-red-600 text-white px-4 py-1 rounded-full font-black uppercase tracking-widest text-xs">
-                          Sold Out Today
-                        </span>
+          {isLoadingRooms ? (
+            <div className="flex flex-col items-center justify-center py-20 space-y-4">
+              <Loader2 className="h-10 w-10 animate-spin text-accent" />
+              <p className="text-muted-foreground animate-pulse font-medium">Curating your experience...</p>
+            </div>
+          ) : safeRooms.length === 0 ? (
+            <div className="text-center py-20 bg-muted/20 rounded-2xl border border-dashed border-border">
+              <p className="text-lg font-medium text-muted-foreground">Our rooms are being prepared. Please check back shortly.</p>
+              <Button variant="outline" className="mt-4" onClick={refreshRooms}>Try Refreshing</Button>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {displayRooms.map((room, index) => {
+                const available = getAvailability(room);
+                const isSoldOut = available === 0;
+                
+                return (
+                  <motion.div variants={fadeScaleItem} key={room.id}>
+                    <Card className={cn(
+                      "overflow-hidden h-full shadow-luxury hover:shadow-hover transition-all duration-300 group",
+                      isSoldOut && "opacity-80"
+                    )}>
+                    <div className="relative h-64 overflow-hidden">
+                      <img 
+                        src={getRoomImage(room.id, index)} 
+                        alt={room.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-4 right-4 bg-accent text-primary px-3 py-1 rounded-full text-sm font-semibold">
+                        {fmt(room.price)}/night
                       </div>
-                    )}
-                  </div>
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="text-2xl font-bold">{room.name}</h3>
-                      {available > 0 && available <= 2 && (
-                        <span className="text-[10px] font-black text-red-600 uppercase tracking-tighter bg-red-100 px-2 py-0.5 rounded animate-pulse">
-                          Only {available} left!
-                        </span>
+                      {isSoldOut && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <span className="bg-red-600 text-white px-4 py-1 rounded-full font-black uppercase tracking-widest text-xs">
+                            Sold Out Today
+                          </span>
+                        </div>
                       )}
                     </div>
-                    <ul className="space-y-2 mb-6">
-                      {room.amenities.map((feature, idx) => (
-                        <li key={idx} className="flex items-center text-muted-foreground whitespace-nowrap">
-                          <Star className="h-4 w-4 text-accent mr-2" />
-                          <span className="text-sm">{feature}</span>
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="text-2xl font-bold">{room.name}</h3>
+                        {available > 0 && available <= 2 && (
+                          <span className="text-[10px] font-black text-red-600 uppercase tracking-tighter bg-red-100 px-2 py-0.5 rounded animate-pulse">
+                            Only {available} left!
+                          </span>
+                        )}
+                      </div>
+                      <ul className="space-y-2 mb-6">
+                        {room.amenities.map((feature, idx) => (
+                          <li key={idx} className="flex items-center text-muted-foreground whitespace-nowrap">
+                            <Star className="h-4 w-4 text-accent mr-2" />
+                            <span className="text-sm">{feature}</span>
+                          </li>
+                        ))}
+                        <li className="flex items-center text-muted-foreground">
+                          <Users className="h-4 w-4 text-accent mr-2" />
+                          <span className="text-sm">Max {room.maxGuests} Guests</span>
                         </li>
-                      ))}
-                      <li className="flex items-center text-muted-foreground">
-                        <Users className="h-4 w-4 text-accent mr-2" />
-                        <span className="text-sm">Max {room.maxGuests} Guests</span>
-                      </li>
-                    </ul>
-                    <Button 
-                      variant={isSoldOut ? "outline" : "elegant"} 
-                      className="w-full" 
-                      onClick={() => navigate('/booking')}
-                      disabled={isSoldOut}
-                    >
-                      {isSoldOut ? "Join Waiting List" : "Book Now"}
-                    </Button>
-                  </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
+                      </ul>
+                      <Button 
+                        variant={isSoldOut ? "outline" : "elegant"} 
+                        className="w-full" 
+                        onClick={() => navigate('/booking')}
+                        disabled={isSoldOut}
+                      >
+                        {isSoldOut ? "Join Waiting List" : "Book Now"}
+                      </Button>
+                    </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
           
-          <motion.div variants={fadeUpItem} className="mt-12 text-center">
-             <Button variant="luxury" size="lg" onClick={() => navigate('/booking')}>
-               View All Room Types
-             </Button>
-          </motion.div>
+          {!isLoadingRooms && safeRooms.length > 0 && (
+            <motion.div variants={fadeUpItem} className="mt-12 text-center">
+               <Button variant="luxury" size="lg" onClick={() => navigate('/booking')}>
+                 View All Room Types
+               </Button>
+            </motion.div>
+          )}
         </motion.div>
       </section>
 

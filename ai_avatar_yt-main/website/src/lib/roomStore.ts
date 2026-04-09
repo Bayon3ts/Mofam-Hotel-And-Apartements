@@ -1,7 +1,9 @@
 // ─── Room Data Store ─────────────────────────────────────────────────────────
 // Centralized data source for room inventory.
-// Uses localStorage for persistence across sessions.
+// Uses Supabase for persistence.
 // Both Booking page and Admin panel read/write from this store.
+
+import { supabase } from "./supabaseClient";
 
 export interface RoomInventory {
   id: string;
@@ -125,65 +127,130 @@ const DEFAULT_ROOMS: RoomInventory[] = [
   },
 ];
 
-const STORAGE_KEY = "mofam_room_inventory";
+// ─── Mapping Helpers ────────────────────────────────────────────────────────
+
+const mapDbToRoom = (db: any): RoomInventory => ({
+  id: db.id,
+  name: db.name,
+  price: db.price,
+  tag: db.tag,
+  badge: db.badge,
+  description: db.description,
+  amenities: db.amenities || [],
+  maxGuests: db.max_guests,
+  totalRooms: db.total_rooms,
+  bookedRooms: db.booked_rooms,
+});
+
+const mapRoomToDb = (room: Partial<RoomInventory>) => {
+  const db: any = {};
+  if (room.id !== undefined) db.id = room.id;
+  if (room.name !== undefined) db.name = room.name;
+  if (room.price !== undefined) db.price = room.price;
+  if (room.tag !== undefined) db.tag = room.tag;
+  if (room.badge !== undefined) db.badge = room.badge;
+  if (room.description !== undefined) db.description = room.description;
+  if (room.amenities !== undefined) db.amenities = room.amenities;
+  if (room.maxGuests !== undefined) db.max_guests = room.maxGuests;
+  if (room.totalRooms !== undefined) db.total_rooms = room.totalRooms;
+  if (room.bookedRooms !== undefined) db.booked_rooms = room.bookedRooms;
+  return db;
+};
 
 // ─── Store API ───────────────────────────────────────────────────────────────
 
-/** Load rooms from localStorage, seeding defaults if empty. */
-export function getRooms(): RoomInventory[] {
+/** Load rooms from Supabase, seeding defaults if empty. */
+export async function getRooms(): Promise<RoomInventory[]> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as RoomInventory[];
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    const { data, error } = await supabase
+      .from('rooms')
+      .select('*')
+      .order('price', { ascending: true });
+
+    if (error) {
+      if (error.code === 'PGRST301' || error.status === 401) {
+        console.warn('Supabase Auth error (401). Check env variables or RLS policies.');
+      }
+      throw error;
     }
-  } catch {
-    // Corrupt data – fall through to defaults
+
+    if (!data || data.length === 0) {
+      console.log('No rooms found in Supabase. Seeding defaults...');
+      return await seedRooms();
+    }
+
+    const mapped = data.map(mapDbToRoom);
+    console.log("[roomStore] Fetched rooms:", mapped);
+    return Array.isArray(mapped) ? mapped : [];
+  } catch (err) {
+    console.error('Error fetching rooms from Supabase:', err);
+    return []; // Return empty array to prevent .filter crashes
   }
-  // Seed defaults on first load
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_ROOMS));
-  return [...DEFAULT_ROOMS];
 }
 
-/** Persist the full rooms array. */
-export function saveRooms(rooms: RoomInventory[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(rooms));
+/** Seed rooms into Supabase. */
+async function seedRooms(): Promise<RoomInventory[]> {
+  try {
+    const seedData = DEFAULT_ROOMS.map(mapRoomToDb);
+    const { data, error } = await supabase
+      .from('rooms')
+      .insert(seedData)
+      .select();
+
+    if (error) throw error;
+    const mapped = (data || []).map(mapDbToRoom);
+    return Array.isArray(mapped) ? mapped : [];
+  } catch (err) {
+    console.error('Error seeding rooms:', err);
+    // Fallback to local defaults if seeding fails
+    return DEFAULT_ROOMS;
+  }
 }
 
 /** Update a single room by id. Returns the updated list. */
-export function updateRoom(
+export async function updateRoom(
   id: string,
   patch: Partial<Pick<RoomInventory, "price" | "totalRooms" | "bookedRooms">>
-): RoomInventory[] {
-  const rooms = getRooms();
-  const idx = rooms.findIndex((r) => r.id === id);
-  if (idx === -1) return rooms;
+): Promise<RoomInventory[]> {
+  try {
+    const dbPatch = mapRoomToDb(patch);
+    
+    if (patch.price !== undefined) dbPatch.price = Math.max(1, patch.price);
+    if (patch.totalRooms !== undefined) dbPatch.total_rooms = Math.max(1, patch.totalRooms);
+    if (patch.bookedRooms !== undefined) dbPatch.booked_rooms = Math.max(0, patch.bookedRooms);
 
-  const room = rooms[idx];
-  const price = patch.price ?? room.price;
-  const totalRooms = patch.totalRooms ?? room.totalRooms;
-  const bookedRooms = patch.bookedRooms ?? room.bookedRooms;
+    const { error } = await supabase
+      .from('rooms')
+      .update(dbPatch)
+      .eq('id', id);
 
-  // Validation
-  rooms[idx] = {
-    ...room,
-    price: Math.max(1, price),
-    totalRooms: Math.max(1, totalRooms),
-    bookedRooms: Math.max(0, Math.min(bookedRooms, totalRooms)),
-  };
-
-  saveRooms(rooms);
-  return rooms;
+    if (error) throw error;
+    
+    return await getRooms();
+  } catch (err) {
+    console.error('Error updating room:', err);
+    return await getRooms();
+  }
 }
 
 /** Reset to factory defaults. */
-export function resetRooms(): RoomInventory[] {
-  const fresh = [...DEFAULT_ROOMS];
-  saveRooms(fresh);
-  return fresh;
+export async function resetRooms(): Promise<RoomInventory[]> {
+  try {
+    const { error } = await supabase
+      .from('rooms')
+      .delete()
+      .neq('id', 'placeholder_force_all');
+
+    if (error) throw error;
+    return await seedRooms();
+  } catch (err) {
+    console.error('Error resetting rooms:', err);
+    return await getRooms();
+  }
 }
 
 /** Compute available rooms for a given room object. */
 export function getAvailability(room: RoomInventory): number {
-  return Math.max(0, room.totalRooms - room.bookedRooms);
+  if (!room) return 0;
+  return Math.max(0, (room.totalRooms || 0) - (room.bookedRooms || 0));
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,8 @@ import {
   Users,
   DoorOpen,
   Lock,
+  LogOut,
+  Loader2,
 } from "lucide-react";
 import {
   getRooms,
@@ -25,49 +28,61 @@ import {
   getAvailability,
   type RoomInventory,
 } from "@/lib/roomStore";
-
-const fmt = (n: number) => `₦${n.toLocaleString("en-NG")}`;
+import { toast } from "@/components/ui/sonner";
 
 const Admin = () => {
   const navigate = useNavigate();
   const [rooms, setRooms] = useState<RoomInventory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
   const [editState, setEditState] = useState<
     Record<string, { price: string; totalRooms: string; bookedRooms: string }>
   >({});
   const [savedId, setSavedId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
-  // Security
-  const [password, setPassword] = useState("");
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [loginError, setLoginError] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === "mofam2024") {
-      setIsAuthorized(true);
-      setLoginError("");
-    } else {
-      setLoginError("Invalid management password");
+  // Fetch rooms on mount
+  const fetchRooms = async (showRefresh = false) => {
+    if (showRefresh) setIsRefreshing(true);
+    else setIsLoading(true);
+    
+    try {
+      const data = await getRooms();
+      console.log("[Admin] Fetched rooms:", data);
+      
+      const safeData = Array.isArray(data) ? data : [];
+      setRooms(safeData);
+      
+      const initial: Record<string, { price: string; totalRooms: string; bookedRooms: string }> = {};
+      safeData.forEach((r) => {
+        initial[r.id] = {
+          price: String(r.price),
+          totalRooms: String(r.totalRooms),
+          bookedRooms: String(r.bookedRooms),
+        };
+      });
+      setEditState(initial);
+    } catch (err) {
+      console.error("[Admin] Fetch error:", err);
+      toast.error("Failed to load inventory data");
+      setRooms([]);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
     }
   };
 
-  // Load rooms on mount
   useEffect(() => {
-    if (!isAuthorized) return;
-    const loaded = getRooms();
-    setRooms(loaded);
-    const initial: Record<string, { price: string; totalRooms: string; bookedRooms: string }> = {};
-    loaded.forEach((r) => {
-      initial[r.id] = {
-        price: String(r.price),
-        totalRooms: String(r.totalRooms),
-        bookedRooms: String(r.bookedRooms),
-      };
-    });
-    setEditState(initial);
-  }, [isAuthorized]);
+    fetchRooms();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success("Successfully logged out");
+    navigate("/admin/login");
+  };
 
   // Validate a single room's inputs
   const validate = (id: string, price: string, total: string, booked: string): string | null => {
@@ -113,98 +128,86 @@ const Admin = () => {
 
     setIsSaving(id);
     
-    // Simulate network delay for better UX (loading states)
-    await new Promise(resolve => setTimeout(resolve, 600));
+    try {
+      const updatedRooms = await updateRoom(id, {
+        price: parseInt(state.price, 10),
+        totalRooms: parseInt(state.totalRooms, 10),
+        bookedRooms: parseInt(state.bookedRooms, 10),
+      });
 
-    const updated = updateRoom(id, {
-      price: parseInt(state.price, 10),
-      totalRooms: parseInt(state.totalRooms, 10),
-      bookedRooms: parseInt(state.bookedRooms, 10),
-    });
-    setRooms(updated);
+      const safeUpdatedRooms = Array.isArray(updatedRooms) ? updatedRooms : [];
+      setRooms(safeUpdatedRooms);
 
-    // Sync edit state with validated values
-    const room = updated.find((r) => r.id === id);
-    if (room) {
-      setEditState((prev) => ({
-        ...prev,
-        [id]: {
-          price: String(room.price),
-          totalRooms: String(room.totalRooms),
-          bookedRooms: String(room.bookedRooms),
-        },
-      }));
+      // Sync edit state with validated values for the updated room
+      const room = safeUpdatedRooms.find((r) => r.id === id);
+      if (room) {
+        setEditState((prev) => ({
+          ...prev,
+          [id]: {
+            price: String(room.price),
+            totalRooms: String(room.totalRooms),
+            bookedRooms: String(room.bookedRooms),
+          },
+        }));
+      }
+
+      setSavedId(id);
+      toast.success(`${room?.name} updated successfully`);
+      setTimeout(() => setSavedId(null), 3000);
+    } catch (err) {
+      console.error("[Admin] Save error:", err);
+      toast.error("Database update failed. Please try again.");
+    } finally {
+      setIsSaving(null);
     }
-
-    setIsSaving(null);
-    setSavedId(id);
-    setTimeout(() => setSavedId(null), 3000);
   };
 
   // Reset all to defaults
-  const handleReset = () => {
+  const handleReset = async () => {
     if (!confirm("Are you sure you want to reset all data to default values?")) return;
     
-    const fresh = resetRooms();
-    setRooms(fresh);
-    const initial: Record<string, { price: string; totalRooms: string; bookedRooms: string }> = {};
-    fresh.forEach((r) => {
-      initial[r.id] = {
-        price: String(r.price),
-        totalRooms: String(r.totalRooms),
-        bookedRooms: String(r.bookedRooms),
-      };
-    });
-    setEditState(initial);
-    setErrors({});
-    setSavedId(null);
+    setIsRefreshing(true);
+    try {
+      const fresh = await resetRooms();
+      const safeFresh = Array.isArray(fresh) ? fresh : [];
+      setRooms(safeFresh);
+      
+      const initial: Record<string, { price: string; totalRooms: string; bookedRooms: string }> = {};
+      safeFresh.forEach((r) => {
+        initial[r.id] = {
+          price: String(r.price),
+          totalRooms: String(r.totalRooms),
+          bookedRooms: String(r.bookedRooms),
+        };
+      });
+      setEditState(initial);
+      setErrors({});
+      setSavedId(null);
+      toast.success("Inventory reset to factory defaults");
+    } catch (err) {
+      console.error("[Admin] Reset error:", err);
+      toast.error("Reset failed");
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
-  // Summary stats
-  const totalInventory = rooms.reduce((s, r) => s + r.totalRooms, 0);
-  const totalBooked = rooms.reduce((s, r) => s + r.bookedRooms, 0);
-  const totalAvailable = rooms.reduce((s, r) => s + getAvailability(r), 0);
+  // ── SAFE SUMMARY STATS ───────────────────────────────────────────────────
+  const safeRoomsList = Array.isArray(rooms) ? rooms : [];
+  const totalInventory = safeRoomsList.reduce((s, r) => s + (r.totalRooms || 0), 0);
+  const totalBooked = safeRoomsList.reduce((s, r) => s + (r.bookedRooms || 0), 0);
+  const totalAvailable = safeRoomsList.reduce((s, r) => s + getAvailability(r), 0);
   const occupancyRate = totalInventory > 0 ? Math.round((totalBooked / totalInventory) * 100) : 0;
 
-  if (!isAuthorized) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
-        <Card className="w-full max-w-md shadow-2xl border-accent/20">
-          <CardHeader className="text-center space-y-2">
-            <div className="mx-auto w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mb-2">
-              <Lock className="h-6 w-6 text-accent" />
-            </div>
-            <CardTitle className="text-2xl font-black tracking-tight">Staff Authentication</CardTitle>
-            <p className="text-sm text-muted-foreground">Enter your secure password to access management</p>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="password">Management Password</Label>
-                <Input 
-                  id="password"
-                  type="password" 
-                  placeholder="••••••••" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 text-center text-lg font-bold tracking-widest"
-                  autoFocus
-                />
-              </div>
-              {loginError && (
-                <p className="text-xs font-bold text-red-500 text-center animate-bounce">
-                  {loginError}
-                </p>
-              )}
-              <Button type="submit" variant="luxury" className="w-full h-12 font-bold text-base">
-                Access Panel
-              </Button>
-              <Button variant="ghost" onClick={() => navigate("/")} className="w-full h-10 text-xs text-muted-foreground">
-                Back to Public Site
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 text-accent animate-spin" />
+          <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground animate-pulse">
+            Syncing Live Inventory...
+          </p>
+        </div>
       </div>
     );
   }
@@ -223,21 +226,34 @@ const Admin = () => {
               <ArrowLeft className="h-4 w-4" />
               <span className="hidden sm:inline">Public Site</span>
             </Button>
+            
             <div className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-accent" />
               <h1 className="text-lg sm:text-2xl font-bold tracking-tight">
                 Staff Management
               </h1>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/booking")}
-              className="gap-1.5 text-xs font-bold"
-            >
-              <Hotel className="h-3.5 w-3.5" />
-              Booking Page
-            </Button>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/booking")}
+                className="hidden sm:flex gap-1.5 text-xs font-bold"
+              >
+                <Hotel className="h-3.5 w-3.5" />
+                Booking Page
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleLogout}
+                className="text-red-500 hover:text-red-600 hover:bg-red-50 gap-2 font-bold text-xs"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Logout</span>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -246,22 +262,36 @@ const Admin = () => {
         {/* Page Title */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
           <div>
-            <h2 className="text-3xl font-extrabold tracking-tight mb-1">
-              Live Inventory & Pricing
-            </h2>
+            <div className="flex items-center gap-3 mb-1">
+              <h2 className="text-3xl font-extrabold tracking-tight">
+                Live Inventory & Pricing
+              </h2>
+              {isRefreshing && <Loader2 className="h-5 w-5 text-accent animate-spin" />}
+            </div>
             <p className="text-muted-foreground">
-              Update room rates and availability. Changes persist immediately.
+              Secure Supabase-powered backend. All updates reflect instantly on the public site.
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleReset}
-            className="gap-1.5 text-xs font-bold text-red-500 hover:text-red-600 hover:bg-red-50"
-          >
-            <RotateCcw className="h-3.5 w-3.5" />
-            Reset All Data
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchRooms(true)}
+              disabled={isRefreshing}
+              className="gap-1.5 text-xs font-bold"
+            >
+              <RotateCcw className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin")} />
+              Refresh
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReset}
+              className="gap-1.5 text-xs font-bold text-red-500 hover:text-red-600 hover:bg-red-50"
+            >
+              Reset Database
+            </Button>
+          </div>
         </div>
 
         {/* Stats Row */}
@@ -290,7 +320,12 @@ const Admin = () => {
 
         {/* Room Cards */}
         <div className="space-y-4">
-          {rooms.map((room) => {
+          {safeRoomsList.length === 0 ? (
+             <div className="text-center py-20 bg-muted/20 rounded-2xl border border-dashed border-border">
+                <p className="text-lg font-medium text-muted-foreground">No room data found in the cloud.</p>
+                <Button variant="outline" className="mt-4" onClick={() => fetchRooms(true)}>Retry Sync</Button>
+             </div>
+          ) : safeRoomsList.map((room) => {
             const available = getAvailability(room);
             const isSoldOut = available === 0;
             const isLow = available > 0 && available <= 2;
@@ -306,7 +341,8 @@ const Admin = () => {
                   "transition-all duration-300 border-border/60",
                   isSoldOut && "border-red-500/30 bg-red-500/[0.01]",
                   isLow && "border-amber-500/30 bg-amber-500/[0.01]",
-                  justSaved && "border-emerald-500/50 bg-emerald-500/[0.02] shadow-lg shadow-emerald-500/5"
+                  justSaved && "border-emerald-500/50 bg-emerald-500/[0.02] shadow-lg shadow-emerald-500/5",
+                  savingThis && "opacity-70 ring-1 ring-accent/20"
                 )}
               >
                 <CardContent className="p-5">
@@ -331,7 +367,7 @@ const Admin = () => {
                         {justSaved && (
                           <span className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-full bg-emerald-100 text-emerald-600 border border-emerald-200 animate-in fade-in zoom-in">
                             <CheckCircle className="h-3 w-3" />
-                            Updated successfully
+                            Database Updated
                           </span>
                         )}
                       </div>
@@ -357,6 +393,7 @@ const Admin = () => {
                             onChange={(e) =>
                               handleChange(room.id, "price", e.target.value)
                             }
+                            disabled={savingThis}
                             className="h-11 pl-4 font-black text-accent border-accent/20 focus-visible:ring-accent"
                           />
                         </div>
@@ -373,6 +410,7 @@ const Admin = () => {
                           onChange={(e) =>
                             handleChange(room.id, "totalRooms", e.target.value)
                           }
+                          disabled={savingThis}
                           className="h-11 font-bold text-center"
                         />
                       </div>
@@ -388,6 +426,7 @@ const Admin = () => {
                           onChange={(e) =>
                             handleChange(room.id, "bookedRooms", e.target.value)
                           }
+                          disabled={savingThis}
                           className="h-11 font-bold text-center"
                         />
                       </div>
@@ -454,7 +493,7 @@ const Admin = () => {
         <div className="mt-12 p-6 bg-accent/5 rounded-2xl border border-accent/10 border-dashed text-center">
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mb-2">Security Notice</p>
             <p className="text-sm text-balance">
-                You are currently in the <strong>Management Portal</strong>. All changes made here are instantly pushed to the public booking interface. Please ensure all pricing and inventory counts are verified before updating.
+                You are currently in the <strong>Management Portal</strong>. All changes made here are instantly pushed to the <strong>Supabase</strong> database and reflected on the live booking site.
             </p>
         </div>
       </main>

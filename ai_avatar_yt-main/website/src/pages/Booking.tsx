@@ -16,6 +16,7 @@ import {
   Check,
   ChevronDown,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -26,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getRooms, getAvailability, type RoomInventory } from "@/lib/roomStore";
+import { toast } from "@/components/ui/sonner";
 
 // ─── Amenity Icon Map ────────────────────────────────────────────────────────
 const AmenityIcon = ({ name }: { name: string }) => {
@@ -86,9 +88,11 @@ const Booking = () => {
     return 0;
   }, [checkIn, checkOut]);
 
+  const safeRoomData = Array.isArray(roomData) ? roomData : [];
+
   const selectedRoom = useMemo(
-    () => roomData.find((r) => r.id === selectedRoomId) ?? null,
-    [selectedRoomId, roomData]
+    () => safeRoomData.find((r) => r.id === selectedRoomId) ?? null,
+    [selectedRoomId, safeRoomData]
   );
 
   const totalPrice = useMemo(
@@ -109,29 +113,29 @@ const Booking = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // ── Sync Logic — Keep inventory updated in real-time ─────────────────────
-  const refreshRoomData = () => {
+  // ── Sync Logic — Keep inventory updated from Supabase ─────────────────────
+  const refreshRoomData = async () => {
     // Only refresh if we already have results showing
     if (showResults) {
-      const liveRooms = getRooms();
-      setRoomData(liveRooms);
+      try {
+        const liveRooms = await getRooms();
+        console.log("[Booking] Refreshing room data:", liveRooms);
+        setRoomData(Array.isArray(liveRooms) ? liveRooms : []);
+      } catch (err) {
+        console.error("[Booking] Sync error:", err);
+      }
     }
   };
 
   useEffect(() => {
-    // Refresh when tab gains focus
     window.addEventListener("focus", refreshRoomData);
-    // Sync across tabs when localStorage changes
-    window.addEventListener("storage", refreshRoomData);
-    
     return () => {
       window.removeEventListener("focus", refreshRoomData);
-      window.removeEventListener("storage", refreshRoomData);
     };
   }, [showResults]);
 
-  // ── Search handler — reads LIVE data from localStorage store ─────────────
-  const handleSearch = () => {
+  // ── Search handler — reads LIVE data from Supabase ─────────────────────
+  const handleSearch = async () => {
     setRoomError("");
     if (!checkIn || !checkOut || nights <= 0) {
       setDateError("Please select valid check-in and check-out dates.");
@@ -142,19 +146,31 @@ const Booking = () => {
     setSelectedRoomId(null);
     setIsSearching(true);
 
-    setTimeout(() => {
-      // Pull fresh data from the store every search
-      const liveRooms = getRooms();
-      setRoomData(liveRooms);
+    try {
+      // Pull fresh data from Supabase
+      const liveRooms = await getRooms();
+      console.log("[Booking] Search live rooms:", liveRooms);
+      
+      const safeLiveRooms = Array.isArray(liveRooms) ? liveRooms : [];
+      setRoomData(safeLiveRooms);
+      
+      // Artificial delay for cinematic feel
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
       setIsSearching(false);
       setShowResults(true);
 
       // Auto-select the first available room
-      const firstAvailable = liveRooms.find((r) => getAvailability(r) > 0);
+      const firstAvailable = safeLiveRooms.find((r) => getAvailability(r) > 0);
       if (firstAvailable) {
         setSelectedRoomId(firstAvailable.id);
       }
-    }, 650);
+    } catch (err) {
+      console.error("[Booking] Search error:", err);
+      toast.error("Unable to fetch room availability. Please try again.");
+      setRoomData([]);
+      setIsSearching(false);
+    }
   };
 
   // ── Reserve handler ──────────────────────────────────────────────────────
@@ -295,9 +311,9 @@ const Booking = () => {
 
             <div className="space-y-2">
               <Label className="text-[11px] font-bold uppercase tracking-widest text-transparent select-none">Search</Label>
-              <Button variant="luxury" className="h-12 px-10 w-full lg:w-auto font-bold text-base shadow-lg shadow-accent/15" onClick={handleSearch}>
-                <Search className="h-4 w-4 mr-2" />
-                Find Rooms
+              <Button variant="luxury" className="h-12 px-10 w-full lg:w-auto font-bold text-base shadow-lg shadow-accent/15" onClick={handleSearch} disabled={isSearching}>
+                {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
+                {isSearching ? "Searching..." : "Find Rooms"}
               </Button>
             </div>
           </div>
@@ -311,7 +327,7 @@ const Booking = () => {
             <div className="space-y-5">
               <div className="flex items-center justify-between mb-2 px-1">
                 <h3 className="text-xl font-extrabold tracking-tight">
-                  {isSearching ? "Finding Best Rates…" : `${roomData.length} Room Types Available`}
+                  {isSearching ? "Finding Best Rates…" : `${safeRoomData.length} Room Types Available`}
                 </h3>
               </div>
 
@@ -330,9 +346,15 @@ const Booking = () => {
                 </div>
               )}
 
-              {showResults && !isSearching && (
+              {showResults && !isSearching && safeRoomData.length === 0 && (
+                 <div className="text-center py-20 bg-muted/20 rounded-2xl border border-dashed border-border animate-in fade-in">
+                    <p className="text-lg font-medium text-muted-foreground">No rooms found for your selected criteria.</p>
+                 </div>
+              )}
+
+              {showResults && !isSearching && safeRoomData.length > 0 && (
                 <div className="space-y-5">
-                  {roomData.map((room, idx) => {
+                  {safeRoomData.map((room, idx) => {
                     const isSelected = selectedRoomId === room.id;
                     const available = getAvailability(room);
                     const isSoldOut = available <= 0;
@@ -387,7 +409,7 @@ const Booking = () => {
                         {/* Bottom: Amenities + Action */}
                         <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mt-auto pt-4 border-t border-border/50">
                           <div className="flex flex-wrap gap-4 items-center w-full sm:w-auto">
-                            {room.amenities.map((a) => <AmenityIcon key={a} name={a} />)}
+                            {(room.amenities || []).map((a) => <AmenityIcon key={a} name={a} />)}
                             <Separator orientation="vertical" className="h-3 hidden sm:block" />
                             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Max {room.maxGuests} Guests</span>
                           </div>
