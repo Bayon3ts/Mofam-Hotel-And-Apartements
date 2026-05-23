@@ -21,6 +21,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, differenceInDays, isBefore, startOfToday, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,8 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getRooms, getAvailability, type RoomInventory } from "@/lib/roomStore";
 import { toast } from "@/components/ui/sonner";
+import { supabase } from "@/lib/supabaseClient";
+import { sendBookingEmails } from "@/lib/emailService";
 
 // ─── Amenity Icon Map ────────────────────────────────────────────────────────
 const AmenityIcon = ({ name }: { name: string }) => {
@@ -81,6 +84,14 @@ const Booking = () => {
   // Validation errors
   const [dateError, setDateError] = useState("");
   const [roomError, setRoomError] = useState("");
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  // Customer info state
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDetailsStep, setIsDetailsStep] = useState(false);
 
   // Derived values
   const nights = useMemo(() => {
@@ -150,13 +161,13 @@ const Booking = () => {
       // Pull fresh data from Supabase
       const liveRooms = await getRooms();
       console.log("[Booking] Search live rooms:", liveRooms);
-      
+
       const safeLiveRooms = Array.isArray(liveRooms) ? liveRooms : [];
       setRoomData(safeLiveRooms);
-      
+
       // Artificial delay for cinematic feel
       await new Promise(resolve => setTimeout(resolve, 800));
-      
+
       setIsSearching(false);
       setShowResults(true);
 
@@ -173,10 +184,25 @@ const Booking = () => {
     }
   };
 
-  // ── Reserve handler ──────────────────────────────────────────────────────
-  const handleReserve = () => {
+  // ── Validation Helpers ─────────────────────────────────────────────────────
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    if (!fullName.trim()) errors.fullName = "Full name is required";
+    if (!email.trim()) {
+      errors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.email = "Invalid email format";
+    }
+    if (!phone.trim()) errors.phone = "Phone number is required";
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // ── Step control ───────────────────────────────────────────────────────────
+  const proceedToDetails = () => {
     if (!selectedRoom) {
-      setRoomError("Please select a room before reserving.");
+      setRoomError("Please select a room before proceeding.");
       return;
     }
     if (getAvailability(selectedRoom) <= 0) {
@@ -184,19 +210,82 @@ const Booking = () => {
       return;
     }
     setRoomError("");
-    navigate("/bookingconfirmation", {
-      state: {
-        checkIn,
-        checkOut,
-        nights,
-        numRooms,
-        adults,
-        children,
-        totalGuests,
-        selectedRoom,
-        totalPrice,
-      },
-    });
+    setIsDetailsStep(true);
+    // Scroll to top of the form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // ── Final Confirm handler (Database Insertion) ──────────────────────────
+  const handleFinalConfirm = async () => {
+    if (!validateForm()) return;
+    if (!selectedRoom) return;
+
+    setIsSubmitting(true);
+
+    // Prepare booking data
+    const bookingData = {
+      full_name: fullName,
+      email: email,
+      phone: phone,
+      room_type: selectedRoom.name,
+      check_in: format(checkIn!, "yyyy-MM-dd"),
+      check_out: format(checkOut!, "yyyy-MM-dd"),
+      guests: totalGuests,
+      total_price: totalPrice,
+      status: 'pending' // Initial status as per requirements
+    };
+
+    try {
+      console.log("[Booking] Initiating secure insert:", bookingData);
+
+      const { data, error } = await supabase
+        .from('bookings')
+        .insert([bookingData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log("[Booking] Insert success:", data);
+
+      // Trigger Emails AFTER successful insert
+      await sendBookingEmails({
+        ...bookingData,
+        id: data.id,
+        check_in: checkIn!,
+        check_out: checkOut!
+      });
+
+      toast.success("Reservation confirmed! Emails sent.");
+
+      // Navigate to confirmation page ONLY on success
+      navigate("/bookingconfirmation", {
+        state: {
+          checkIn,
+          checkOut,
+          nights,
+          numRooms,
+          adults,
+          children,
+          totalGuests,
+          selectedRoom,
+          totalPrice,
+          customer: { fullName, email, phone },
+          bookingId: data.id
+        },
+      });
+    } catch (err: any) {
+      console.error("[Booking] Reservation failed:", err);
+      
+      // More detailed logging for debugging
+      if (err.code) console.error("Error Code:", err.code);
+      if (err.message) console.error("Error Message:", err.message);
+      if (err.details) console.error("Error Details:", err.details);
+      if (err.hint) console.error("Error Hint:", err.hint);
+
+      toast.error("Failed to save reservation. Please click confirm again or check your connection.");
+      setIsSubmitting(false);
+    }
   };
 
   const guestLabel = `${numRooms} Room${numRooms > 1 ? "s" : ""} · ${adults} Adult${adults > 1 ? "s" : ""}${children > 0 ? ` · ${children} Child${children > 1 ? "ren" : ""}` : ""}`;
@@ -320,8 +409,94 @@ const Booking = () => {
           {dateError && <p className="text-red-500 text-xs font-medium mt-3 animate-in fade-in slide-in-from-top-1">{dateError}</p>}
         </div>
 
-        {/* ── RESULTS ───────────────────────────────────────────────── */}
-        {(isSearching || showResults) && (
+        {/* ── CUSTOMER DETAILS FORM (STEP 2) ────────────────────────── */}
+        {isDetailsStep && (
+          <div className="max-w-4xl mx-auto mb-10 animate-in fade-in slide-in-from-bottom-5 duration-500">
+            <Card className="rounded-2xl border-accent/20 overflow-hidden bg-card">
+              <div className="p-6 bg-accent/[0.03] border-b border-border flex items-center justify-between">
+                <div>
+                  <h3 className="font-black text-xl tracking-tight">Customer Information</h3>
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mt-1">Details for your reservation</p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setIsDetailsStep(false)} disabled={isSubmitting} className="text-xs font-bold uppercase tracking-widest opacity-60 hover:opacity-100">
+                  <ArrowLeft className="h-3 w-3 mr-2" /> Change Selection
+                </Button>
+              </div>
+              <div className="p-8">
+                <div className="grid gap-8 md:grid-cols-2">
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="fullName" className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Full Name</Label>
+                      <Input
+                        id="fullName"
+                        placeholder="e.g. John Doe"
+                        value={fullName}
+                        onChange={(e) => { setFullName(e.target.value); if (formErrors.fullName) setFormErrors(prev => ({ ...prev, fullName: "" })); }}
+                        className={cn("h-12 border-border/60 focus:border-accent text-base", formErrors.fullName && "border-red-500/50 bg-red-500/[0.02]")}
+                        disabled={isSubmitting}
+                      />
+                      {formErrors.fullName && <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider ml-1">{formErrors.fullName}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Email Address</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="john@example.com"
+                        value={email}
+                        onChange={(e) => { setEmail(e.target.value); if (formErrors.email) setFormErrors(prev => ({ ...prev, email: "" })); }}
+                        className={cn("h-12 border-border/60 focus:border-accent text-base", formErrors.email && "border-red-500/50 bg-red-500/[0.02]")}
+                        disabled={isSubmitting}
+                      />
+                      {formErrors.email && <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider ml-1">{formErrors.email}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Phone Number</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="+234 (0) 800-000-0000"
+                        value={phone}
+                        onChange={(e) => { setPhone(e.target.value); if (formErrors.phone) setFormErrors(prev => ({ ...prev, phone: "" })); }}
+                        className={cn("h-12 border-border/60 focus:border-accent text-base", formErrors.phone && "border-red-500/50 bg-red-500/[0.02]")}
+                        disabled={isSubmitting}
+                      />
+                      {formErrors.phone && <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider ml-1">{formErrors.phone}</p>}
+                    </div>
+                  </div>
+
+                  <div className="bg-accent/[0.02] border border-accent/10 rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-[0.2em] text-accent mb-4">Secure Checkout</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Your data is encrypted and used only for managing your reservation. By clicking confirm, you agree to our terms of service and editorial standards.
+                      </p>
+                    </div>
+                    <div className="pt-6">
+                      <Button
+                        variant="luxury"
+                        size="lg"
+                        className="w-full h-14 text-base font-black shadow-xl shadow-accent/20"
+                        onClick={handleFinalConfirm}
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Processing...</> : "Confirm Reservation"}
+                      </Button>
+                      <p className="text-[10px] font-bold text-center text-muted-foreground uppercase tracking-widest mt-3 opacity-60 italic">
+                        No credit card required for standard sessions
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* ── RESULTS (STEP 1) ───────────────────────────────────────── */}
+        {!isDetailsStep && (isSearching || showResults) && (
           <div className="grid gap-8 lg:grid-cols-[1fr_360px] items-start animate-in fade-in duration-500">
             {/* Left: Rooms */}
             <div className="space-y-5">
@@ -347,9 +522,9 @@ const Booking = () => {
               )}
 
               {showResults && !isSearching && safeRoomData.length === 0 && (
-                 <div className="text-center py-20 bg-muted/20 rounded-2xl border border-dashed border-border animate-in fade-in">
-                    <p className="text-lg font-medium text-muted-foreground">No rooms found for your selected criteria.</p>
-                 </div>
+                <div className="text-center py-20 bg-muted/20 rounded-2xl border border-dashed border-border animate-in fade-in">
+                  <p className="text-lg font-medium text-muted-foreground">No rooms found for your selected criteria.</p>
+                </div>
               )}
 
               {showResults && !isSearching && safeRoomData.length > 0 && (
@@ -504,8 +679,14 @@ const Booking = () => {
 
                   {roomError && <p className="text-red-500 text-[11px] font-bold uppercase text-center bg-red-500/10 py-2 rounded-lg">{roomError}</p>}
 
-                  <Button variant="luxury" size="lg" className="w-full h-14 text-base font-black shadow-xl shadow-accent/20 hover:scale-[1.02] active:scale-95 transition-transform" onClick={handleReserve} disabled={!selectedRoom}>
-                    Confirm Reservation
+                  <Button
+                    variant="luxury"
+                    size="lg"
+                    className="w-full h-14 text-base font-black shadow-xl shadow-accent/20 hover:scale-[1.02] active:scale-95 transition-transform"
+                    onClick={isDetailsStep ? handleFinalConfirm : proceedToDetails}
+                    disabled={!selectedRoom || isSubmitting}
+                  >
+                    {isSubmitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Confirming...</> : isDetailsStep ? "Confirm Reservation" : "Proceed to Details"}
                   </Button>
                 </div>
               </Card>
@@ -521,8 +702,13 @@ const Booking = () => {
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none">{selectedRoom.name} · {nights} Night{nights !== 1 ? "s" : ""}</p>
             <p className="text-2xl font-black text-accent tracking-tighter">{fmt(totalPrice)}</p>
           </div>
-          <Button variant="luxury" className="h-12 px-8 font-black text-sm tracking-wide rounded-xl shadow-lg shadow-accent/20" onClick={handleReserve}>
-            Reserve
+          <Button
+            variant="luxury"
+            className="h-12 px-8 font-black text-sm tracking-wide rounded-xl shadow-lg shadow-accent/20"
+            onClick={isDetailsStep ? handleFinalConfirm : proceedToDetails}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Confirming..." : isDetailsStep ? "Confirm" : "Reserve"}
           </Button>
         </div>
       )}

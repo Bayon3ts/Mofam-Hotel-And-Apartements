@@ -6,14 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, useScroll, useTransform, Variants } from "framer-motion";
 import LiveKitWidget from "@/components/ai_avatar/LiveKitWidget";
-import { 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Wifi, 
-  Car, 
-  Utensils, 
-  Waves, 
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Wifi,
+  Car,
+  Utensils,
+  Waves,
   Dumbbell,
   Crown,
   Calendar,
@@ -33,7 +33,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
 
 // Import images
-import heroImage from "@/assets/hero-hotel.jpg";
+import heroVideo from "@/assets/hero-video.mp4";
 import suiteImage from "@/assets/suite-room.jpg";
 import diningImage from "@/assets/dining-restaurant.jpg";
 import meetingImage from "@/assets/meeting-room.jpg";
@@ -83,7 +83,7 @@ const Index = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [rooms, setRooms] = useState<any[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
-  
+
   const { scrollY } = useScroll();
   const parallaxY = useTransform(scrollY, [0, 1000], [0, 200]);
 
@@ -95,14 +95,14 @@ const Index = () => {
     { id: "events", label: "Meetings & Events" },
     { id: "contact", label: "Contact" }
   ];
-  
+
   // 2. SAFE FETCH HANDLING (Requirement 2)
   const refreshRooms = async () => {
     setIsLoadingRooms(true);
     try {
       console.log("Fetching rooms from Supabase...");
       const { data, error } = await supabase.from("rooms").select("*");
-      
+
       if (error) {
         console.error("Fetch error:", error);
         setRooms([]); // Safe state reset
@@ -122,10 +122,10 @@ const Index = () => {
   useEffect(() => {
     setIsVisible(true);
     refreshRooms();
-    
+
     // Sync when returning to tab
     window.addEventListener("focus", refreshRooms);
-    
+
     // Dynamic navbar scroll detection
     const handleScroll = () => {
       if (window.scrollY > window.innerHeight * 0.8) {
@@ -134,7 +134,7 @@ const Index = () => {
         setIsScrolled(false);
       }
     };
-    
+
     window.addEventListener("scroll", handleScroll);
     return () => {
       window.removeEventListener("scroll", handleScroll);
@@ -181,13 +181,13 @@ const Index = () => {
   // 5. RENDER USING SAFE DATA (Requirement 7)
   const roomsToDisplay = useMemo(() => {
     const rawRooms = Array.isArray(rooms) ? rooms : [];
-    
+
     // Filtering logic to respect user "leave other" request
     const filtered = rawRooms.filter(r => !EXCLUDED_IDS.includes(r.id));
-    
+
     // Fallback logic (Requirement 6)
     const list = filtered.length > 0 ? filtered : DEFAULT_ROOMS;
-    
+
     // Return safe row of 3 with stable mapping
     return list.slice(0, 3).map((r, i) => ({
       ...r,
@@ -199,19 +199,18 @@ const Index = () => {
   }, [rooms]);
 
   const hasRoomsData = roomsToDisplay.length > 0;
-  
+
   // Requirement 8: Debug Logging
   console.log("Final rooms selection:", roomsToDisplay);
 
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav 
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out ${
-          isScrolled 
-            ? "translate-y-0 opacity-100 bg-background/95 backdrop-blur-md border-b border-border shadow-sm pointer-events-auto" 
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out ${isScrolled
+            ? "translate-y-0 opacity-100 bg-background/95 backdrop-blur-md border-b border-border shadow-sm pointer-events-auto"
             : "-translate-y-full opacity-0 pointer-events-none"
-        }`}
+          }`}
       >
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -221,9 +220,8 @@ const Index = () => {
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className={`text-sm font-medium transition-colors hover:text-accent ${
-                    activeSection === item.id ? "text-accent" : "text-foreground"
-                  }`}
+                  className={`text-sm font-medium transition-colors hover:text-accent ${activeSection === item.id ? "text-accent" : "text-foreground"
+                    }`}
                 >
                   {item.label}
                 </button>
@@ -232,9 +230,9 @@ const Index = () => {
             <div className="hidden md:block">
               <Button variant="luxury" size="sm" onClick={() => navigate('/booking')}>Book Now</Button>
             </div>
-            
+
             {/* Mobile Toggle Button */}
-            <button 
+            <button
               className="md:hidden text-foreground p-2 -mr-2"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
@@ -246,46 +244,54 @@ const Index = () => {
         {/* Mobile Menu Dropdown */}
         {isMobileMenuOpen && (
           <div className="md:hidden bg-background border-b border-border shadow-lg animate-fade-in">
-             <div className="container mx-auto px-6 py-4 flex flex-col space-y-4">
-               {navItems.map((item) => (
-                 <button
-                   key={item.id}
-                   onClick={() => {
-                     scrollToSection(item.id);
-                     setIsMobileMenuOpen(false);
-                   }}
-                   className={`text-left text-base font-medium transition-colors hover:text-accent ${
-                     activeSection === item.id ? "text-accent" : "text-foreground"
-                   }`}
-                 >
-                   {item.label}
-                 </button>
-               ))}
-               <Button variant="luxury" className="w-full mt-2" onClick={() => navigate('/booking')}>Book Now</Button>
-             </div>
+            <div className="container mx-auto px-6 py-4 flex flex-col space-y-4">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    scrollToSection(item.id);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`text-left text-base font-medium transition-colors hover:text-accent ${activeSection === item.id ? "text-accent" : "text-foreground"
+                    }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+              <Button variant="luxury" className="w-full mt-2" onClick={() => navigate('/booking')}>Book Now</Button>
+            </div>
           </div>
         )}
       </nav>
 
       {/* Hero Section */}
       <section id="home" className="relative h-screen flex items-center justify-center overflow-hidden">
-        <motion.div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${heroImage})`, y: parallaxY }}
+        <motion.div
+          className="absolute inset-0"
+          style={{ y: parallaxY }}
           initial={{ scale: 1.1 }}
           animate={{ scale: 1 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
-        />
+        >
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+            src={heroVideo}
+          />
+        </motion.div>
         <div className="absolute inset-0 bg-gradient-hero" />
-        
-        <motion.div 
+
+        <motion.div
           initial="hidden"
           animate="show"
           variants={staggerContainer}
           className="relative z-10 text-center text-white px-6 max-w-4xl mx-auto"
         >
           <motion.h1 variants={fadeUpItem} className="text-5xl md:text-7xl font-bold mb-6">
-            Experience 
+            Experience
             <span className="block bg-gradient-gold bg-clip-text text-transparent">
               Luxury Redefined
             </span>
@@ -306,7 +312,7 @@ const Index = () => {
 
       {/* Rooms & Suites */}
       <section id="rooms" className="py-20 px-6">
-        <motion.div 
+        <motion.div
           className="container mx-auto max-w-6xl"
           initial="hidden"
           whileInView="show"
@@ -327,13 +333,13 @@ const Index = () => {
               const available = Math.max(0, totalRoomsCount - bookedRoomsCount);
               const isSoldOut = available === 0;
               const imageUrl = getRoomImage(room.id, index);
-              
+
               return (
                 <div key={room.id || `room-${index}`} className="flex flex-col rounded-xl overflow-hidden shadow-luxury bg-white border border-border h-full transition-transform hover:-translate-y-1">
                   {/* Image Block */}
                   <div className="relative h-64 w-full bg-muted flex-shrink-0">
-                    <img 
-                      src={imageUrl} 
+                    <img
+                      src={imageUrl}
                       alt={room.name || "Hotel Room"}
                       className="absolute inset-0 w-full h-full object-cover block"
                       onError={(e) => { (e.target as HTMLImageElement).src = suiteImage; }}
@@ -361,7 +367,7 @@ const Index = () => {
                         </span>
                       )}
                     </div>
-                    
+
                     <ul className="space-y-3 mb-8">
                       {(Array.isArray(room.amenities) ? room.amenities : ["WiFi", "TV", "AC"]).slice(0, 4).map((feature: string, idx: number) => (
                         <li key={idx} className="flex items-center text-muted-foreground">
@@ -374,10 +380,10 @@ const Index = () => {
                         <span className="text-sm">Up to {room.maxGuests || 2} Guests</span>
                       </li>
                     </ul>
-                    
-                    <Button 
-                      variant={isSoldOut ? "outline" : "luxury"} 
-                      className="w-full mt-auto font-bold" 
+
+                    <Button
+                      variant={isSoldOut ? "outline" : "luxury"}
+                      className="w-full mt-auto font-bold"
                       onClick={() => navigate('/booking')}
                       disabled={isSoldOut}
                     >
@@ -388,12 +394,12 @@ const Index = () => {
               );
             })}
           </div>
-          
+
           {!isLoadingRooms && roomsToDisplay.length > 0 && (
             <motion.div variants={fadeUpItem} className="mt-12 text-center">
-               <Button variant="luxury" size="lg" onClick={() => navigate('/booking')}>
-                 View All Room Types
-               </Button>
+              <Button variant="luxury" size="lg" onClick={() => navigate('/booking')}>
+                View All Room Types
+              </Button>
             </motion.div>
           )}
         </motion.div>
@@ -401,7 +407,7 @@ const Index = () => {
 
       {/* Amenities */}
       <section id="amenities" className="py-20 px-6 bg-muted/30">
-        <motion.div 
+        <motion.div
           className="container mx-auto max-w-6xl"
           initial="hidden"
           whileInView="show"
@@ -423,8 +429,8 @@ const Index = () => {
                 { icon: Wifi, title: "High-Speed WiFi", desc: "Complimentary internet throughout the property", link: null },
                 { icon: Car, title: "Valet Parking", desc: "Secure parking with professional valet service", link: "/valet-parking" }
               ].map((amenity, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className={`flex items-start space-x-4 ${amenity.link ? 'cursor-pointer hover:bg-muted/50 p-4 rounded-lg transition-colors' : 'p-4'}`}
                   onClick={() => amenity.link && navigate(amenity.link)}
                 >
@@ -442,8 +448,8 @@ const Index = () => {
               ))}
             </motion.div>
             <motion.div variants={fadeScaleItem} className="overflow-hidden rounded-lg shadow-luxury">
-              <motion.img 
-                src={spaImage} 
+              <motion.img
+                src={spaImage}
                 alt="Spa Amenities"
                 className="w-full h-96 object-cover"
                 initial={{ scale: 1.1 }}
@@ -458,7 +464,7 @@ const Index = () => {
 
       {/* Dining */}
       <section id="dining" className="py-20 px-6">
-        <motion.div 
+        <motion.div
           className="container mx-auto max-w-6xl"
           initial="hidden"
           whileInView="show"
@@ -476,54 +482,54 @@ const Index = () => {
             <motion.div variants={fadeScaleItem} className="flex flex-col h-full">
               <Card className="overflow-hidden shadow-luxury h-full flex flex-col">
                 <div className="relative h-64 overflow-hidden">
-                  <motion.img 
-                    src={diningImage} 
+                  <motion.img
+                    src={diningImage}
                     alt="Fine Dining Restaurant"
                     className="w-full h-full object-cover"
                     whileHover={{ scale: 1.05 }}
                     transition={{ duration: 0.5 }}
                   />
-              </div>
-              <CardContent className="p-6 flex flex-col flex-grow">
-                <div className="flex items-center mb-3">
-                  <ChefHat className="h-5 w-5 text-accent mr-2" />
-                  <h3 className="text-2xl font-bold">Le Jardin</h3>
                 </div>
-                <p className="text-muted-foreground mb-4">
-                  Award-winning fine dining with innovative cuisine and impeccable service
-                </p>
-                <div className="flex justify-between items-center mt-auto">
-                  <span className="text-sm text-muted-foreground">Open: 6 PM - 11 PM</span>
-                  <Button variant="luxury" size="sm">Reserve Table</Button>
-                </div>
-              </CardContent>
+                <CardContent className="p-6 flex flex-col flex-grow">
+                  <div className="flex items-center mb-3">
+                    <ChefHat className="h-5 w-5 text-accent mr-2" />
+                    <h3 className="text-2xl font-bold">Le Jardin</h3>
+                  </div>
+                  <p className="text-muted-foreground mb-4">
+                    Award-winning fine dining with innovative cuisine and impeccable service
+                  </p>
+                  <div className="flex justify-between items-center mt-auto">
+                    <span className="text-sm text-muted-foreground">Open: 6 PM - 11 PM</span>
+                    <Button variant="luxury" size="sm">Reserve Table</Button>
+                  </div>
+                </CardContent>
               </Card>
             </motion.div>
 
             <motion.div variants={fadeScaleItem} className="flex flex-col h-full">
               <Card className="overflow-hidden shadow-luxury h-full flex flex-col">
                 <div className="relative h-64 overflow-hidden">
-                  <motion.img 
-                    src={loungeImage} 
+                  <motion.img
+                    src={loungeImage}
                     alt="Café & Lounge"
                     className="w-full h-full object-cover"
                     whileHover={{ scale: 1.05 }}
                     transition={{ duration: 0.5 }}
                   />
-              </div>
-              <CardContent className="p-6 flex flex-col flex-grow">
-                <div className="flex items-center mb-3">
-                  <Coffee className="h-5 w-5 text-accent mr-2" />
-                  <h3 className="text-2xl font-bold">Sky Lounge</h3>
                 </div>
-                <p className="text-muted-foreground mb-4">
-                  Casual dining with panoramic city views and artisan coffee
-                </p>
-                <div className="flex justify-between items-center mt-auto pt-4">
-                  <span className="text-sm text-muted-foreground">Open: 7 AM - 10 PM</span>
-                  <Button variant="elegant" size="sm">View Menu</Button>
-                </div>
-              </CardContent>
+                <CardContent className="p-6 flex flex-col flex-grow">
+                  <div className="flex items-center mb-3">
+                    <Coffee className="h-5 w-5 text-accent mr-2" />
+                    <h3 className="text-2xl font-bold">Sky Lounge</h3>
+                  </div>
+                  <p className="text-muted-foreground mb-4">
+                    Casual dining with panoramic city views and artisan coffee
+                  </p>
+                  <div className="flex justify-between items-center mt-auto pt-4">
+                    <span className="text-sm text-muted-foreground">Open: 7 AM - 10 PM</span>
+                    <Button variant="elegant" size="sm">View Menu</Button>
+                  </div>
+                </CardContent>
               </Card>
             </motion.div>
           </div>
@@ -532,7 +538,7 @@ const Index = () => {
 
       {/* Meetings & Events */}
       <section id="events" className="py-20 px-6 bg-muted/30">
-        <motion.div 
+        <motion.div
           className="container mx-auto max-w-6xl"
           initial="hidden"
           whileInView="show"
@@ -570,30 +576,30 @@ const Index = () => {
               <motion.div variants={fadeScaleItem} key={index}>
                 <Card className="overflow-hidden h-full shadow-luxury hover:shadow-hover transition-all duration-300">
                   <div className="relative h-48 overflow-hidden group">
-                    <motion.img 
-                      src={venue.image} 
+                    <motion.img
+                      src={venue.image}
                       alt={venue.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                </div>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-xl font-bold">{venue.title}</h3>
-                    <div className="flex items-center text-accent">
-                      <Users className="h-4 w-4 mr-1" />
-                      <span className="text-sm">{venue.capacity}</span>
-                    </div>
                   </div>
-                  <ul className="space-y-1 mb-6 text-sm text-muted-foreground">
-                    {venue.features.map((feature, idx) => (
-                      <li key={idx}>• {feature}</li>
-                    ))}
-                  </ul>
-                  <Button variant="elegant" className="w-full">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Check Availability
-                  </Button>
-                </CardContent>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-xl font-bold">{venue.title}</h3>
+                      <div className="flex items-center text-accent">
+                        <Users className="h-4 w-4 mr-1" />
+                        <span className="text-sm">{venue.capacity}</span>
+                      </div>
+                    </div>
+                    <ul className="space-y-1 mb-6 text-sm text-muted-foreground">
+                      {venue.features.map((feature, idx) => (
+                        <li key={idx}>• {feature}</li>
+                      ))}
+                    </ul>
+                    <Button variant="elegant" className="w-full">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Check Availability
+                    </Button>
+                  </CardContent>
                 </Card>
               </motion.div>
             ))}
@@ -603,7 +609,7 @@ const Index = () => {
 
       {/* Contact */}
       <section id="contact" className="py-20 px-6">
-        <motion.div 
+        <motion.div
           className="container mx-auto max-w-6xl"
           initial="hidden"
           whileInView="show"
@@ -707,7 +713,7 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-4">Management</h4>
               <div className="space-y-2 text-primary-foreground/80">
-                 <p className="text-sm">Secure Portal Access Required</p>
+                <p className="text-sm">Secure Portal Access Required</p>
               </div>
             </div>
           </div>
@@ -719,8 +725,8 @@ const Index = () => {
 
       {/* Floating AI Concierge Button */}
       <div className="fixed bottom-6 right-6 z-50">
-        <Button 
-          variant="luxury" 
+        <Button
+          variant="luxury"
           size="lg"
           className="rounded-full shadow-elegant hover:shadow-glow transition-all duration-300 hover:scale-105 flex items-center gap-2 px-6 py-3"
           onClick={() => setShowSupport(true)}

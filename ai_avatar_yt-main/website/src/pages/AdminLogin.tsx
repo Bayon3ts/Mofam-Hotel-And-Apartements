@@ -47,9 +47,9 @@ const AdminLogin = () => {
       </div>
 
       <div className="w-full max-w-md relative z-10">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate("/")} 
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/")}
           className="mb-8 hover:bg-transparent hover:text-accent transition-colors flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -74,10 +74,10 @@ const AdminLogin = () => {
                 </Label>
                 <div className="relative group">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors" />
-                  <Input 
+                  <Input
                     id="email"
-                    type="email" 
-                    placeholder="admin@mofamhotel.com" 
+                    type="email"
+                    placeholder="admin@mofamhotel.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -94,10 +94,10 @@ const AdminLogin = () => {
                 </div>
                 <div className="relative group">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors" />
-                  <Input 
+                  <Input
                     id="password"
-                    type="password" 
-                    placeholder="••••••••" 
+                    type="password"
+                    placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -115,9 +115,9 @@ const AdminLogin = () => {
                 </div>
               )}
 
-              <Button 
-                type="submit" 
-                variant="luxury" 
+              <Button
+                type="submit"
+                variant="luxury"
                 className="w-full h-14 font-black text-lg shadow-xl shadow-accent/20"
                 disabled={isLoading}
               >
@@ -133,7 +133,7 @@ const AdminLogin = () => {
             </form>
           </CardContent>
         </Card>
-        
+
         <p className="text-center mt-8 text-xs text-muted-foreground font-medium uppercase tracking-[0.2em] opacity-50">
           Mofam Hotel & Apartements · Property Management
         </p>

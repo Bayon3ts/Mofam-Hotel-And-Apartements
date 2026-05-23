@@ -37,6 +37,12 @@ interface BookingState {
   totalGuests: number;
   selectedRoom: RoomData;
   totalPrice: number;
+  customer: {
+    fullName: string;
+    email: string;
+    phone: string;
+  };
+  bookingId: string;
 }
 
 const fmt = (n: number) => `₦${n.toLocaleString("en-NG")}`;
@@ -88,6 +94,8 @@ const BookingConfirmation = () => {
     totalGuests,
     selectedRoom,
     totalPrice,
+    customer,
+    bookingId
   } = state;
 
   const checkInDate = new Date(checkIn);
@@ -128,8 +136,15 @@ const BookingConfirmation = () => {
               </div>
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold mb-2">Booking Confirmed!</h1>
+            <div className="flex flex-col items-center gap-2 mb-6">
+              <p className="text-xs font-black uppercase tracking-[0.3em] text-accent opacity-70">Reservation Reference</p>
+              <code className="px-4 py-2 bg-accent/5 border border-accent/20 rounded-lg text-lg font-mono font-bold tracking-wider">
+                {bookingId.slice(0, 8).toUpperCase()}
+              </code>
+            </div>
             <p className="text-muted-foreground text-lg max-w-lg mx-auto">
-              Thank you for choosing Mofam Hotel And Apartements. Your reservation has been successfully processed.
+              Thank you for choosing Mofam Hotel And Apartements, <span className="text-foreground font-bold">{customer.fullName}</span>.
+              Your reservation has been successfully processed and a confirmation email has been sent to <span className="text-foreground font-bold">{customer.email}</span>.
             </p>
           </div>
 
@@ -205,6 +220,38 @@ const BookingConfirmation = () => {
                     <div className="text-right shrink-0">
                       <p className="text-2xl font-black text-accent">{fmt(selectedRoom.price)}</p>
                       <p className="text-xs text-muted-foreground">per night</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Customer Contact Details */}
+              <Card className="shadow-elegant">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Mail className="h-5 w-5 text-accent" />
+                    Reservation Holder
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid sm:grid-cols-2 gap-6">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Full Name</p>
+                      <p className="font-bold">{customer.fullName}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Contact Status</p>
+                      <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm">
+                        <CheckCircle className="h-4 w-4" /> Verified
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email Address</p>
+                      <p className="font-medium text-sm">{customer.email}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Phone Number</p>
+                      <p className="font-medium text-sm">{customer.phone}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -293,7 +340,7 @@ const BookingConfirmation = () => {
                     <div className="text-right">
                       <p className="text-3xl font-black text-accent">{fmt(totalPrice)}</p>
                       <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">
-                        Paid via online reservation
+                        Guaranteed reservation
                       </p>
                     </div>
                   </div>

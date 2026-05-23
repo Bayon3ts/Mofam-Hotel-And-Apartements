@@ -42,12 +42,12 @@
     --gradient-hero: linear-gradient(135deg, hsl(220 35% 15% / 0.8), hsl(220 35% 25% / 0.6));
     --gradient-gold: linear-gradient(135deg, hsl(45 90% 60%), hsl(45 85% 75%));
     --gradient-card: linear-gradient(135deg, hsl(0 0% 100%), hsl(220 15% 98%));
-    
+
     /* Elegant shadows */
     --shadow-luxury: 0 20px 50px -10px hsl(220 35% 15% / 0.15);
     --shadow-card: 0 4px 20px -2px hsl(220 35% 15% / 0.08);
     --shadow-hover: 0 8px 30px -5px hsl(220 35% 15% / 0.2);
-    
+
     /* Smooth transitions */
     --transition-luxury: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

@@ -20,6 +20,11 @@ import {
   Lock,
   LogOut,
   Loader2,
+  ClipboardList,
+  CalendarCheck,
+  Search as SearchIcon,
+  Mail as MailIcon,
+  Phone as PhoneIcon,
 } from "lucide-react";
 import {
   getRooms,
@@ -42,6 +47,12 @@ const Admin = () => {
   const [savedId, setSavedId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Tab State
+  const [activeTab, setActiveTab] = useState<"inventory" | "bookings">("inventory");
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [isBookingsLoading, setIsBookingsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch rooms on mount
   const fetchRooms = async (showRefresh = false) => {
@@ -74,8 +85,27 @@ const Admin = () => {
     }
   };
 
+  const fetchBookings = async () => {
+    setIsBookingsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setBookings(data || []);
+    } catch (err) {
+      console.error("[Admin] Fetch bookings error:", err);
+      toast.error("Failed to load bookings");
+    } finally {
+      setIsBookingsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchRooms();
+    fetchBookings();
   }, []);
 
   const handleLogout = async () => {
@@ -258,9 +288,31 @@ const Admin = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 sm:px-6 py-8 max-w-5xl">
-        {/* Page Title */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+      <main className="container mx-auto px-4 sm:px-6 py-8 max-w-6xl">
+        {/* Navigation Tabs */}
+        <div className="flex gap-2 mb-8 bg-muted/30 p-1.5 rounded-2xl border border-border/50 w-fit">
+          <Button 
+            variant={activeTab === "inventory" ? "luxury" : "ghost"} 
+            size="sm" 
+            onClick={() => setActiveTab("inventory")}
+            className="rounded-xl font-bold px-6"
+          >
+            <Hotel className="h-4 w-4 mr-2" /> Inventory
+          </Button>
+          <Button 
+            variant={activeTab === "bookings" ? "luxury" : "ghost"} 
+            size="sm" 
+            onClick={() => setActiveTab("bookings")}
+            className="rounded-xl font-bold px-6"
+          >
+            <ClipboardList className="h-4 w-4 mr-2" /> Bookings
+          </Button>
+        </div>
+
+        {activeTab === "inventory" ? (
+          <>
+            {/* Page Title */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
           <div>
             <div className="flex items-center gap-3 mb-1">
               <h2 className="text-3xl font-extrabold tracking-tight">
@@ -489,7 +541,109 @@ const Admin = () => {
             );
           })}
         </div>
-        
+      </>
+    ) : (
+      <div className="space-y-6">
+        {/* Bookings Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <h2 className="text-3xl font-extrabold tracking-tight">Active Reservations</h2>
+              {isBookingsLoading && <Loader2 className="h-5 w-5 text-accent animate-spin" />}
+            </div>
+            <p className="text-muted-foreground">Monitor and manage guest bookings in real-time.</p>
+          </div>
+          <div className="relative w-full md:w-72">
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Search name or email..." 
+              className="pl-10 h-10 border-border/60"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <Card className="rounded-2xl border-border/60 shadow-elegant overflow-hidden">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead>
+                  <tr className="bg-muted/50 border-b border-border/50">
+                    <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Guest / Contact</th>
+                    <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Stay Details</th>
+                    <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Revenue</th>
+                    <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/40">
+                  {isBookingsLoading ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-20 text-center">
+                        <Loader2 className="h-8 w-8 text-accent animate-spin mx-auto mb-2" />
+                        <p className="font-bold text-muted-foreground text-xs uppercase tracking-widest">Loading bookings...</p>
+                      </td>
+                    </tr>
+                  ) : bookings.filter(b => 
+                      b.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                      b.email?.toLowerCase().includes(searchQuery.toLowerCase())
+                    ).length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-20 text-center">
+                        <p className="text-muted-foreground">No reservations found.</p>
+                      </td>
+                    </tr>
+                  ) : bookings
+                      .filter(b => 
+                        b.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                        b.email?.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+                      .map((booking) => (
+                    <tr key={booking.id} className="hover:bg-accent/[0.01] transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="space-y-1">
+                          <p className="font-black text-foreground">{booking.full_name}</p>
+                          <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                            <span className="flex items-center gap-1"><MailIcon className="h-3 w-3" /> {booking.email}</span>
+                            <span className="flex items-center gap-1"><PhoneIcon className="h-3 w-3" /> {booking.phone}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="space-y-1">
+                          <p className="font-bold text-xs uppercase tracking-wider text-accent leading-none mb-1">{booking.room_type}</p>
+                          <div className="flex items-center gap-2 text-xs font-medium">
+                            <CalendarCheck className="h-3 w-3 opacity-50" />
+                            <span>{format(new Date(booking.check_in), "MMM dd")}</span>
+                            <span className="opacity-30">→</span>
+                            <span>{format(new Date(booking.check_out), "MMM dd")}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="font-black text-foreground">₦{Number(booking.total_price).toLocaleString()}</p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">{booking.guests} Guests</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={cn(
+                          "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
+                          booking.status === "pending" ? "bg-amber-100/50 text-amber-700 border-amber-200" :
+                          booking.status === "confirmed" ? "bg-emerald-100/50 text-emerald-700 border-emerald-200" :
+                          "bg-muted text-muted-foreground"
+                        )}>
+                          {booking.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )}
+
         <div className="mt-12 p-6 bg-accent/5 rounded-2xl border border-accent/10 border-dashed text-center">
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mb-2">Security Notice</p>
             <p className="text-sm text-balance">
