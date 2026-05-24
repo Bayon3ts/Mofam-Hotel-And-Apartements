@@ -93,8 +93,8 @@ const fmt = (n: any) => {
 // 1. FAIL-SAFE FALLBACK DATA (Requirement 6)
 const DEFAULT_ROOMS = [
   { id: "standard", name: "Standard", price: 35000, total_rooms: 15, booked_rooms: 12, amenities: ["WiFi", "TV", "AC"], maxGuests: 2, description: "Comfortable and affordable stay." },
-  { id: "business", name: "Business", price: 250000, total_rooms: 12, booked_rooms: 10, amenities: ["WiFi", "TV", "AC", "Desk"], maxGuests: 2, description: "Ideal for the modern traveler." },
-  { id: "executive", name: "Executive", price: 180000, total_rooms: 10, booked_rooms: 7, amenities: ["WiFi", "TV", "AC", "Coffee", "Parking"], maxGuests: 3, description: "Elevated comfort for business professionals." }
+  { id: "business", name: "Business", price: 45000, total_rooms: 12, booked_rooms: 10, amenities: ["WiFi", "TV", "AC", "Desk"], maxGuests: 2, description: "Ideal for the modern traveler." },
+  { id: "executive", name: "Executive", price: 70000, total_rooms: 10, booked_rooms: 7, amenities: ["WiFi", "TV", "AC", "Coffee", "Parking"], maxGuests: 3, description: "Elevated comfort for business professionals." }
 ];
 
 const EXCLUDED_IDS = ["royal", "executive-suite", "royal-apartment", "diplomatic-apartment", "vvip", "presidential"];
@@ -236,8 +236,8 @@ const Index = () => {
     return list.slice(0, 3).map((r, i) => ({
       ...r,
       id: r.id || `room-fallback-${i}`,
-      name: String(r.id || "").toLowerCase().includes("business") ? "VVIP APT" : String(r.id || "").toLowerCase().includes("executive") ? "Royal APT" : r.name || "Mofam Luxurious Room",
-      price: String(r.id || "").toLowerCase().includes("business") ? 250000 : String(r.id || "").toLowerCase().includes("executive") ? 180000 : r.price || 0,
+      name: String(r.id || "").toLowerCase().includes("business") ? "Business" : String(r.id || "").toLowerCase().includes("executive") ? "Executive" : r.name || "Mofam Luxurious Room",
+      price: String(r.id || "").toLowerCase().includes("business") ? 45000 : String(r.id || "").toLowerCase().includes("executive") ? 70000 : r.price || 0,
       amenities: Array.isArray(r.amenities) ? r.amenities : ["WiFi", "TV", "AC"]
     }));
   }, [rooms]);
