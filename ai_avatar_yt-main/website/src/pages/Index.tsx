@@ -35,10 +35,35 @@ import { cn } from "@/lib/utils";
 // Import images
 import heroVideo from "@/assets/hero-video.mp4";
 import suiteImage from "@/assets/suite-room.jpg";
-import diningImage from "@/assets/dining-restaurant.jpg";
+import diningImage from "../../mofam_roomsPicture/A_photorealistic,_ultra-high_resolution_luxury_202605240116.jpeg";
 import meetingImage from "@/assets/meeting-room.jpg";
-import spaImage from "@/assets/spa-amenities.jpg";
-import loungeImage from "@/assets/lounge-area.jpg";
+import spaImage from "../../mofam_roomsPicture/DSC00314poolside.jpg";
+import loungeImage from "../../mofam_roomsPicture/A_photorealistic,_ultra-high_resolution_luxury_202605240102lo.jpeg";
+import standardRoomImageOne from "../../mofam_roomsPicture/A_photorealistic,_ultra-high_resolution_hotel_202605231130.jpeg";
+import standardRoomImageTwo from "../../mofam_roomsPicture/A_photorealistic,_ultra-high_resolution_hotel_202605231131.jpeg";
+import standardRoomImageThree from "../../mofam_roomsPicture/DSC00552_Standardroom3.jpg";
+import standardRoomImageFour from "../../mofam_roomsPicture/DSC00553_standardroom4.jpg";
+import vvipAptRoomImage from "../../mofam_roomsPicture/DSC00495VVIP1.jpg";
+import royalAptRoomImageOne from "../../mofam_roomsPicture/DSC00391 Royal1.jpg";
+import royalAptRoomImageTwo from "../../mofam_roomsPicture/DSC00393Royal2.jpg";
+import royalAptRoomImageThree from "../../mofam_roomsPicture/DSC00394Royal 3.jpg";
+import royalAptRoomImageFour from "../../mofam_roomsPicture/DSC00397Royal4.jpg";
+
+const STANDARD_ROOM_IMAGES = [
+  standardRoomImageOne,
+  standardRoomImageTwo,
+  standardRoomImageThree,
+  standardRoomImageFour
+];
+const STANDARD_ROOM_SLIDE_DURATION = 4;
+
+const ROYAL_APT_IMAGES = [
+  royalAptRoomImageOne,
+  royalAptRoomImageTwo,
+  royalAptRoomImageThree,
+  royalAptRoomImageFour
+];
+const ROYAL_APT_SLIDE_DURATION = 4;
 
 const staggerContainer: Variants = {
   hidden: { opacity: 0 },
@@ -68,8 +93,8 @@ const fmt = (n: any) => {
 // 1. FAIL-SAFE FALLBACK DATA (Requirement 6)
 const DEFAULT_ROOMS = [
   { id: "standard", name: "Standard", price: 35000, total_rooms: 15, booked_rooms: 12, amenities: ["WiFi", "TV", "AC"], maxGuests: 2, description: "Comfortable and affordable stay." },
-  { id: "business", name: "Business", price: 45000, total_rooms: 12, booked_rooms: 10, amenities: ["WiFi", "TV", "AC", "Desk"], maxGuests: 2, description: "Ideal for the modern traveler." },
-  { id: "executive", name: "Executive", price: 70000, total_rooms: 10, booked_rooms: 7, amenities: ["WiFi", "TV", "AC", "Coffee", "Parking"], maxGuests: 3, description: "Elevated comfort for business professionals." }
+  { id: "business", name: "Business", price: 250000, total_rooms: 12, booked_rooms: 10, amenities: ["WiFi", "TV", "AC", "Desk"], maxGuests: 2, description: "Ideal for the modern traveler." },
+  { id: "executive", name: "Executive", price: 180000, total_rooms: 10, booked_rooms: 7, amenities: ["WiFi", "TV", "AC", "Coffee", "Parking"], maxGuests: 3, description: "Elevated comfort for business professionals." }
 ];
 
 const EXCLUDED_IDS = ["royal", "executive-suite", "royal-apartment", "diplomatic-apartment", "vvip", "presidential"];
@@ -83,6 +108,8 @@ const Index = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [rooms, setRooms] = useState<any[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
+  const [standardRoomSlideIndex, setStandardRoomSlideIndex] = useState(0);
+  const [royalAptSlideIndex, setRoyalAptSlideIndex] = useState(0);
 
   const { scrollY } = useScroll();
   const parallaxY = useTransform(scrollY, [0, 1000], [0, 200]);
@@ -142,11 +169,28 @@ const Index = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const slideTimer = window.setInterval(() => {
+      setStandardRoomSlideIndex((current) => (current + 1) % STANDARD_ROOM_IMAGES.length);
+    }, STANDARD_ROOM_SLIDE_DURATION * 1000);
+
+    return () => window.clearInterval(slideTimer);
+  }, []);
+
+  useEffect(() => {
+    const slideTimer = window.setInterval(() => {
+      setRoyalAptSlideIndex((current) => (current + 1) % ROYAL_APT_IMAGES.length);
+    }, ROYAL_APT_SLIDE_DURATION * 1000);
+
+    return () => window.clearInterval(slideTimer);
+  }, []);
+
   // Helper to get image for room
   const getRoomImage = (id: string | undefined, index: number) => {
     try {
       if (!id) return index % 2 === 0 ? loungeImage : suiteImage;
       const safeId = String(id).toLowerCase();
+      if (safeId.includes("business")) return vvipAptRoomImage;
       if (safeId.includes("suite")) return suiteImage;
       if (safeId.includes("apartment")) return loungeImage;
       if (safeId.includes("royal") || safeId.includes("presidential") || safeId.includes("vvip")) return suiteImage;
@@ -192,8 +236,8 @@ const Index = () => {
     return list.slice(0, 3).map((r, i) => ({
       ...r,
       id: r.id || `room-fallback-${i}`,
-      name: r.name || "Mofam Luxurious Room",
-      price: r.price || 0,
+      name: String(r.id || "").toLowerCase().includes("business") ? "VVIP APT" : String(r.id || "").toLowerCase().includes("executive") ? "Royal APT" : r.name || "Mofam Luxurious Room",
+      price: String(r.id || "").toLowerCase().includes("business") ? 250000 : String(r.id || "").toLowerCase().includes("executive") ? 180000 : r.price || 0,
       amenities: Array.isArray(r.amenities) ? r.amenities : ["WiFi", "TV", "AC"]
     }));
   }, [rooms]);
@@ -333,17 +377,43 @@ const Index = () => {
               const available = Math.max(0, totalRoomsCount - bookedRoomsCount);
               const isSoldOut = available === 0;
               const imageUrl = getRoomImage(room.id, index);
+              const isStandardRoom = `${room.id ?? ""} ${room.name ?? ""}`.toLowerCase().includes("standard");
+              const isRoyalAptRoom = `${room.id ?? ""} ${room.name ?? ""}`.toLowerCase().includes("executive") || `${room.id ?? ""} ${room.name ?? ""}`.toLowerCase().includes("royal apt");
 
               return (
                 <div key={room.id || `room-${index}`} className="flex flex-col rounded-xl overflow-hidden shadow-luxury bg-white border border-border h-full transition-transform hover:-translate-y-1">
                   {/* Image Block */}
                   <div className="relative h-64 w-full bg-muted flex-shrink-0">
-                    <img
-                      src={imageUrl}
-                      alt={room.name || "Hotel Room"}
-                      className="absolute inset-0 w-full h-full object-cover block"
-                      onError={(e) => { (e.target as HTMLImageElement).src = suiteImage; }}
-                    />
+                    {isStandardRoom ? (
+                      <motion.img
+                        key={STANDARD_ROOM_IMAGES[standardRoomSlideIndex]}
+                        src={STANDARD_ROOM_IMAGES[standardRoomSlideIndex]}
+                        alt={room.name || "Hotel Room"}
+                        className="absolute inset-0 w-full h-full object-cover block"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.6, ease: "easeInOut" }}
+                        onError={(e) => { (e.target as HTMLImageElement).src = suiteImage; }}
+                      />
+                    ) : isRoyalAptRoom ? (
+                      <motion.img
+                        key={ROYAL_APT_IMAGES[royalAptSlideIndex]}
+                        src={ROYAL_APT_IMAGES[royalAptSlideIndex]}
+                        alt={room.name || "Hotel Room"}
+                        className="absolute inset-0 w-full h-full object-cover block"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.6, ease: "easeInOut" }}
+                        onError={(e) => { (e.target as HTMLImageElement).src = suiteImage; }}
+                      />
+                    ) : (
+                      <img
+                        src={imageUrl}
+                        alt={room.name || "Hotel Room"}
+                        className="absolute inset-0 w-full h-full object-cover block"
+                        onError={(e) => { (e.target as HTMLImageElement).src = suiteImage; }}
+                      />
+                    )}
                     <div className="absolute top-4 right-4 bg-accent text-primary px-3 py-1 rounded-full text-sm font-bold shadow-lg z-10">
                       {fmt(room.price)}
                       <span className="text-[10px] ml-1 opacity-80">/ night</span>
@@ -493,10 +563,10 @@ const Index = () => {
                 <CardContent className="p-6 flex flex-col flex-grow">
                   <div className="flex items-center mb-3">
                     <ChefHat className="h-5 w-5 text-accent mr-2" />
-                    <h3 className="text-2xl font-bold">Le Jardin</h3>
+                    <h3 className="text-2xl font-bold">Dining</h3>
                   </div>
                   <p className="text-muted-foreground mb-4">
-                    Award-winning fine dining with innovative cuisine and impeccable service
+                    A dining experience crafted for comfort and elegance. Enjoy freshly prepared meals in a beautifully designed space, served by staff who genuinely care. Morning, noon, and night.
                   </p>
                   <div className="flex justify-between items-center mt-auto">
                     <span className="text-sm text-muted-foreground">Open: 6 PM - 11 PM</span>
@@ -520,10 +590,10 @@ const Index = () => {
                 <CardContent className="p-6 flex flex-col flex-grow">
                   <div className="flex items-center mb-3">
                     <Coffee className="h-5 w-5 text-accent mr-2" />
-                    <h3 className="text-2xl font-bold">Sky Lounge</h3>
+                    <h3 className="text-2xl font-bold">The Bar & Lounge</h3>
                   </div>
                   <p className="text-muted-foreground mb-4">
-                    Casual dining with panoramic city views and artisan coffee
+                    A lively bar stocked with premium spirits and fine wines, wrapped in warm ambient lighting and stylish lounge seating. The perfect spot to unwind, celebrate, or simply enjoy a well-deserved drink.
                   </p>
                   <div className="flex justify-between items-center mt-auto pt-4">
                     <span className="text-sm text-muted-foreground">Open: 7 AM - 10 PM</span>
