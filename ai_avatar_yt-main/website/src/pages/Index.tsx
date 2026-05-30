@@ -49,13 +49,7 @@ import royalAptRoomImageTwo from "../../mofam_roomsPicture/DSC00393Royal2.jpg";
 import royalAptRoomImageThree from "../../mofam_roomsPicture/DSC00394Royal 3.jpg";
 import royalAptRoomImageFour from "../../mofam_roomsPicture/DSC00397Royal4.jpg";
 
-const STANDARD_ROOM_IMAGES = [
-  standardRoomImageOne,
-  standardRoomImageTwo,
-  standardRoomImageThree,
-  standardRoomImageFour
-];
-const STANDARD_ROOM_SLIDE_DURATION = 4;
+const STANDARD_ROOM_IMAGE = standardRoomImageOne;
 
 const ROYAL_APT_IMAGES = [
   royalAptRoomImageOne,
@@ -63,7 +57,7 @@ const ROYAL_APT_IMAGES = [
   royalAptRoomImageThree,
   royalAptRoomImageFour
 ];
-const ROYAL_APT_SLIDE_DURATION = 4;
+const EXECUTIVE_ROOM_IMAGE = ROYAL_APT_IMAGES[0];
 
 const staggerContainer: Variants = {
   hidden: { opacity: 0 },
@@ -108,8 +102,6 @@ const Index = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [rooms, setRooms] = useState<any[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
-  const [standardRoomSlideIndex, setStandardRoomSlideIndex] = useState(0);
-  const [royalAptSlideIndex, setRoyalAptSlideIndex] = useState(0);
 
   const { scrollY } = useScroll();
   const parallaxY = useTransform(scrollY, [0, 1000], [0, 200]);
@@ -167,22 +159,6 @@ const Index = () => {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("focus", refreshRooms);
     };
-  }, []);
-
-  useEffect(() => {
-    const slideTimer = window.setInterval(() => {
-      setStandardRoomSlideIndex((current) => (current + 1) % STANDARD_ROOM_IMAGES.length);
-    }, STANDARD_ROOM_SLIDE_DURATION * 1000);
-
-    return () => window.clearInterval(slideTimer);
-  }, []);
-
-  useEffect(() => {
-    const slideTimer = window.setInterval(() => {
-      setRoyalAptSlideIndex((current) => (current + 1) % ROYAL_APT_IMAGES.length);
-    }, ROYAL_APT_SLIDE_DURATION * 1000);
-
-    return () => window.clearInterval(slideTimer);
   }, []);
 
   // Helper to get image for room
@@ -385,25 +361,17 @@ const Index = () => {
                   {/* Image Block */}
                   <div className="relative h-64 w-full bg-muted flex-shrink-0">
                     {isStandardRoom ? (
-                      <motion.img
-                        key={STANDARD_ROOM_IMAGES[standardRoomSlideIndex]}
-                        src={STANDARD_ROOM_IMAGES[standardRoomSlideIndex]}
+                      <img
+                        src={STANDARD_ROOM_IMAGE}
                         alt={room.name || "Hotel Room"}
                         className="absolute inset-0 w-full h-full object-cover block"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.6, ease: "easeInOut" }}
                         onError={(e) => { (e.target as HTMLImageElement).src = suiteImage; }}
                       />
                     ) : isRoyalAptRoom ? (
-                      <motion.img
-                        key={ROYAL_APT_IMAGES[royalAptSlideIndex]}
-                        src={ROYAL_APT_IMAGES[royalAptSlideIndex]}
+                      <img
+                        src={EXECUTIVE_ROOM_IMAGE}
                         alt={room.name || "Hotel Room"}
                         className="absolute inset-0 w-full h-full object-cover block"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.6, ease: "easeInOut" }}
                         onError={(e) => { (e.target as HTMLImageElement).src = suiteImage; }}
                       />
                     ) : (
