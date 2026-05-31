@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -105,6 +105,36 @@ const Index = () => {
 
   const { scrollY } = useScroll();
   const parallaxY = useTransform(scrollY, [0, 1000], [0, 200]);
+
+  // Ref for the luxury divider animation
+  const dividerRef = useRef<HTMLDivElement>(null);
+  const [isDividerVisible, setIsDividerVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsDividerVisible(true);
+          } else {
+            // Optional premium feature requested: remove class on exit so it replays
+            setIsDividerVisible(false);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    if (dividerRef.current) {
+      observer.observe(dividerRef.current);
+    }
+
+    return () => {
+      if (dividerRef.current) {
+        observer.unobserve(dividerRef.current);
+      }
+    };
+  }, []);
 
   const navItems = [
     { id: "home", label: "Home" },
@@ -522,7 +552,7 @@ const Index = () => {
           </motion.div>
 
           {/* Room Cards Grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "28px", minHeight: "500px", paddingLeft: "40px", paddingRight: "40px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "28px", paddingLeft: "40px", paddingRight: "40px" }}>
             {(Array.isArray(roomsToDisplay) && roomsToDisplay.length > 0 ? roomsToDisplay : DEFAULT_ROOMS.slice(0, 3)).map((room, index) => {
               const totalRoomsCount = Number(room.total_rooms || room.totalRooms || 0);
               const bookedRoomsCount = Number(room.booked_rooms || room.bookedRooms || 0);
@@ -756,97 +786,238 @@ const Index = () => {
             })}
           </div>
 
-          {/* View All button */}
-          {!isLoadingRooms && roomsToDisplay.length > 0 && (
-            <motion.div variants={fadeUpItem} style={{ marginTop: "48px", textAlign: "center" }}>
-              <button
-                onClick={() => navigate('/booking')}
-                style={{
-                  background: "transparent",
-                  border: "1px solid rgba(201,168,76,0.4)",
-                  color: "#C9A84C",
-                  fontWeight: 600,
-                  padding: "14px 40px",
-                  borderRadius: "8px",
-                  letterSpacing: "0.08em",
-                  fontSize: "13px",
-                  fontFamily: "'Inter', sans-serif",
-                  cursor: "pointer",
-                  textTransform: "uppercase",
-                  transition: "border-color 0.3s ease, color 0.3s ease",
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = "#C9A84C";
-                  e.currentTarget.style.color = "#F5F0E8";
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = "rgba(201,168,76,0.4)";
-                  e.currentTarget.style.color = "#C9A84C";
-                }}
-              >
-                View All Room Types
-              </button>
-            </motion.div>
-          )}
+          {/* View All button — always visible */}
+          <motion.div variants={fadeUpItem} style={{ marginTop: "48px", textAlign: "center" }}>
+            <button
+              onClick={() => navigate('/booking')}
+              style={{
+                background: "transparent",
+                border: "1px solid rgba(201,168,76,0.4)",
+                color: "#C9A84C",
+                fontWeight: 600,
+                padding: "14px 40px",
+                borderRadius: "8px",
+                letterSpacing: "0.08em",
+                fontSize: "13px",
+                fontFamily: "'Inter', sans-serif",
+                cursor: "pointer",
+                textTransform: "uppercase",
+                transition: "border-color 0.3s ease, color 0.3s ease",
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = "#C9A84C";
+                e.currentTarget.style.color = "#F5F0E8";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = "rgba(201,168,76,0.4)";
+                e.currentTarget.style.color = "#C9A84C";
+              }}
+            >
+              View All Room Types
+            </button>
+          </motion.div>
         </motion.div>
       </section>
 
-      {/* Amenities */}
-      <section id="amenities" className="py-20 px-6 bg-muted/30">
+      {/* Luxury Section Divider */}
+      <div 
+        ref={dividerRef} 
+        className={`luxury-divider-container ${isDividerVisible ? 'divider-animate' : ''}`} 
+        style={{ background: "#0F0D08", display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", padding: "48px 0" }}
+      >
+        <div className="divider-line-left" style={{ width: "120px", height: "1px", background: "linear-gradient(to right, transparent, rgba(201,168,76,0.6))" }} />
+        <span className="divider-star" style={{ color: "#C9A84C", fontSize: "14px", display: "inline-block" }}>✦</span>
+        <div className="divider-line-right" style={{ width: "120px", height: "1px", background: "linear-gradient(to left, transparent, rgba(201,168,76,0.6))" }} />
+      </div>
+
+      {/* Amenities — Luxury Redesign */}
+      <section
+        id="amenities"
+        style={{ background: "#0F0D08", padding: "48px 5% 80px" }}
+      >
         <motion.div
-          className="container mx-auto max-w-6xl"
+          className="mx-auto"
+          style={{ maxWidth: "1200px" }}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
           variants={staggerContainer}
         >
-          <motion.div variants={fadeUpItem} className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">World-Class Amenities</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          {/* Section Header */}
+          <motion.div variants={fadeUpItem} style={{ textAlign: "center", marginBottom: "64px" }}>
+            {/* Eyebrow */}
+            <p style={{
+              color: "#C9A84C",
+              fontSize: "11px",
+              letterSpacing: "0.25em",
+              textTransform: "uppercase",
+              fontFamily: "'Inter', sans-serif",
+              marginBottom: "12px",
+              fontWeight: 400
+            }}>
+              Facilities &amp; Services
+            </p>
+
+            {/* 32px gold rule between eyebrow and heading */}
+            <div style={{ width: "32px", height: "1px", background: "#C9A84C", margin: "0 auto 12px" }} />
+
+            {/* Main heading */}
+            <h2 style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "clamp(36px, 5vw, 60px)",
+              color: "#F5F0E8",
+              fontWeight: 600,
+              lineHeight: 1.1,
+              margin: 0
+            }}>
+              World-Class Amenities
+            </h2>
+
+            {/* Gold decorative rule */}
+            <div style={{ width: "60px", height: "1px", background: "#C9A84C", margin: "12px auto 0" }} />
+
+            {/* Subheading */}
+            <p style={{
+              color: "rgba(245,240,232,0.55)",
+              fontSize: "15px",
+              fontFamily: "'Inter', sans-serif",
+              marginTop: "16px",
+              lineHeight: 1.6
+            }}>
               Indulge in our premium facilities designed for your comfort and convenience
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <motion.div variants={fadeUpItem} className="space-y-8">
+          {/* Two-column layout */}
+          <div className="amenities-two-col">
+
+            {/* LEFT — Amenity list */}
+            <motion.div variants={fadeUpItem}>
               {[
                 { icon: Waves, title: "Spa & Wellness", desc: "Rejuvenate in our award-winning spa with premium treatments", link: "/spa-wellness" },
                 { icon: Dumbbell, title: "Fitness Center", desc: "State-of-the-art equipment available 24/7", link: "/fitness-center" },
-                { icon: Wifi, title: "High-Speed WiFi", desc: "Complimentary internet throughout the property", link: null },
-                { icon: Car, title: "Valet Parking", desc: "Secure parking with professional valet service", link: "/valet-parking" }
-              ].map((amenity, index) => (
+                { icon: Wifi, title: "High-Speed WiFi", desc: "Complimentary internet throughout the property", link: "/wifi-connectivity" },
+              ].map((amenity, index, arr) => (
                 <div
                   key={index}
-                  className={`flex items-start space-x-4 ${amenity.link ? 'cursor-pointer hover:bg-muted/50 p-4 rounded-lg transition-colors' : 'p-4'}`}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "20px",
+                    padding: "24px 0",
+                    borderBottom: index < arr.length - 1 ? "1px solid rgba(201,168,76,0.1)" : "none",
+                    cursor: amenity.link ? "pointer" : "default",
+                  }}
                   onClick={() => amenity.link && navigate(amenity.link)}
                 >
-                  <div className="flex-shrink-0 w-12 h-12 bg-gradient-gold rounded-lg flex items-center justify-center">
-                    <amenity.icon className="h-6 w-6 text-primary" />
+                  {/* Circle icon container */}
+                  <div style={{
+                    flexShrink: 0,
+                    width: "48px",
+                    height: "48px",
+                    borderRadius: "50%",
+                    border: "1px solid rgba(201,168,76,0.4)",
+                    background: "rgba(201,168,76,0.08)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}>
+                    <amenity.icon style={{ width: "20px", height: "20px", color: "#C9A84C", strokeWidth: 1.5 }} />
                   </div>
+
+                  {/* Text content */}
                   <div>
-                    <h3 className="text-xl font-semibold mb-2">{amenity.title}</h3>
-                    <p className="text-muted-foreground">{amenity.desc}</p>
+                    <h3 style={{
+                      fontFamily: "'Cormorant Garamond', serif",
+                      fontSize: "22px",
+                      color: "#F5F0E8",
+                      fontWeight: 500,
+                      margin: "0 0 6px 0",
+                      lineHeight: 1.2
+                    }}>
+                      {amenity.title}
+                    </h3>
+                    <p style={{
+                      color: "rgba(245,240,232,0.55)",
+                      fontSize: "14px",
+                      fontFamily: "'Inter', sans-serif",
+                      lineHeight: 1.6,
+                      margin: "0 0 8px 0"
+                    }}>
+                      {amenity.desc}
+                    </p>
                     {amenity.link && (
-                      <p className="text-sm text-primary mt-2 hover:underline">Learn more →</p>
+                      <a
+                        href={amenity.link}
+                        onClick={e => e.preventDefault()}
+                        style={{
+                          color: "#C9A84C",
+                          fontSize: "12px",
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                          fontFamily: "'Inter', sans-serif",
+                          textDecoration: "none",
+                          fontWeight: 500,
+                          transition: "text-decoration 0.2s ease",
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
+                        onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
+                      >
+                        Learn more →
+                      </a>
                     )}
                   </div>
                 </div>
               ))}
             </motion.div>
-            <motion.div variants={fadeScaleItem} className="overflow-hidden rounded-lg shadow-luxury">
-              <motion.img
-                src={spaImage}
-                alt="Spa Amenities"
-                className="w-full h-96 object-cover"
-                initial={{ scale: 1.1 }}
-                whileInView={{ scale: 1 }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
-                viewport={{ once: true }}
-              />
+
+            {/* RIGHT — Image */}
+            <motion.div
+              variants={fadeScaleItem}
+              style={{ display: "flex", flexDirection: "column" }}
+            >
+              <div style={{
+                borderRadius: "12px",
+                overflow: "hidden",
+                border: "1px solid rgba(201,168,76,0.2)",
+                position: "relative",
+              }}>
+                <motion.img
+                  src={spaImage}
+                  alt="Mofam Hotel Exterior & Pool"
+                  style={{ width: "100%", height: "480px", objectFit: "cover", display: "block" }}
+                  initial={{ scale: 1.06 }}
+                  whileInView={{ scale: 1 }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  viewport={{ once: true }}
+                />
+                {/* Gradient overlay */}
+                <div style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "linear-gradient(to top, rgba(15,13,8,0.5) 0%, transparent 40%)",
+                  pointerEvents: "none"
+                }} />
+              </div>
+
+              {/* Caption */}
+              <p style={{
+                color: "rgba(201,168,76,0.6)",
+                fontSize: "11px",
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                fontFamily: "'Inter', sans-serif",
+                textAlign: "center",
+                marginTop: "12px",
+              }}>
+                Mofam Hotel Exterior &amp; Pool
+              </p>
             </motion.div>
+
           </div>
         </motion.div>
       </section>
+
 
       {/* Dining */}
       <section id="dining" className="py-20 px-6">

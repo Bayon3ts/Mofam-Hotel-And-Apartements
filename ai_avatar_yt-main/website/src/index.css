@@ -269,3 +269,83 @@
 .rooms-luxury-card:hover {
   border-color: rgba(201, 168, 76, 0.60) !important;
 }
+
+/* ─── Amenities — Responsive Two-Column Grid ────────────────────────────── */
+.amenities-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+
+@media (max-width: 767px) {
+  .amenities-two-col {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .amenities-two-col img {
+    height: 280px !important;
+  }
+}
+
+/* ─── Luxury Section Divider Animation ──────────────────────────────────── */
+.luxury-divider-container .divider-line-left,
+.luxury-divider-container .divider-line-right,
+.luxury-divider-container .divider-star {
+  opacity: 0; /* Hidden initially */
+}
+
+/* When the animate class is applied */
+.luxury-divider-container.divider-animate .divider-line-left {
+  animation: lineDrawLeft 0.6s ease-out forwards;
+  transform-origin: right;
+}
+
+.luxury-divider-container.divider-animate .divider-line-right {
+  animation: lineDrawRight 0.6s ease-out forwards;
+  transform-origin: left;
+}
+
+.luxury-divider-container.divider-animate .divider-star {
+  animation: diamondReveal 0.4s ease-out 0.5s forwards;
+}
+
+@keyframes lineDrawLeft {
+  0% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  1% {
+    opacity: 1; /* Instantly visible to draw */
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes lineDrawRight {
+  0% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  1% {
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes diamondReveal {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
