@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import {
   CheckCircle,
   MapPin,
@@ -13,10 +10,10 @@ import {
   Calendar,
   CreditCard,
   Home,
-  Star,
+  Check,
+  Users,
 } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface RoomData {
@@ -47,330 +44,351 @@ interface BookingState {
 
 const fmt = (n: number) => `₦${n.toLocaleString("en-NG")}`;
 
+// ─── Luxury Card ─────────────────────────────────────────────────────────────
+const LuxuryCard = ({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) => (
+  <div style={{
+    background: "rgba(255,255,255,0.03)",
+    border: "1px solid rgba(201,168,76,0.2)",
+    borderRadius: "12px",
+    padding: "28px 32px",
+    ...style
+  }}>
+    {children}
+  </div>
+);
+
+// ─── Card Icon ───────────────────────────────────────────────────────────────
+const CardIcon = ({ icon }: { icon: React.ReactNode }) => (
+  <div style={{
+    width: "40px", height: "40px", borderRadius: "50%",
+    border: "1px solid rgba(201,168,76,0.4)", background: "rgba(201,168,76,0.08)",
+    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+  }}>
+    {icon}
+  </div>
+);
+
+// ─── Card Heading ─────────────────────────────────────────────────────────────
+const CardHeading = ({ icon, title }: { icon: React.ReactNode; title: string }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "24px" }}>
+    <CardIcon icon={icon} />
+    <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", color: "#F5F0E8", fontWeight: 600, margin: 0 }}>
+      {title}
+    </h2>
+  </div>
+);
+
+// ─── Field Label + Value ──────────────────────────────────────────────────────
+const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
+  <div>
+    <p style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "6px", margin: "0 0 6px 0" }}>
+      {label}
+    </p>
+    <p style={{ color: "#F5F0E8", fontSize: "16px", fontWeight: 500, margin: 0 }}>{value}</p>
+  </div>
+);
+
+// ─── Divider ─────────────────────────────────────────────────────────────────
+const GoldDivider = () => (
+  <div style={{ borderTop: "1px solid rgba(201,168,76,0.1)", margin: "20px 0" }} />
+);
+
 // ─── Component ───────────────────────────────────────────────────────────────
 const BookingConfirmation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isVisible, setIsVisible] = useState(false);
+  const [iconVisible, setIconVisible] = useState(false);
 
   const state = location.state as BookingState | null;
 
   useEffect(() => {
-    setIsVisible(true);
+    // Trigger icon scale animation after mount
+    const t = setTimeout(() => setIconVisible(true), 60);
     if (!state) {
-      const timer = setTimeout(() => navigate("/booking"), 3000);
-      return () => clearTimeout(timer);
+      const redirect = setTimeout(() => navigate("/booking"), 3000);
+      return () => { clearTimeout(t); clearTimeout(redirect); };
     }
+    return () => clearTimeout(t);
   }, [state, navigate]);
 
   // ── Fallback screen ──────────────────────────────────────────────────────
   if (!state) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4 px-4">
-          <div className="flex justify-center mb-4">
-            <Calendar className="h-16 w-16 text-muted-foreground opacity-40" />
-          </div>
-          <h2 className="text-2xl font-bold">No booking data found</h2>
-          <p className="text-muted-foreground max-w-sm mx-auto">
+      <div style={{ minHeight: "100vh", background: "#0F0D08", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center", padding: "0 24px" }}>
+          <Calendar style={{ width: "56px", height: "56px", color: "#C9A84C", opacity: 0.4, margin: "0 auto 20px" }} />
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "28px", color: "#F5F0E8", marginBottom: "12px" }}>
+            No booking data found
+          </h2>
+          <p style={{ color: "rgba(245,240,232,0.55)", fontSize: "14px", maxWidth: "340px", margin: "0 auto 24px" }}>
             It looks like you navigated here directly. Redirecting you back to the booking page…
           </p>
-          <Button variant="luxury" onClick={() => navigate("/booking")}>
+          <button
+            onClick={() => navigate("/booking")}
+            style={{ background: "#C9A84C", color: "#0F0D08", fontWeight: 700, padding: "14px 40px", borderRadius: "8px", border: "none", cursor: "pointer", letterSpacing: "0.06em" }}
+          >
             Go to Booking
-          </Button>
+          </button>
         </div>
       </div>
     );
   }
 
   // ── Destructure state ────────────────────────────────────────────────────
-  const {
-    checkIn,
-    checkOut,
-    nights,
-    numRooms,
-    adults,
-    children,
-    totalGuests,
-    selectedRoom,
-    totalPrice,
-    customer,
-    bookingId
-  } = state;
+  const { checkIn, checkOut, nights, numRooms, adults, children, totalGuests, selectedRoom, totalPrice, customer, bookingId } = state;
 
   const checkInDate = new Date(checkIn);
   const checkOutDate = new Date(checkOut);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-accent/5">
-      {/* ── HEADER ─────────────────────────────────────────────────────── */}
-      <header className="bg-background/95 backdrop-blur-sm border-b sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Button variant="ghost" onClick={() => navigate("/")} className="flex items-center gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Hotel
-            </Button>
-            <h1 className="text-lg sm:text-2xl font-bold bg-gradient-luxury bg-clip-text text-transparent">
-              Mofam Hotel And Apartements
-            </h1>
-            <div className="w-28 hidden sm:block" />
-          </div>
-        </div>
-      </header>
+    <div style={{ minHeight: "100vh", background: "#0F0D08", fontFamily: "'Inter', sans-serif" }}>
 
-      {/* ── MAIN ───────────────────────────────────────────────────────── */}
-      <main className="container mx-auto px-4 py-8">
-        <div
-          className={cn(
-            "max-w-5xl mx-auto transition-all duration-700",
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-          )}
+      {/* ── BACK LINK ─────────────────────────────────────────────────────── */}
+      <div style={{ padding: "24px 40px" }}>
+        <button
+          onClick={() => navigate("/")}
+          style={{ background: "none", border: "none", color: "#C9A84C", fontSize: "11px", letterSpacing: "0.15em", textTransform: "uppercase", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", transition: "opacity 0.2s", padding: 0 }}
+          onMouseEnter={e => e.currentTarget.style.opacity = "0.7"}
+          onMouseLeave={e => e.currentTarget.style.opacity = "1"}
         >
-          {/* Confirmation header */}
-          <div className="text-center mb-10">
-            <div className="flex justify-center mb-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-green-500/20 rounded-full blur-xl animate-pulse" />
-                <CheckCircle className="relative h-20 w-20 text-green-500" />
-              </div>
+          <ArrowLeft style={{ width: "13px", height: "13px" }} />
+          Back to Hotel
+        </button>
+      </div>
+
+      {/* ── MAIN CONTENT ──────────────────────────────────────────────────── */}
+      <main style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 5% 80px" }}>
+
+        {/* ── HERO CONFIRMATION BLOCK ────────────────────────────────────── */}
+        <div style={{ textAlign: "center", marginBottom: "56px" }}>
+
+          {/* Gold animated checkmark circle */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "28px" }}>
+            <div style={{
+              width: "64px", height: "64px", borderRadius: "50%",
+              border: "2px solid #C9A84C", display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 0 32px rgba(201,168,76,0.2)",
+              transform: iconVisible ? "scale(1)" : "scale(0)",
+              transition: "transform 0.5s ease-out",
+            }}>
+              <Check style={{ width: "28px", height: "28px", color: "#C9A84C" }} />
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2">Booking Confirmed!</h1>
-            <div className="flex flex-col items-center gap-2 mb-6">
-              <p className="text-xs font-black uppercase tracking-[0.3em] text-accent opacity-70">Reservation Reference</p>
-              <code className="px-4 py-2 bg-accent/5 border border-accent/20 rounded-lg text-lg font-mono font-bold tracking-wider">
-                {bookingId.slice(0, 8).toUpperCase()}
-              </code>
-            </div>
-            <p className="text-muted-foreground text-lg max-w-lg mx-auto">
-              Thank you for choosing Mofam Hotel And Apartements, <span className="text-foreground font-bold">{customer.fullName}</span>.
-              Your reservation has been successfully processed and a confirmation email has been sent to <span className="text-foreground font-bold">{customer.email}</span>.
-            </p>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-[1fr_340px] items-start">
-            {/* ── LEFT COLUMN ──────────────────────────────────────────── */}
-            <div className="space-y-6">
-              {/* Dates & Stay Summary */}
-              <Card className="shadow-elegant">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Calendar className="h-5 w-5 text-accent" />
-                    Your Stay
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                        Check-In
-                      </p>
-                      <p className="text-xl font-bold">{format(checkInDate, "EEE, MMM dd")}</p>
-                      <p className="text-sm text-muted-foreground">{format(checkInDate, "yyyy")}</p>
-                      <p className="text-xs text-muted-foreground mt-1">From 3:00 PM</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                        Check-Out
-                      </p>
-                      <p className="text-xl font-bold">{format(checkOutDate, "EEE, MMM dd")}</p>
-                      <p className="text-sm text-muted-foreground">{format(checkOutDate, "yyyy")}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Until 11:00 AM</p>
-                    </div>
+          {/* Heading */}
+          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(36px, 5vw, 60px)", color: "#F5F0E8", fontWeight: 600, margin: "0 0 20px 0" }}>
+            Booking Confirmed!
+          </h1>
+
+          {/* Reference code */}
+          <p style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.25em", textTransform: "uppercase", margin: "0 0 12px 0" }}>
+            Reservation Reference
+          </p>
+          <div style={{ display: "inline-block", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.4)", borderRadius: "8px", padding: "12px 32px", color: "#C9A84C", fontSize: "20px", fontFamily: "monospace", letterSpacing: "0.15em", marginBottom: "24px" }}>
+            {bookingId.slice(0, 8).toUpperCase()}
+          </div>
+
+          {/* Confirmation message */}
+          <p style={{ color: "rgba(245,240,232,0.65)", fontSize: "15px", lineHeight: 1.8, maxWidth: "560px", margin: "0 auto" }}>
+            Thank you for choosing Mofam Hotel &amp; Apartments,{" "}
+            <span style={{ color: "#F5F0E8", fontWeight: 600 }}>{customer.fullName}</span>.
+            Your reservation has been successfully processed and a confirmation email has been sent to{" "}
+            <span style={{ color: "#F5F0E8", fontWeight: 600 }}>{customer.email}</span>.
+          </p>
+        </div>
+
+        {/* ── CONTENT GRID ──────────────────────────────────────────────── */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "32px", alignItems: "start" }} className="confirmation-grid">
+
+          {/* ── LEFT COLUMN ───────────────────────────────────────────────── */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+
+            {/* Your Stay */}
+            <LuxuryCard>
+              <CardHeading icon={<Calendar style={{ width: "18px", height: "18px", color: "#C9A84C" }} />} title="Your Stay" />
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "20px" }}>
+                <div>
+                  <Field label="Check-In" value={format(checkInDate, "EEE, MMM dd yyyy")} />
+                  <p style={{ color: "rgba(245,240,232,0.4)", fontSize: "12px", marginTop: "4px" }}>From 3:00 PM</p>
+                </div>
+                <div>
+                  <Field label="Check-Out" value={format(checkOutDate, "EEE, MMM dd yyyy")} />
+                  <p style={{ color: "rgba(245,240,232,0.4)", fontSize: "12px", marginTop: "4px" }}>By 11:00 AM</p>
+                </div>
+              </div>
+
+              <GoldDivider />
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
+                {[
+                  { label: "Nights", value: nights },
+                  { label: "Rooms", value: numRooms },
+                  { label: "Adults", value: adults },
+                  { label: "Children", value: children },
+                ].map(({ label, value }) => (
+                  <div key={label} style={{ textAlign: "center", padding: "14px 8px", background: "rgba(201,168,76,0.05)", border: "1px solid rgba(201,168,76,0.12)", borderRadius: "8px" }}>
+                    <p style={{ color: "#C9A84C", fontSize: "9px", letterSpacing: "0.2em", textTransform: "uppercase", margin: "0 0 6px 0" }}>{label}</p>
+                    <p style={{ color: "#F5F0E8", fontSize: "20px", fontWeight: 600, margin: 0 }}>{value}</p>
                   </div>
+                ))}
+              </div>
+            </LuxuryCard>
 
-                  <Separator />
+            {/* Room Details */}
+            <LuxuryCard>
+              <CardHeading icon={<Home style={{ width: "18px", height: "18px", color: "#C9A84C" }} />} title="Room Details" />
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
+                <div>
+                  <h3 style={{ color: "#F5F0E8", fontSize: "18px", fontFamily: "'Cormorant Garamond', serif", fontWeight: 600, margin: "0 0 6px 0" }}>
+                    {selectedRoom.name} Room
+                  </h3>
+                  <p style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 10px 0" }}>{selectedRoom.tag}</p>
+                  <p style={{ color: "rgba(245,240,232,0.55)", fontSize: "14px", lineHeight: 1.7, margin: 0, maxWidth: "420px" }}>
+                    {selectedRoom.description}
+                  </p>
+                </div>
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <p style={{ color: "#C9A84C", fontSize: "22px", fontWeight: 700, margin: "0 0 2px 0" }}>{fmt(selectedRoom.price)}</p>
+                  <p style={{ color: "rgba(245,240,232,0.4)", fontSize: "11px", margin: 0 }}>per night</p>
+                </div>
+              </div>
+            </LuxuryCard>
 
-                  <div className="grid grid-cols-4 gap-3">
-                    {[
-                      { label: "Nights", value: nights },
-                      { label: "Rooms", value: numRooms },
-                      { label: "Adults", value: adults },
-                      { label: "Children", value: children },
-                    ].map(({ label, value }) => (
-                      <div key={label} className="text-center p-3 bg-muted rounded-xl">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">{label}</p>
-                        <p className="text-xl font-bold mt-0.5">{value}</p>
-                      </div>
-                    ))}
+            {/* Reservation Holder */}
+            <LuxuryCard>
+              <CardHeading icon={<Mail style={{ width: "18px", height: "18px", color: "#C9A84C" }} />} title="Reservation Holder" />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                <Field label="Full Name" value={customer.fullName} />
+                <div>
+                  <p style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "8px", margin: "0 0 8px 0" }}>
+                    Contact Status
+                  </p>
+                  <span style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.4)", color: "#C9A84C", borderRadius: "20px", padding: "4px 12px", fontSize: "11px", letterSpacing: "0.1em", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    <Check style={{ width: "10px", height: "10px" }} /> Verified
+                  </span>
+                </div>
+                <Field label="Email Address" value={customer.email} />
+                <Field label="Phone Number" value={customer.phone} />
+              </div>
+            </LuxuryCard>
+
+            {/* Hotel Information */}
+            <LuxuryCard>
+              <CardHeading icon={<MapPin style={{ width: "18px", height: "18px", color: "#C9A84C" }} />} title="Hotel Information" />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "20px" }}>
+                <div>
+                  <p style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", margin: "0 0 8px 0" }}>Address</p>
+                  <p style={{ color: "rgba(245,240,232,0.7)", fontSize: "14px", lineHeight: 1.8, margin: 0 }}>
+                    19 Ofatedo Road,<br />
+                    Osogbo,<br />
+                    Osun State, Nigeria
+                  </p>
+                </div>
+                <div>
+                  <p style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", margin: "0 0 12px 0" }}>Contact</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <a href="tel:+2348000000000" style={{ color: "#C9A84C", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}
+                      onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
+                      onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}>
+                      <Phone style={{ width: "13px", height: "13px" }} />
+                      +234 (0) 800-MOFAM-HOTEL
+                    </a>
+                    <a href="mailto:reservations@mofamhotel.com" style={{ color: "#C9A84C", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}
+                      onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
+                      onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}>
+                      <Mail style={{ width: "13px", height: "13px" }} />
+                      reservations@mofamhotel.com
+                    </a>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
-              {/* Selected Room */}
-              <Card className="shadow-elegant border-accent/20">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Home className="h-5 w-5 text-accent" />
-                    Room Details
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-bold">{selectedRoom.name} Room</h3>
-                        <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                      </div>
-                      <p className="text-sm text-muted-foreground">{selectedRoom.tag}</p>
-                      <p className="text-sm text-muted-foreground mt-2 leading-relaxed max-w-sm">
-                        {selectedRoom.description}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-2xl font-black text-accent">{fmt(selectedRoom.price)}</p>
-                      <p className="text-xs text-muted-foreground">per night</p>
-                    </div>
+              <GoldDivider />
+
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "16px", background: "rgba(201,168,76,0.04)", border: "1px solid rgba(201,168,76,0.1)", borderRadius: "8px" }}>
+                <Clock style={{ width: "14px", height: "14px", color: "#C9A84C", flexShrink: 0, marginTop: "2px" }} />
+                <div style={{ fontSize: "13px", color: "rgba(245,240,232,0.6)", lineHeight: 1.8 }}>
+                  <p style={{ margin: 0 }}><span style={{ color: "#F5F0E8", fontWeight: 600 }}>Check-In:</span> From 3:00 PM</p>
+                  <p style={{ margin: 0 }}><span style={{ color: "#F5F0E8", fontWeight: 600 }}>Check-Out:</span> By 11:00 AM</p>
+                  <p style={{ margin: "4px 0 0 0", color: "rgba(245,240,232,0.4)" }}>Early check-in and late check-out may be available upon request.</p>
+                </div>
+              </div>
+            </LuxuryCard>
+          </div>
+
+          {/* ── RIGHT COLUMN: Price Summary ────────────────────────────────── */}
+          <div style={{ position: "sticky", top: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+            <LuxuryCard>
+              <CardHeading icon={<CreditCard style={{ width: "18px", height: "18px", color: "#C9A84C" }} />} title="Price Summary" />
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "16px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "rgba(245,240,232,0.6)", fontSize: "14px" }}>{selectedRoom.name} Room</span>
+                  <span style={{ color: "rgba(245,240,232,0.6)", fontSize: "14px" }}>{fmt(selectedRoom.price)} / night</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "rgba(245,240,232,0.6)", fontSize: "14px" }}>× {nights} night{nights !== 1 ? "s" : ""}</span>
+                </div>
+                {numRooms > 1 && (
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "rgba(245,240,232,0.6)", fontSize: "14px" }}>× {numRooms} rooms</span>
                   </div>
-                </CardContent>
-              </Card>
+                )}
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "rgba(245,240,232,0.6)", fontSize: "14px" }}>Total guests</span>
+                  <span style={{ color: "rgba(245,240,232,0.6)", fontSize: "14px" }}>{totalGuests}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "rgba(245,240,232,0.6)", fontSize: "14px" }}>Taxes &amp; fees</span>
+                  <span style={{ color: "#C9A84C", fontSize: "14px", fontWeight: 500 }}>Included</span>
+                </div>
+              </div>
 
-              {/* Customer Contact Details */}
-              <Card className="shadow-elegant">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Mail className="h-5 w-5 text-accent" />
-                    Reservation Holder
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid sm:grid-cols-2 gap-6">
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Full Name</p>
-                      <p className="font-bold">{customer.fullName}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Contact Status</p>
-                      <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm">
-                        <CheckCircle className="h-4 w-4" /> Verified
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email Address</p>
-                      <p className="font-medium text-sm">{customer.email}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Phone Number</p>
-                      <p className="font-medium text-sm">{customer.phone}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div style={{ borderTop: "1px solid rgba(201,168,76,0.2)", paddingTop: "16px", marginTop: "4px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                  <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>Total</span>
+                  <span style={{ color: "#C9A84C", fontSize: "20px", fontWeight: 700 }}>{fmt(totalPrice)}</span>
+                </div>
+                <p style={{ color: "rgba(245,240,232,0.3)", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", textAlign: "right", margin: "4px 0 0 0" }}>Guaranteed reservation</p>
+              </div>
 
-              {/* Hotel Information */}
-              <Card className="shadow-elegant">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <MapPin className="h-5 w-5 text-accent" />
-                    Hotel Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid sm:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="font-semibold text-sm mb-2">Address</h4>
-                      <p className="text-muted-foreground text-sm leading-relaxed">
-                        19 Ofatedo Road,<br />
-                        Osogbo,<br />
-                        Osun State, Nigeria
-                      </p>
-                    </div>
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-sm mb-2">Contact</h4>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Phone className="h-4 w-4 text-accent shrink-0" />
-                        +234 (0) 800-MOFAM-HOTEL
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Mail className="h-4 w-4 text-accent shrink-0" />
-                        reservations@mofamhotel.com
-                      </div>
-                    </div>
-                  </div>
-                  <Separator />
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/60">
-                    <Clock className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      <p><span className="font-semibold text-foreground">Check-In:</span> From 3:00 PM</p>
-                      <p><span className="font-semibold text-foreground">Check-Out:</span> By 11:00 AM</p>
-                      <p className="mt-1">Early check-in and late check-out may be available upon request.</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* ── RIGHT COLUMN: Price Summary ───────────────────────────── */}
-            <div className="space-y-4">
-              <Card className="shadow-elegant border-accent/20 sticky top-24">
-                <CardHeader className="bg-accent/5 border-b border-border">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <CreditCard className="h-5 w-5 text-accent" />
-                    Price Summary
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-5 space-y-4">
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{selectedRoom.name} Room</span>
-                      <span>{fmt(selectedRoom.price)} / night</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">× {nights} nights</span>
-                    </div>
-                    {numRooms > 1 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">× {numRooms} rooms</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total guests</span>
-                      <span>{totalGuests}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Taxes & fees</span>
-                      <span className="text-emerald-600 font-medium">Included</span>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-lg font-bold">Total Amount</span>
-                    <div className="text-right">
-                      <p className="text-3xl font-black text-accent">{fmt(totalPrice)}</p>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">
-                        Guaranteed reservation
-                      </p>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-3 pt-1">
-                    <Button
-                      variant="luxury"
-                      size="lg"
-                      className="w-full"
-                      onClick={() => navigate("/")}
-                    >
-                      Return to Homepage
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="w-full"
-                      onClick={() => window.print()}
-                    >
-                      Print Confirmation
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+              <div style={{ borderTop: "1px solid rgba(201,168,76,0.1)", marginTop: "20px", paddingTop: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                <button
+                  onClick={() => navigate("/")}
+                  style={{ background: "#C9A84C", color: "#0F0D08", fontWeight: 700, padding: "14px 40px", borderRadius: "8px", border: "none", cursor: "pointer", letterSpacing: "0.06em", fontSize: "14px", width: "100%", transition: "background 0.3s ease" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "#b8963e"}
+                  onMouseLeave={e => e.currentTarget.style.background = "#C9A84C"}
+                >
+                  Return to Homepage
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  style={{ background: "transparent", border: "1px solid rgba(201,168,76,0.5)", color: "#C9A84C", fontWeight: 600, padding: "14px 40px", borderRadius: "8px", cursor: "pointer", letterSpacing: "0.06em", fontSize: "14px", width: "100%", transition: "all 0.3s ease" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(201,168,76,0.08)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+                >
+                  Print Confirmation
+                </button>
+              </div>
+            </LuxuryCard>
           </div>
         </div>
       </main>
+
+      {/* ── RESPONSIVE STYLES ────────────────────────────────────────────── */}
+      <style>{`
+        @media (max-width: 900px) {
+          .confirmation-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 600px) {
+          .confirmation-grid > div:first-child > div {
+            gap: 16px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

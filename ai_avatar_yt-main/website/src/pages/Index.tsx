@@ -26,7 +26,10 @@ import {
   Menu,
   Lock,
   X,
-  Loader2
+  Loader2,
+  Instagram,
+  Facebook,
+  Twitter
 } from "lucide-react";
 import { getRooms, getAvailability, type RoomInventory } from "@/lib/roomStore";
 import { supabase } from "@/lib/supabaseClient";
@@ -110,9 +113,11 @@ const Index = () => {
   const dividerRef = useRef<HTMLDivElement>(null);
   const dividerRef2 = useRef<HTMLDivElement>(null);
   const dividerRef3 = useRef<HTMLDivElement>(null);
+  const dividerRef4 = useRef<HTMLDivElement>(null);
   const [isDividerVisible, setIsDividerVisible] = useState(false);
   const [isDividerVisible2, setIsDividerVisible2] = useState(false);
   const [isDividerVisible3, setIsDividerVisible3] = useState(false);
+  const [isDividerVisible4, setIsDividerVisible4] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -124,6 +129,8 @@ const Index = () => {
             setIsDividerVisible2(entry.isIntersecting);
           } else if (entry.target === dividerRef3.current) {
             setIsDividerVisible3(entry.isIntersecting);
+          } else if (entry.target === dividerRef4.current) {
+            setIsDividerVisible4(entry.isIntersecting);
           }
         });
       },
@@ -133,11 +140,13 @@ const Index = () => {
     if (dividerRef.current) observer.observe(dividerRef.current);
     if (dividerRef2.current) observer.observe(dividerRef2.current);
     if (dividerRef3.current) observer.observe(dividerRef3.current);
+    if (dividerRef4.current) observer.observe(dividerRef4.current);
 
     return () => {
       if (dividerRef.current) observer.unobserve(dividerRef.current);
       if (dividerRef2.current) observer.unobserve(dividerRef2.current);
       if (dividerRef3.current) observer.unobserve(dividerRef3.current);
+      if (dividerRef4.current) observer.unobserve(dividerRef4.current);
     };
   }, []);
 
@@ -182,7 +191,7 @@ const Index = () => {
 
     // Dynamic navbar scroll detection
     const handleScroll = () => {
-      if (window.scrollY > window.innerHeight * 0.8) {
+      if (window.scrollY > window.innerHeight) {
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
@@ -263,11 +272,18 @@ const Index = () => {
       {/* Navigation */}
       {/* Navigation */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out ${isScrolled
-            ? "backdrop-blur-md border-b border-white/10 shadow-lg py-3"
-            : "bg-transparent py-5"
-          }`}
-        style={isScrolled ? { background: "rgba(15,13,8,0.97)" } : {}}
+        className="fixed top-0 left-0 right-0 z-50 py-3"
+        style={{
+          transition: "all 0.3s ease",
+          opacity: isScrolled ? 1 : 0,
+          transform: isScrolled ? "translateY(0)" : "translateY(-100%)",
+          background: "rgba(15,13,8,0.97)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          borderBottom: "1px solid rgba(255,255,255,0.1)",
+          boxShadow: "0 4px 30px rgba(0,0,0,0.1)",
+          pointerEvents: isScrolled ? "auto" : "none"
+        }}
       >
         <div className="container mx-auto px-6 lg:px-12">
           <div className="flex items-center justify-between">
@@ -1118,7 +1134,7 @@ const Index = () => {
                     e.currentTarget.style.background = "transparent";
                   }}
                 >
-                  View Menu
+                  View Drinks Menu
                 </button>
               </div>
             </motion.div>
@@ -1306,118 +1322,267 @@ const Index = () => {
         </motion.div>
       </section>
 
+      {/* Luxury Section Divider 4 */}
+      <div 
+        ref={dividerRef4} 
+        className={`luxury-divider-container ${isDividerVisible4 ? 'divider-animate' : ''}`} 
+        style={{ background: "#0F0D08", display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", padding: "48px 0" }}
+      >
+        <div className="divider-line-left" style={{ width: "120px", height: "1px", background: "linear-gradient(to right, transparent, rgba(201,168,76,0.6))" }} />
+        <span className="divider-star" style={{ color: "#C9A84C", fontSize: "14px", display: "inline-block" }}>✦</span>
+        <div className="divider-line-right" style={{ width: "120px", height: "1px", background: "linear-gradient(to left, transparent, rgba(201,168,76,0.6))" }} />
+      </div>
+
       {/* Contact */}
-      <section id="contact" className="py-20 px-6">
+      <section id="contact" style={{ background: "#0F0D08", padding: "80px 5% 100px" }}>
         <motion.div
-          className="container mx-auto max-w-6xl"
+          className="mx-auto"
+          style={{ maxWidth: "1200px" }}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
           variants={staggerContainer}
         >
-          <motion.div variants={fadeUpItem} className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">Contact Us</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <motion.div variants={fadeUpItem} style={{ textAlign: "center", marginBottom: "64px" }}>
+            <p style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.25em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif", marginBottom: "12px", fontWeight: 400 }}>
+              GET IN TOUCH
+            </p>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(36px, 5vw, 60px)", color: "#F5F0E8", fontWeight: 600, lineHeight: 1.1, margin: 0 }}>
+              Contact Us
+            </h2>
+            <div style={{ width: "60px", height: "1px", background: "#C9A84C", margin: "12px auto 0" }} />
+            <p style={{ color: "rgba(245,240,232,0.55)", fontSize: "15px", fontFamily: "'Inter', sans-serif", marginTop: "16px", lineHeight: 1.6 }}>
               We're here to make your stay exceptional
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-12">
-            <motion.div variants={fadeUpItem} className="space-y-8">
-              <div>
-                <h3 className="text-2xl font-bold mb-6">Get in Touch</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-gradient-gold rounded-lg flex items-center justify-center">
-                      <MapPin className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Address</p>
-                      <p className="text-muted-foreground">19 Ofatedo Road, Osogbo,  Osun State, Nigeria</p>
-                    </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "64px" }}>
+            {/* Left — Contact Info Block */}
+            <motion.div variants={fadeUpItem} style={{ display: "flex", flexDirection: "column" }}>
+              <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "28px", color: "#F5F0E8", fontWeight: 500, margin: "0 0 32px 0", lineHeight: 1.2 }}>
+                Get in Touch
+              </h3>
+              
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", padding: "20px 0", borderBottom: "1px solid rgba(201,168,76,0.1)" }}>
+                  <div style={{ flexShrink: 0, width: "44px", height: "44px", borderRadius: "50%", border: "1px solid rgba(201,168,76,0.4)", background: "rgba(201,168,76,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <MapPin style={{ width: "18px", height: "18px", color: "#C9A84C" }} />
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-gradient-gold rounded-lg flex items-center justify-center">
-                      <Phone className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Phone</p>
-                      <p className="text-muted-foreground">+234 (706) 920-6935</p>
-                    </div>
+                  <div>
+                    <p style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif", margin: "0 0 4px 0", fontWeight: 500 }}>Address</p>
+                    <p style={{ color: "#F5F0E8", fontSize: "15px", lineHeight: 1.6, fontFamily: "'Inter', sans-serif", margin: 0 }}>19 Ofatedo Road, Osogbo,<br />Osun State, Nigeria</p>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-gradient-gold rounded-lg flex items-center justify-center">
-                      <Mail className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Email</p>
-                      <p className="text-muted-foreground">reservations@mofamhotel.com</p>
-                    </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", padding: "20px 0", borderBottom: "1px solid rgba(201,168,76,0.1)" }}>
+                  <div style={{ flexShrink: 0, width: "44px", height: "44px", borderRadius: "50%", border: "1px solid rgba(201,168,76,0.4)", background: "rgba(201,168,76,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Phone style={{ width: "18px", height: "18px", color: "#C9A84C" }} />
+                  </div>
+                  <div>
+                    <p style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif", margin: "0 0 4px 0", fontWeight: 500 }}>Phone</p>
+                    <p style={{ color: "#F5F0E8", fontSize: "15px", lineHeight: 1.6, fontFamily: "'Inter', sans-serif", margin: 0 }}>+234 (706) 920-6935</p>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", padding: "20px 0" }}>
+                  <div style={{ flexShrink: 0, width: "44px", height: "44px", borderRadius: "50%", border: "1px solid rgba(201,168,76,0.4)", background: "rgba(201,168,76,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Mail style={{ width: "18px", height: "18px", color: "#C9A84C" }} />
+                  </div>
+                  <div>
+                    <p style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif", margin: "0 0 4px 0", fontWeight: 500 }}>Email</p>
+                    <p style={{ color: "#F5F0E8", fontSize: "15px", lineHeight: 1.6, fontFamily: "'Inter', sans-serif", margin: 0 }}>reservations@mofamhotel.com</p>
                   </div>
                 </div>
               </div>
             </motion.div>
 
+            {/* Right — Contact Form */}
             <motion.div variants={fadeScaleItem}>
-              <Card className="shadow-luxury">
-                <CardContent className="p-6">
-                  <h3 className="text-2xl font-bold mb-6">Send us a Message</h3>
-                  <form className="space-y-4">
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <Input placeholder="First Name" />
-                      <Input placeholder="Last Name" />
-                    </div>
-                    <Input placeholder="Email Address" type="email" />
-                    <Input placeholder="Phone Number" type="tel" />
-                    <Textarea placeholder="How can we assist you?" rows={4} />
-                    <Button variant="luxury" size="lg" className="w-full">
-                      Send Message
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
+              <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(201,168,76,0.25)", borderRadius: "12px", padding: "36px" }}>
+                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "24px", color: "#F5F0E8", margin: "0 0 24px 0", lineHeight: 1.2, fontWeight: 500 }}>
+                  Send us a Message
+                </h3>
+                <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                    <input 
+                      type="text" 
+                      placeholder="First Name" 
+                      className="contact-luxury-input"
+                      style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", transition: "all 0.3s ease" }} 
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="Last Name" 
+                      className="contact-luxury-input"
+                      style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", transition: "all 0.3s ease" }} 
+                    />
+                  </div>
+                  <input 
+                    type="email" 
+                    placeholder="Email Address" 
+                    className="contact-luxury-input"
+                    style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", transition: "all 0.3s ease" }} 
+                  />
+                  <input 
+                    type="tel" 
+                    placeholder="Phone Number" 
+                    className="contact-luxury-input"
+                    style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", transition: "all 0.3s ease" }} 
+                  />
+                  <textarea 
+                    placeholder="How can we assist you?" 
+                    className="contact-luxury-input"
+                    style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", minHeight: "120px", resize: "vertical", transition: "all 0.3s ease" }} 
+                  />
+                  <button 
+                    type="submit"
+                    style={{ width: "100%", background: "#C9A84C", color: "#0F0D08", fontWeight: 700, padding: "16px", borderRadius: "8px", letterSpacing: "0.06em", fontSize: "15px", fontFamily: "'Inter', sans-serif", border: "none", cursor: "pointer", transition: "background 0.3s ease" }}
+                    onMouseEnter={e => e.currentTarget.style.background = "#b8963e"}
+                    onMouseLeave={e => e.currentTarget.style.background = "#C9A84C"}
+                  >
+                    Send Message
+                  </button>
+                </form>
+              </div>
             </motion.div>
           </div>
         </motion.div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-primary text-primary-foreground py-12 px-6">
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <img src="/mofam.webp" alt="Mofam Hotel And Apartements" className="h-10 md:h-12 w-auto object-contain mb-4" />
-              <p className="text-primary-foreground/80">
+      <footer style={{ background: "#0A0800", position: "relative" }}>
+        {/* Top ornamental border with static divider */}
+        <div style={{ position: "relative", width: "100%", height: "1px", background: "rgba(201,168,76,0.25)" }}>
+          <div style={{ position: "absolute", top: "-24px", left: "50%", transform: "translateX(-50%)", display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", background: "#0A0800", padding: "0 24px" }}>
+            <div style={{ width: "40px", height: "1px", background: "linear-gradient(to right, transparent, rgba(201,168,76,0.6))" }} />
+            <span style={{ color: "#C9A84C", fontSize: "14px", display: "inline-block" }}>✦</span>
+            <div style={{ width: "40px", height: "1px", background: "linear-gradient(to left, transparent, rgba(201,168,76,0.6))" }} />
+          </div>
+        </div>
+
+        {/* Footer top section */}
+        <div style={{ padding: "64px 5% 48px", maxWidth: "1200px", margin: "0 auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "48px" }}>
+            {/* Column 1 — Brand */}
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <img src="/mofam.webp" alt="Mofam Hotel And Apartements" style={{ width: "56px", height: "auto", objectFit: "contain" }} />
+              <p style={{ color: "rgba(245,240,232,0.55)", fontSize: "13px", lineHeight: 1.8, marginTop: "16px", maxWidth: "200px", fontFamily: "'Inter', sans-serif" }}>
                 Experience luxury redefined in the heart of the city.
               </p>
+              {/* Social Icons */}
+              <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
+                {[Instagram, Facebook, Twitter].map((Icon, idx) => (
+                  <a key={idx} href="#" target="_blank" style={{ 
+                    width: "36px", height: "36px", borderRadius: "50%", border: "1px solid rgba(201,168,76,0.35)", 
+                    display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none",
+                    transition: "all 0.3s ease"
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = "#C9A84C";
+                    e.currentTarget.style.background = "rgba(201,168,76,0.1)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = "rgba(201,168,76,0.35)";
+                    e.currentTarget.style.background = "transparent";
+                  }}>
+                    <Icon style={{ width: "15px", height: "15px", color: "#C9A84C" }} />
+                  </a>
+                ))}
+              </div>
             </div>
-            <div>
-              <h4 className="font-semibold mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-primary-foreground/80">
-                <li><a href="#rooms" className="hover:text-accent transition-colors">Rooms & Suites</a></li>
-                <li><a href="#amenities" className="hover:text-accent transition-colors">Amenities</a></li>
-                <li><a href="#dining" className="hover:text-accent transition-colors">Dining</a></li>
-                <li><a href="#events" className="hover:text-accent transition-colors">Events</a></li>
-              </ul>
+
+            {/* Column 2 — Quick Links */}
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <h4 style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif", margin: "0 0 20px 0" }}>
+                Quick Links
+              </h4>
+              <div style={{ width: "32px", height: "1px", background: "#C9A84C", marginBottom: "20px" }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {[
+                  { label: "Rooms & Suites", href: "#rooms" },
+                  { label: "Amenities", href: "#amenities" },
+                  { label: "Dining", href: "#dining" },
+                  { label: "Meetings & Events", href: "#events" }
+                ].map((link, idx) => (
+                  <a key={idx} href={link.href} style={{ 
+                    color: "rgba(245,240,232,0.55)", fontSize: "13px", lineHeight: 2.2, textDecoration: "none", 
+                    fontFamily: "'Inter', sans-serif", transition: "all 0.2s ease" 
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.color = "#C9A84C";
+                    e.currentTarget.style.paddingLeft = "4px";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.color = "rgba(245,240,232,0.55)";
+                    e.currentTarget.style.paddingLeft = "0";
+                  }}>
+                    {link.label}
+                  </a>
+                ))}
+              </div>
             </div>
-            <div>
-              <h4 className="font-semibold mb-4">Services</h4>
-              <ul className="space-y-2 text-primary-foreground/80">
-                <li>Concierge</li>
-                <li>Room Service</li>
-                <li>Spa & Wellness</li>
-                <li>Business Center</li>
-              </ul>
+
+            {/* Column 3 — Services */}
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <h4 style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif", margin: "0 0 20px 0" }}>
+                Services
+              </h4>
+              <div style={{ width: "32px", height: "1px", background: "#C9A84C", marginBottom: "20px" }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {["Concierge", "Room Service", "Spa & Wellness", "Business Center"].map((label, idx) => (
+                  <span key={idx} style={{ 
+                    color: "rgba(245,240,232,0.55)", fontSize: "13px", lineHeight: 2.2, 
+                    fontFamily: "'Inter', sans-serif", transition: "all 0.2s ease", cursor: "pointer"
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.color = "#C9A84C";
+                    e.currentTarget.style.paddingLeft = "4px";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.color = "rgba(245,240,232,0.55)";
+                    e.currentTarget.style.paddingLeft = "0";
+                  }}>
+                    {label}
+                  </span>
+                ))}
+              </div>
             </div>
-            <div>
-              <h4 className="font-semibold mb-4">Management</h4>
-              <div className="space-y-2 text-primary-foreground/80">
-                <p className="text-sm">Secure Portal Access Required</p>
+
+            {/* Column 4 — Management */}
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <h4 style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif", margin: "0 0 20px 0" }}>
+                Management
+              </h4>
+              <div style={{ width: "32px", height: "1px", background: "#C9A84C", marginBottom: "20px" }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <span style={{ 
+                  color: "rgba(245,240,232,0.55)", fontSize: "13px", lineHeight: 2.2, 
+                  fontFamily: "'Inter', sans-serif", transition: "all 0.2s ease", cursor: "pointer"
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.color = "#C9A84C";
+                  e.currentTarget.style.paddingLeft = "4px";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.color = "rgba(245,240,232,0.55)";
+                  e.currentTarget.style.paddingLeft = "0";
+                }}>
+                  Secure Portal Access Required
+                </span>
               </div>
             </div>
           </div>
-          <div className="border-t border-primary-foreground/20 mt-8 pt-8 text-center text-primary-foreground/60">
-            <p>&copy; 2025 Mofam Hotel And Apartements. All rights reserved. Designed by Bayonet Lab</p>
+        </div>
+
+        {/* Footer bottom bar */}
+        <div style={{ padding: "20px 5%", borderTop: "1px solid rgba(201,168,76,0.12)" }}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "16px" }}>
+            <p style={{ color: "rgba(245,240,232,0.35)", fontSize: "12px", fontFamily: "'Inter', sans-serif", margin: 0 }}>
+              © 2025 Mofam Hotel &amp; Apartments. All rights reserved.
+            </p>
+            <p style={{ color: "rgba(201,168,76,0.5)", fontSize: "11px", letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif", margin: 0 }}>
+              Osogbo, Osun State &middot; Nigeria
+            </p>
           </div>
         </div>
       </footer>

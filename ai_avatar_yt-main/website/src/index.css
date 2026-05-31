@@ -368,3 +368,62 @@
     opacity: 1;
   }
 }
+
+/* ─── Contact Form — Luxury Input Focus ─────────────────────────────────── */
+.contact-luxury-input:focus {
+  border-color: rgba(201, 168, 76, 0.7) !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.08);
+}
+.contact-luxury-input::placeholder {
+  color: rgba(245, 240, 232, 0.35);
+}
+
+/* ─── Booking Page Luxury Calendar ───────────────────────────────────────── */
+.booking-calendar-wrapper {
+  background: #1A1610;
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+
+.booking-calendar-wrapper .rdp-caption_label {
+  font-family: 'Cormorant Garamond', serif;
+  color: #F5F0E8;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.booking-calendar-wrapper .rdp-nav_button {
+  color: #C9A84C;
+}
+
+.booking-calendar-wrapper .rdp-head_cell {
+  color: rgba(201,168,76,0.6);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.booking-calendar-wrapper .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+  background: rgba(201,168,76,0.15) !important;
+  color: #F5F0E8 !important;
+  border-radius: 50%;
+}
+
+.booking-calendar-wrapper .rdp-day {
+  color: rgba(245,240,232,0.7);
+}
+
+.booking-calendar-wrapper .rdp-day_selected,
+.booking-calendar-wrapper .rdp-day_selected:focus-visible,
+.booking-calendar-wrapper .rdp-day_selected:hover {
+  background-color: #C9A84C !important;
+  color: #0F0D08 !important;
+  border-radius: 50% !important;
+  font-weight: 700;
+}
+
+.booking-calendar-wrapper .rdp-day_outside {
+  color: rgba(245,240,232,0.2);
+}
