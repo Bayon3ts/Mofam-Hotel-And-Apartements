@@ -39,7 +39,7 @@
     --ring: 45 90% 60%;
 
     /* Luxury gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(220 35% 15% / 0.8), hsl(220 35% 25% / 0.6));
+    --gradient-hero: rgba(20, 14, 2, 0.23);
     --gradient-gold: linear-gradient(135deg, hsl(45 90% 60%), hsl(45 85% 75%));
     --gradient-card: linear-gradient(135deg, hsl(0 0% 100%), hsl(220 15% 98%));
 
@@ -117,5 +117,146 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Plus Jakarta Sans', 'Inter', 'Segoe UI', Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* ─── Hero Split Layout — Glass Card & Clay Buttons ─────────────────────── */
+
+.film-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+}
+
+.hero-glass-card {
+  background: rgba(20, 16, 6, 0.22);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(201, 168, 76, 0.7);
+  box-shadow: 0 0 0 1px rgba(201, 168, 76, 0.15), inset 0 0 30px rgba(255, 255, 255, 0.03), 0 8px 32px rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Shared CTA base */
+.hero-cta-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 20px;
+  width: 100%;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: all 0.3s ease;
+  border: none;
+  outline: none;
+}
+
+/* "Explore Rooms" — outline gold */
+.hero-cta-btn--explore {
+  background: transparent;
+  color: #F5F0E8;
+  border: 1px solid rgba(201, 168, 76, 0.7);
+}
+
+.hero-cta-btn--explore:hover {
+  background: #C9A84C;
+  color: #1A1A1A;
+}
+
+/* "Book Your Stay" — solid champagne */
+.hero-cta-btn--book {
+  background: #C9A84C;
+  color: #1A1A1A;
+  font-weight: 600;
+}
+
+.hero-cta-btn--book:hover {
+  background: #deb851;
+  box-shadow: 0 4px 15px rgba(201, 168, 76, 0.4);
+}
+
+@layer utilities {
+  /* ─── Premium Marquee Ribbon ────────────────────────────────────── */
+
+  /* Floating marquee over video */
+  .mofam-marquee-section {
+    /* Styles moved to inline in Index.tsx */
+  }
+
+  /* Gold hairline borders */
+  .mofam-marquee-hairline-top,
+  .mofam-marquee-hairline-bottom {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(45 90% 60% / 0.6) 20%,
+      hsl(45 85% 75% / 0.9) 50%,
+      hsl(45 90% 60% / 0.6) 80%,
+      transparent 100%
+    );
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .mofam-marquee-hairline-top  { top: 0; }
+  .mofam-marquee-hairline-bottom { bottom: 0; }
+
+  /* Scrolling track */
+  .mofam-marquee-track {
+    animation: mofam-marquee 40s linear infinite;
+  }
+
+  /* Label text: uppercase, tracked, charcoal */
+  .mofam-marquee-text {
+    font-family: "Inter", "Segoe UI", Arial, sans-serif;
+    font-weight: 600;
+  }
+
+  .mofam-marquee-label {
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #C9A84C;
+    padding: 0 2rem;
+  }
+
+  /* Charcoal diamond separator */
+  .mofam-marquee-separator {
+    margin: 0 0.5rem;
+    font-size: 0.45rem;
+    color: #C9A84C;
+    opacity: 0.5;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  /* Keyframe */
+  @keyframes mofam-marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mofam-marquee-track {
+      animation-duration: 0.01ms;
+      animation-iteration-count: 1;
+    }
   }
 }

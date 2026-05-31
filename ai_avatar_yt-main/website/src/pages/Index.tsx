@@ -39,7 +39,7 @@ import diningImage from "../../mofam_roomsPicture/A_photorealistic,_ultra-high_r
 import meetingImage from "@/assets/meeting-room.jpg";
 import spaImage from "../../mofam_roomsPicture/DSC00314poolside.jpg";
 import loungeImage from "../../mofam_roomsPicture/A_photorealistic,_ultra-high_resolution_luxury_202605240102lo.jpeg";
-import standardRoomImageOne from "../../mofam_roomsPicture/A_photorealistic,_ultra-high_resolution_hotel_202605231130.jpeg";
+import standardRoomImageOne from "../../mofam_roomsPicture/DSC00552.jpg";
 import standardRoomImageTwo from "../../mofam_roomsPicture/A_photorealistic,_ultra-high_resolution_hotel_202605231131.jpeg";
 import standardRoomImageThree from "../../mofam_roomsPicture/DSC00552_Standardroom3.jpg";
 import standardRoomImageFour from "../../mofam_roomsPicture/DSC00553_standardroom4.jpg";
@@ -226,34 +226,33 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
+      {/* Navigation */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out ${isScrolled
-            ? "translate-y-0 opacity-100 bg-background/95 backdrop-blur-md border-b border-border shadow-sm pointer-events-auto"
-            : "-translate-y-full opacity-0 pointer-events-none"
+            ? "bg-charcoal/95 backdrop-blur-md border-b border-white/10 shadow-sm py-3"
+            : "bg-transparent py-5"
           }`}
       >
-        <div className="container mx-auto px-6 py-4">
+        <div className="container mx-auto px-6 lg:px-12">
           <div className="flex items-center justify-between">
-            <img src="/mofam.webp" alt="Mofam Hotel And Apartements" className="h-10 md:h-12 w-auto object-contain" />
-            <div className="hidden md:flex items-center space-x-8">
+            <div style={{ padding: "20px 0 0 24px" }}>
+              <img src="/mofam.webp" alt="Mofam Hotel And Apartements" style={{ width: "64px", height: "64px" }} className="object-contain" />
+            </div>
+            <div className="hidden md:flex items-center justify-end flex-1 space-x-10 pr-6">
               {navItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className={`text-sm font-medium transition-colors hover:text-accent ${activeSection === item.id ? "text-accent" : "text-foreground"
-                    }`}
+                  className={`text-[13px] font-light tracking-[0.05em] uppercase transition-colors text-white hover:text-champagne`}
+                  style={{ fontFamily: "'Inter', sans-serif" }}
                 >
                   {item.label}
                 </button>
               ))}
             </div>
-            <div className="hidden md:block">
-              <Button variant="luxury" size="sm" onClick={() => navigate('/booking')}>Book Now</Button>
-            </div>
-
             {/* Mobile Toggle Button */}
             <button
-              className="md:hidden text-foreground p-2 -mr-2"
+              className="md:hidden text-white p-2 -mr-2"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -263,7 +262,7 @@ const Index = () => {
 
         {/* Mobile Menu Dropdown */}
         {isMobileMenuOpen && (
-          <div className="md:hidden bg-background border-b border-border shadow-lg animate-fade-in">
+          <div className="md:hidden bg-charcoal/95 backdrop-blur-md border-b border-white/10 shadow-lg animate-fade-in">
             <div className="container mx-auto px-6 py-4 flex flex-col space-y-4">
               {navItems.map((item) => (
                 <button
@@ -272,20 +271,22 @@ const Index = () => {
                     scrollToSection(item.id);
                     setIsMobileMenuOpen(false);
                   }}
-                  className={`text-left text-base font-medium transition-colors hover:text-accent ${activeSection === item.id ? "text-accent" : "text-foreground"
-                    }`}
+                  className={`text-left text-[13px] tracking-wide uppercase transition-colors text-white hover:text-champagne`}
                 >
                   {item.label}
                 </button>
               ))}
-              <Button variant="luxury" className="w-full mt-2" onClick={() => navigate('/booking')}>Book Now</Button>
             </div>
           </div>
         )}
       </nav>
 
       {/* Hero Section */}
-      <section id="home" className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section
+        id="home"
+        className="relative flex min-h-screen flex-col justify-center overflow-hidden"
+      >
+        {/* Background video */}
         <motion.div
           className="absolute inset-0"
           style={{ y: parallaxY }}
@@ -294,41 +295,173 @@ const Index = () => {
           transition={{ duration: 1.5, ease: "easeOut" }}
         >
           <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover"
+            autoPlay loop muted playsInline
+            className="w-full h-full object-cover object-center"
             src={heroVideo}
           />
         </motion.div>
-        <div className="absolute inset-0 bg-gradient-hero" />
 
-        <motion.div
-          initial="hidden"
-          animate="show"
-          variants={staggerContainer}
-          className="relative z-10 text-center text-white px-6 max-w-4xl mx-auto"
+        {/* Top vignette for navbar legibility */}
+        <div 
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 30%, transparent 60%)", zIndex: 2 }}
+        />
+
+        {/* Directional overlay */}
+        <div className="absolute inset-0 bg-gradient-hero pointer-events-none z-10" />
+        
+        {/* Film grain overlay */}
+        <div className="film-grain" />
+
+        {/* Localized gradient for text legibility */}
+        <div 
+          className="absolute inset-y-0 left-0 w-full z-10 pointer-events-none"
+          style={{ background: "linear-gradient(to right, rgba(8,6,1,0.65) 0%, rgba(8,6,1,0.3) 45%, transparent 70%)" }} 
+        />
+
+        {/* Upper right overlay */}
+        <div 
+          className="absolute inset-0 z-10 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse at top right, rgba(0,0,0,0.35) 0%, transparent 60%)" }}
+        />
+
+        {/* Content grid */}
+        <div className="relative z-20 w-full pb-11">
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pt-40 lg:pt-24 pb-10">
+            <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+
+              {/* LEFT — Text Block */}
+              <motion.div
+                initial="hidden"
+                animate="show"
+                variants={staggerContainer}
+                className="flex flex-col justify-center pl-6 md:pl-[60px] h-full"
+                style={{ fontFamily: "'Inter', sans-serif", marginBottom: "8vh" }}
+              >
+                <div className="flex flex-col">
+                  {/* Eyebrow */}
+                  <motion.div
+                    variants={fadeUpItem}
+                    className="flex items-center space-x-4 mb-6"
+                  >
+                    <div className="h-[1px] w-8 bg-champagne/60" />
+                    <p className="text-[11px] font-medium tracking-[0.2em] uppercase text-champagne/80">
+                      Osogbo, Osun State &middot; Nigeria
+                    </p>
+                    <div className="h-[1px] w-8 bg-champagne/60" />
+                  </motion.div>
+
+                  {/* Headline */}
+                  <motion.h1
+                    variants={fadeUpItem}
+                    className="flex flex-col"
+                    style={{ textShadow: "0 2px 24px rgba(0,0,0,0.5)" }}
+                  >
+                    <span 
+                      className="text-white whitespace-nowrap leading-none" 
+                      style={{ fontSize: "clamp(52px, 6.5vw, 82px)", letterSpacing: "-0.03em", fontWeight: 700, fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" }}
+                    >
+                      Experience
+                    </span>
+                    <span 
+                      className="font-serif italic whitespace-nowrap" 
+                      style={{ 
+                        color: "#C9A84C", 
+                        opacity: 1, 
+                        textShadow: "0 2px 20px rgba(0,0,0,0.6)", 
+                        fontSize: "clamp(52px, 6.5vw, 84px)", 
+                        fontFamily: "'Cormorant Garamond', serif", 
+                        lineHeight: 1.05 
+                      }}
+                    >
+                      Luxury Redefined
+                    </span>
+                  </motion.h1>
+
+                  {/* Subtitle */}
+                  <motion.div variants={fadeUpItem} style={{ marginTop: "24px" }}>
+                    <p className="text-[16px] text-white/70 tracking-wide font-light">
+                      Where elegance meets comfort in the heart of the city
+                    </p>
+                    <motion.div 
+                      className="h-[1px] bg-champagne mt-5"
+                      initial={{ width: 0 }}
+                      animate={{ width: 60 }}
+                      transition={{ duration: 0.8, ease: "easeOut", delay: 1 }}
+                    />
+                  </motion.div>
+                </div>
+              </motion.div>
+
+              {/* RIGHT — Glass Card */}
+              <motion.div
+                initial={{ opacity: 0, x: 40 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.9, delay: 0.45, ease: "easeOut" }}
+                className="flex items-center justify-center lg:justify-end h-full"
+                style={{ marginBottom: "8vh" }}
+              >
+                <div className="hero-glass-card w-full max-w-sm">
+                  {/* Card header */}
+                  <div className="flex items-center justify-center pb-2">
+                    <span style={{ display: "inline-block", width: "36px", height: "1px", background: "#C9A84C", opacity: 0.6, verticalAlign: "middle", margin: "0 10px" }} />
+                    <p 
+                      style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.25em", fontFamily: "'Cormorant Garamond', serif", textTransform: "uppercase", textAlign: "center" }}
+                    >
+                      Begin Your Stay
+                    </p>
+                    <span style={{ display: "inline-block", width: "36px", height: "1px", background: "#C9A84C", opacity: 0.6, verticalAlign: "middle", margin: "0 10px" }} />
+                  </div>
+
+                  {/* Explore Rooms */}
+                  <button
+                    className="hero-cta-btn hero-cta-btn--explore w-full flex items-center justify-center"
+                    onClick={() => scrollToSection("rooms")}
+                  >
+                    <span>Explore Rooms</span>
+                    <ArrowRight className="h-4 w-4 ml-2 flex-shrink-0 stroke-[1.5]" />
+                  </button>
+
+                  {/* Book Your Stay */}
+                  <button
+                    className="hero-cta-btn hero-cta-btn--book w-full"
+                    onClick={() => navigate('/booking')}
+                  >
+                    Book Your Stay
+                  </button>
+                </div>
+              </motion.div>
+
+            </div>
+          </div>
+        </div>
+
+
+
+        {/* Marquee Ribbon — pinned to bottom of hero */}
+        <div
+          aria-label="Mofam Hotel welcome message"
+          className="overflow-hidden"
+          style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '44px', zIndex: 25, background: 'rgba(10,8,2,0.40)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
         >
-          <motion.h1 variants={fadeUpItem} className="text-5xl md:text-7xl font-bold mb-6">
-            Experience
-            <span className="block bg-gradient-gold bg-clip-text text-transparent">
-              Luxury Redefined
-            </span>
-          </motion.h1>
-          <motion.p variants={fadeUpItem} className="text-xl md:text-2xl mb-8 text-white/90">
-            Where elegance meets comfort in the heart of the city
-          </motion.p>
-          <motion.div variants={fadeUpItem} className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="hero" size="xl" onClick={() => scrollToSection("rooms")}>
-              Explore Rooms <ArrowRight className="ml-2" />
-            </Button>
-            <Button variant="luxury" size="xl" onClick={() => navigate('/booking')}>
-              Book Your Stay
-            </Button>
-          </motion.div>
-        </motion.div>
+          <div className="mofam-marquee-hairline-top" />
+          <div className="mofam-marquee-track flex h-full w-max items-center">
+            {Array.from({ length: 2 }).map((_, groupIndex) => (
+              <div key={groupIndex} className="flex shrink-0" aria-hidden={groupIndex === 1}>
+                {Array.from({ length: 6 }).map((_, itemIndex) => (
+                  <span key={itemIndex} className="flex items-center whitespace-nowrap">
+                    <span className="mofam-marquee-text mofam-marquee-label">
+                      Welcome to Mofam Hotel &amp; Apartments &mdash; where every moment feels like home
+                    </span>
+                    <span className="mofam-marquee-separator" aria-hidden="true">◆</span>
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
+
 
       {/* Rooms & Suites */}
       <section id="rooms" className="py-20 px-6">
@@ -763,15 +896,19 @@ const Index = () => {
 
       {/* Floating AI Concierge Button */}
       <div className="fixed bottom-6 right-6 z-50">
-        <Button
-          variant="luxury"
-          size="lg"
-          className="rounded-full shadow-elegant hover:shadow-glow transition-all duration-300 hover:scale-105 flex items-center gap-2 px-6 py-3"
+        <button
+          className="rounded-full flex items-center gap-2 px-6 py-3 transition-all duration-300 hover:scale-105"
+          style={{
+            background: "rgba(10,10,10,0.7)",
+            backdropFilter: "blur(8px)",
+            boxShadow: "0 0 16px rgba(201,168,76,0.25)",
+            border: "1px solid rgba(201,168,76,0.3)"
+          }}
           onClick={() => setShowSupport(true)}
         >
-          <MessageCircle className="h-5 w-5" />
-          <span className="font-medium">Talk to AI Concierge</span>
-        </Button>
+          <MessageCircle className="h-5 w-5 text-[#C9A84C]" />
+          <span className="font-medium text-white text-sm">Talk to AI Concierge</span>
+        </button>
       </div>
       {/* LiveKit Widget */}
       {showSupport && (

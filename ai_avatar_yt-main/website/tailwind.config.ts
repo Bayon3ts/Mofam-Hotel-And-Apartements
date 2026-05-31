@@ -18,7 +18,14 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				sans: ['Plus Jakarta Sans', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+				serif: ['Cormorant Garamond', 'Playfair Display', 'serif'],
+			},
 			colors: {
+				charcoal: '#1A1A1A',
+				champagne: '#C9A84C',
+				warmWhite: '#F5F0E8',
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
