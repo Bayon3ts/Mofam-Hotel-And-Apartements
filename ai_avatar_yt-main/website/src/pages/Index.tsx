@@ -108,31 +108,36 @@ const Index = () => {
 
   // Ref for the luxury divider animation
   const dividerRef = useRef<HTMLDivElement>(null);
+  const dividerRef2 = useRef<HTMLDivElement>(null);
+  const dividerRef3 = useRef<HTMLDivElement>(null);
   const [isDividerVisible, setIsDividerVisible] = useState(false);
+  const [isDividerVisible2, setIsDividerVisible2] = useState(false);
+  const [isDividerVisible3, setIsDividerVisible3] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsDividerVisible(true);
-          } else {
-            // Optional premium feature requested: remove class on exit so it replays
-            setIsDividerVisible(false);
+          if (entry.target === dividerRef.current) {
+            setIsDividerVisible(entry.isIntersecting);
+          } else if (entry.target === dividerRef2.current) {
+            setIsDividerVisible2(entry.isIntersecting);
+          } else if (entry.target === dividerRef3.current) {
+            setIsDividerVisible3(entry.isIntersecting);
           }
         });
       },
       { threshold: 0.5 }
     );
 
-    if (dividerRef.current) {
-      observer.observe(dividerRef.current);
-    }
+    if (dividerRef.current) observer.observe(dividerRef.current);
+    if (dividerRef2.current) observer.observe(dividerRef2.current);
+    if (dividerRef3.current) observer.observe(dividerRef3.current);
 
     return () => {
-      if (dividerRef.current) {
-        observer.unobserve(dividerRef.current);
-      }
+      if (dividerRef.current) observer.unobserve(dividerRef.current);
+      if (dividerRef2.current) observer.unobserve(dividerRef2.current);
+      if (dividerRef3.current) observer.unobserve(dividerRef3.current);
     };
   }, []);
 
@@ -1019,103 +1024,149 @@ const Index = () => {
       </section>
 
 
-      {/* Dining */}
-      <section id="dining" className="py-20 px-6">
+      {/* Luxury Section Divider 2 */}
+      <div 
+        ref={dividerRef2} 
+        className={`luxury-divider-container ${isDividerVisible2 ? 'divider-animate' : ''}`} 
+        style={{ background: "#0F0D08", display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", padding: "48px 0" }}
+      >
+        <div className="divider-line-left" style={{ width: "120px", height: "1px", background: "linear-gradient(to right, transparent, rgba(201,168,76,0.6))" }} />
+        <span className="divider-star" style={{ color: "#C9A84C", fontSize: "14px", display: "inline-block" }}>✦</span>
+        <div className="divider-line-right" style={{ width: "120px", height: "1px", background: "linear-gradient(to left, transparent, rgba(201,168,76,0.6))" }} />
+      </div>
+
+      {/* Dining — Luxury Redesign */}
+      <section id="dining" style={{ background: "#0F0D08", padding: "80px 5%" }}>
         <motion.div
-          className="container mx-auto max-w-6xl"
+          className="mx-auto"
+          style={{ maxWidth: "1200px" }}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
           variants={staggerContainer}
         >
-          <motion.div variants={fadeUpItem} className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">Exquisite Dining</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          {/* Section Header */}
+          <motion.div variants={fadeUpItem} style={{ textAlign: "center", marginBottom: "64px" }}>
+            <p style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.25em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif", marginBottom: "12px", fontWeight: 400 }}>
+              Culinary Experience
+            </p>
+            <div style={{ width: "32px", height: "1px", background: "#C9A84C", margin: "0 auto 12px" }} />
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(36px, 5vw, 60px)", color: "#F5F0E8", fontWeight: 600, lineHeight: 1.1, margin: 0 }}>
+              Exquisite Dining
+            </h2>
+            <div style={{ width: "60px", height: "1px", background: "#C9A84C", margin: "12px auto 0" }} />
+            <p style={{ color: "rgba(245,240,232,0.55)", fontSize: "15px", fontFamily: "'Inter', sans-serif", marginTop: "16px", lineHeight: 1.6 }}>
               Savor culinary excellence at our award-winning restaurants
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-12">
-            <motion.div variants={fadeScaleItem} className="flex flex-col h-full">
-              <Card className="overflow-hidden shadow-luxury h-full flex flex-col">
-                <div className="relative h-64 overflow-hidden">
-                  <motion.img
-                    src={diningImage}
-                    alt="Fine Dining Restaurant"
-                    className="w-full h-full object-cover"
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ duration: 0.5 }}
-                  />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "32px" }}>
+            {/* Dining Card */}
+            <motion.div variants={fadeScaleItem} className="dining-luxury-card" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(201,168,76,0.25)", borderRadius: "12px", overflow: "hidden", display: "flex", flexDirection: "column", height: "100%" }}>
+              <div style={{ position: "relative", height: "280px", overflow: "hidden" }}>
+                <img src={diningImage} alt="Dining" className="dining-card-img" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,13,8,0.85) 0%, transparent 50%)", pointerEvents: "none" }} />
+              </div>
+              <div style={{ padding: "32px 24px", flexGrow: 1, display: "flex", flexDirection: "column" }}>
+                <div style={{ width: "40px", height: "1px", background: "#C9A84C" }} />
+                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "28px", color: "#F5F0E8", fontWeight: 500, margin: "20px 0 0 0", lineHeight: 1.2 }}>Dining</h3>
+                <p style={{ color: "rgba(245,240,232,0.60)", fontSize: "14px", fontFamily: "'Inter', sans-serif", lineHeight: 1.8, margin: "12px 0 0 0" }}>
+                  From jollof rice perfected over open flame to Continental favourites prepared by our in-house chefs, every meal at Mofam is a celebration. Warm service, rich aromas, and a space designed to make you linger.
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "20px", paddingTop: "16px", borderTop: "1px solid rgba(201,168,76,0.15)" }}>
+                  <Coffee style={{ width: "14px", height: "14px", color: "#C9A84C" }} />
+                  <span style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif", fontWeight: 500 }}>Open: 6 PM – 11 PM</span>
                 </div>
-                <CardContent className="p-6 flex flex-col flex-grow">
-                  <div className="flex items-center mb-3">
-                    <ChefHat className="h-5 w-5 text-accent mr-2" />
-                    <h3 className="text-2xl font-bold">Dining</h3>
-                  </div>
-                  <p className="text-muted-foreground mb-4">
-                    A dining experience crafted for comfort and elegance. Enjoy freshly prepared meals in a beautifully designed space, served by staff who genuinely care. Morning, noon, and night.
-                  </p>
-                  <div className="flex justify-between items-center mt-auto">
-                    <span className="text-sm text-muted-foreground">Open: 6 PM - 11 PM</span>
-                    <Button variant="luxury" size="sm">Reserve Table</Button>
-                  </div>
-                </CardContent>
-              </Card>
+              </div>
+              <div style={{ padding: "0 24px 24px" }}>
+                <button
+                  style={{ width: "100%", background: "#C9A84C", color: "#0F0D08", fontWeight: 700, padding: "14px", borderRadius: "8px", letterSpacing: "0.06em", border: "none", cursor: "pointer", fontFamily: "'Inter', sans-serif", textTransform: "uppercase", fontSize: "13px", transition: "background 0.3s ease" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "#b8963e"}
+                  onMouseLeave={e => e.currentTarget.style.background = "#C9A84C"}
+                >
+                  Reserve Table
+                </button>
+              </div>
             </motion.div>
 
-            <motion.div variants={fadeScaleItem} className="flex flex-col h-full">
-              <Card className="overflow-hidden shadow-luxury h-full flex flex-col">
-                <div className="relative h-64 overflow-hidden">
-                  <motion.img
-                    src={loungeImage}
-                    alt="Café & Lounge"
-                    className="w-full h-full object-cover"
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ duration: 0.5 }}
-                  />
+            {/* The Bar & Lounge Card */}
+            <motion.div variants={fadeScaleItem} className="dining-luxury-card" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(201,168,76,0.25)", borderRadius: "12px", overflow: "hidden", display: "flex", flexDirection: "column", height: "100%" }}>
+              <div style={{ position: "relative", height: "280px", overflow: "hidden" }}>
+                <img src={loungeImage} alt="The Bar & Lounge" className="dining-card-img" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,13,8,0.85) 0%, transparent 50%)", pointerEvents: "none" }} />
+              </div>
+              <div style={{ padding: "32px 24px", flexGrow: 1, display: "flex", flexDirection: "column" }}>
+                <div style={{ width: "40px", height: "1px", background: "#C9A84C" }} />
+                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "28px", color: "#F5F0E8", fontWeight: 500, margin: "20px 0 0 0", lineHeight: 1.2 }}>The Bar & Lounge</h3>
+                <p style={{ color: "rgba(245,240,232,0.60)", fontSize: "14px", fontFamily: "'Inter', sans-serif", lineHeight: 1.8, margin: "12px 0 0 0" }}>
+                  Whether you're toasting a deal, unwinding after a long journey, or simply enjoying a cold Trophy and good company the Mofam Bar & Lounge is where good times find a home. Premium spirits, local favourites, and an Osogbo vibe that never rushes you
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "20px", paddingTop: "16px", borderTop: "1px solid rgba(201,168,76,0.15)" }}>
+                  <Coffee style={{ width: "14px", height: "14px", color: "#C9A84C" }} />
+                  <span style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif", fontWeight: 500 }}>Open: 7 AM – 10 PM</span>
                 </div>
-                <CardContent className="p-6 flex flex-col flex-grow">
-                  <div className="flex items-center mb-3">
-                    <Coffee className="h-5 w-5 text-accent mr-2" />
-                    <h3 className="text-2xl font-bold">The Bar & Lounge</h3>
-                  </div>
-                  <p className="text-muted-foreground mb-4">
-                    A lively bar stocked with premium spirits and fine wines, wrapped in warm ambient lighting and stylish lounge seating. The perfect spot to unwind, celebrate, or simply enjoy a well-deserved drink.
-                  </p>
-                  <div className="flex justify-between items-center mt-auto pt-4">
-                    <span className="text-sm text-muted-foreground">Open: 7 AM - 10 PM</span>
-                    <Button variant="elegant" size="sm">View Menu</Button>
-                  </div>
-                </CardContent>
-              </Card>
+              </div>
+              <div style={{ padding: "0 24px 24px" }}>
+                <button
+                  style={{ width: "100%", background: "transparent", border: "1px solid rgba(201,168,76,0.55)", color: "#C9A84C", fontWeight: 600, padding: "14px", borderRadius: "8px", letterSpacing: "0.06em", cursor: "pointer", fontFamily: "'Inter', sans-serif", textTransform: "uppercase", fontSize: "13px", transition: "all 0.3s ease" }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = "#C9A84C";
+                    e.currentTarget.style.background = "rgba(201,168,76,0.08)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = "rgba(201,168,76,0.55)";
+                    e.currentTarget.style.background = "transparent";
+                  }}
+                >
+                  View Menu
+                </button>
+              </div>
             </motion.div>
           </div>
         </motion.div>
       </section>
 
+      {/* Luxury Section Divider 3 */}
+      <div 
+        ref={dividerRef3} 
+        className={`luxury-divider-container ${isDividerVisible3 ? 'divider-animate' : ''}`} 
+        style={{ background: "#0F0D08", display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", padding: "48px 0" }}
+      >
+        <div className="divider-line-left" style={{ width: "120px", height: "1px", background: "linear-gradient(to right, transparent, rgba(201,168,76,0.6))" }} />
+        <span className="divider-star" style={{ color: "#C9A84C", fontSize: "14px", display: "inline-block" }}>✦</span>
+        <div className="divider-line-right" style={{ width: "120px", height: "1px", background: "linear-gradient(to left, transparent, rgba(201,168,76,0.6))" }} />
+      </div>
+
       {/* Meetings & Events */}
-      <section id="events" className="py-20 px-6 bg-muted/30">
+      <section id="events" style={{ background: "#0F0D08", padding: "80px 5%" }}>
         <motion.div
-          className="container mx-auto max-w-6xl"
+          className="mx-auto"
+          style={{ maxWidth: "1200px" }}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
           variants={staggerContainer}
         >
-          <motion.div variants={fadeUpItem} className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">Meetings & Events</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <motion.div variants={fadeUpItem} style={{ textAlign: "center", marginBottom: "64px" }}>
+            <p style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.25em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif", marginBottom: "12px", fontWeight: 400 }}>
+              VENUES & OCCASIONS
+            </p>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(36px, 5vw, 60px)", color: "#F5F0E8", fontWeight: 600, lineHeight: 1.1, margin: 0 }}>
+              Meetings & Events
+            </h2>
+            <div style={{ width: "60px", height: "1px", background: "#C9A84C", margin: "12px auto 0" }} />
+            <p style={{ color: "rgba(245,240,232,0.55)", fontSize: "15px", fontFamily: "'Inter', sans-serif", marginTop: "16px", lineHeight: 1.6 }}>
               Host memorable events in our sophisticated venues
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "32px" }}>
             {[
               {
-                title: "Grand Ballroom",
+                title: "Event Hall",
                 capacity: "300 guests",
                 image: meetingImage,
-                features: ["Crystal chandeliers", "Premium AV equipment", "Dedicated event planning"]
+                features: ["Spacious hall ideal for weddings, conferences & celebrations", "Professional sound & lighting system", "Dedicated event coordinator on-site"]
               },
               {
                 title: "Executive Boardroom",
@@ -1130,34 +1181,125 @@ const Index = () => {
                 features: ["Outdoor setting", "City views", "Weather protection"]
               }
             ].map((venue, index) => (
-              <motion.div variants={fadeScaleItem} key={index}>
-                <Card className="overflow-hidden h-full shadow-luxury hover:shadow-hover transition-all duration-300">
-                  <div className="relative h-48 overflow-hidden group">
-                    <motion.img
-                      src={venue.image}
-                      alt={venue.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  </div>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-xl font-bold">{venue.title}</h3>
-                      <div className="flex items-center text-accent">
-                        <Users className="h-4 w-4 mr-1" />
-                        <span className="text-sm">{venue.capacity}</span>
-                      </div>
+              <motion.div 
+                variants={fadeScaleItem} 
+                key={index}
+                className="events-luxury-card"
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(201,168,76,0.25)",
+                  borderRadius: "12px",
+                  overflow: "hidden",
+                  transition: "border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease",
+                  height: "100%"
+                }}
+                whileHover={{
+                  y: -4,
+                  boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+                  borderColor: "rgba(201,168,76,0.55)"
+                }}
+              >
+                <div style={{ position: "relative", height: "240px", overflow: "hidden", flexShrink: 0 }}>
+                  <motion.img
+                    src={venue.image}
+                    alt={venue.title}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    whileHover={{ scale: 1.04 }}
+                    transition={{ duration: 0.6, ease: "easeInOut" }}
+                  />
+                  <div style={{
+                    position: "absolute", inset: 0,
+                    background: "linear-gradient(to top, rgba(15,13,8,0.85) 0%, transparent 50%)",
+                    pointerEvents: "none"
+                  }} />
+                </div>
+
+                <div style={{ padding: "24px", paddingBottom: "28px", display: "flex", flexDirection: "column", flexGrow: 1 }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "16px", gap: "12px" }}>
+                    <h3 style={{
+                      fontFamily: "'Cormorant Garamond', serif",
+                      fontSize: "26px",
+                      color: "#F5F0E8",
+                      fontWeight: 500,
+                      margin: 0,
+                      lineHeight: 1.2
+                    }}>
+                      {venue.title}
+                    </h3>
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      color: "#C9A84C",
+                      fontSize: "12px",
+                      letterSpacing: "0.08em",
+                      fontFamily: "'Inter', sans-serif",
+                      textTransform: "uppercase",
+                      marginTop: "6px"
+                    }}>
+                      <Users style={{ width: "12px", height: "12px" }} />
+                      {venue.capacity}
                     </div>
-                    <ul className="space-y-1 mb-6 text-sm text-muted-foreground">
-                      {venue.features.map((feature, idx) => (
-                        <li key={idx}>• {feature}</li>
-                      ))}
-                    </ul>
-                    <Button variant="elegant" className="w-full">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Check Availability
-                    </Button>
-                  </CardContent>
-                </Card>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px", flexGrow: 1 }}>
+                    {venue.features.map((feature, idx) => (
+                      <div key={idx} style={{ display: "flex", alignItems: "flex-start" }}>
+                        <div style={{
+                          background: "#C9A84C",
+                          width: "2px",
+                          height: "14px",
+                          borderRadius: "2px",
+                          marginRight: "10px",
+                          marginTop: "5px",
+                          flexShrink: 0
+                        }} />
+                        <span style={{
+                          color: "rgba(245,240,232,0.65)",
+                          fontSize: "14px",
+                          lineHeight: 1.7,
+                          fontFamily: "'Inter', sans-serif"
+                        }}>
+                          {feature}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    style={{
+                      width: "100%",
+                      background: "transparent",
+                      border: "1px solid rgba(201,168,76,0.55)",
+                      color: "#C9A84C",
+                      fontWeight: 600,
+                      padding: "14px",
+                      borderRadius: "8px",
+                      letterSpacing: "0.06em",
+                      fontSize: "14px",
+                      fontFamily: "'Inter', sans-serif",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      transition: "border-color 0.3s ease, background 0.3s ease",
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.borderColor = "#C9A84C";
+                      e.currentTarget.style.background = "rgba(201,168,76,0.08)";
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.borderColor = "rgba(201,168,76,0.55)";
+                      e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    <Calendar style={{ width: "16px", height: "16px", color: "#C9A84C" }} />
+                    Check Availability
+                  </button>
+                </div>
               </motion.div>
             ))}
           </div>
