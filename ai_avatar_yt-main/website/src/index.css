@@ -260,3 +260,12 @@
     }
   }
 }
+
+/* ─── Rooms & Suites — Luxury Card Hover ────────────────────────────────── */
+.rooms-luxury-card {
+  transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.rooms-luxury-card:hover {
+  border-color: rgba(201, 168, 76, 0.60) !important;
+}

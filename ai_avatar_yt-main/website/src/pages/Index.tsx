@@ -229,9 +229,10 @@ const Index = () => {
       {/* Navigation */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out ${isScrolled
-            ? "bg-charcoal/95 backdrop-blur-md border-b border-white/10 shadow-sm py-3"
+            ? "backdrop-blur-md border-b border-white/10 shadow-lg py-3"
             : "bg-transparent py-5"
           }`}
+        style={isScrolled ? { background: "rgba(15,13,8,0.97)" } : {}}
       >
         <div className="container mx-auto px-6 lg:px-12">
           <div className="flex items-center justify-between">
@@ -463,23 +464,65 @@ const Index = () => {
       </section>
 
 
-      {/* Rooms & Suites */}
-      <section id="rooms" className="py-20 px-6">
+      {/* Rooms & Suites — Luxury Redesign */}
+      <section
+        id="rooms"
+        style={{ background: "#0F0D08", paddingTop: "100px", paddingBottom: "80px", paddingLeft: "5%", paddingRight: "5%" }}
+      >
         <motion.div
-          className="container mx-auto max-w-6xl"
+          className="mx-auto"
+          style={{ maxWidth: "1200px" }}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
           variants={staggerContainer}
         >
-          <motion.div variants={fadeUpItem} className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">Rooms & Suites</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Discover our collection of meticulously designed accommodations
+          {/* Section Header */}
+          <motion.div variants={fadeUpItem} style={{ textAlign: "center", marginBottom: "48px" }}>
+            {/* Eyebrow label */}
+            <p style={{
+              color: "#C9A84C",
+              fontSize: "11px",
+              letterSpacing: "0.25em",
+              textTransform: "uppercase",
+              fontFamily: "'Inter', sans-serif",
+              marginBottom: "12px",
+              fontWeight: 400
+            }}>
+              Our Accommodations
             </p>
+
+            {/* Short gold rule between eyebrow and heading */}
+            <div style={{
+              width: "32px",
+              height: "1px",
+              background: "#C9A84C",
+              margin: "0 auto 12px"
+            }} />
+
+            {/* Main heading */}
+            <h2 style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "clamp(40px, 5vw, 64px)",
+              color: "#F5F0E8",
+              fontWeight: 600,
+              lineHeight: 1.1,
+              margin: 0
+            }}>
+              Rooms &amp; Suites
+            </h2>
+
+            {/* Gold rule beneath heading */}
+            <div style={{
+              width: "60px",
+              height: "1px",
+              background: "#C9A84C",
+              margin: "16px auto 0"
+            }} />
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 min-h-[500px]">
+          {/* Room Cards Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "28px", minHeight: "500px", paddingLeft: "40px", paddingRight: "40px" }}>
             {(Array.isArray(roomsToDisplay) && roomsToDisplay.length > 0 ? roomsToDisplay : DEFAULT_ROOMS.slice(0, 3)).map((room, index) => {
               const totalRoomsCount = Number(room.total_rooms || room.totalRooms || 0);
               const bookedRoomsCount = Number(room.booked_rooms || room.bookedRooms || 0);
@@ -488,89 +531,261 @@ const Index = () => {
               const imageUrl = getRoomImage(room.id, index);
               const isStandardRoom = `${room.id ?? ""} ${room.name ?? ""}`.toLowerCase().includes("standard");
               const isRoyalAptRoom = `${room.id ?? ""} ${room.name ?? ""}`.toLowerCase().includes("executive") || `${room.id ?? ""} ${room.name ?? ""}`.toLowerCase().includes("royal apt");
+              const roomImg = isStandardRoom ? STANDARD_ROOM_IMAGE : isRoyalAptRoom ? EXECUTIVE_ROOM_IMAGE : imageUrl;
 
               return (
-                <div key={room.id || `room-${index}`} className="flex flex-col rounded-xl overflow-hidden shadow-luxury bg-white border border-border h-full transition-transform hover:-translate-y-1">
+                <motion.div
+                  key={room.id || `room-${index}`}
+                  variants={fadeUpItem}
+                  className="rooms-luxury-card"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(201,168,76,0.30)",
+                    borderRadius: "12px",
+                    overflow: "hidden",
+                    boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
+                    transition: "border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease",
+                  }}
+                  whileHover={{
+                    y: -4,
+                    boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+                  }}
+                >
                   {/* Image Block */}
-                  <div className="relative h-64 w-full bg-muted flex-shrink-0">
-                    {isStandardRoom ? (
-                      <img
-                        src={STANDARD_ROOM_IMAGE}
-                        alt={room.name || "Hotel Room"}
-                        className="absolute inset-0 w-full h-full object-cover block"
-                        onError={(e) => { (e.target as HTMLImageElement).src = suiteImage; }}
-                      />
-                    ) : isRoyalAptRoom ? (
-                      <img
-                        src={EXECUTIVE_ROOM_IMAGE}
-                        alt={room.name || "Hotel Room"}
-                        className="absolute inset-0 w-full h-full object-cover block"
-                        onError={(e) => { (e.target as HTMLImageElement).src = suiteImage; }}
-                      />
-                    ) : (
-                      <img
-                        src={imageUrl}
-                        alt={room.name || "Hotel Room"}
-                        className="absolute inset-0 w-full h-full object-cover block"
-                        onError={(e) => { (e.target as HTMLImageElement).src = suiteImage; }}
-                      />
-                    )}
-                    <div className="absolute top-4 right-4 bg-accent text-primary px-3 py-1 rounded-full text-sm font-bold shadow-lg z-10">
-                      {fmt(room.price)}
-                      <span className="text-[10px] ml-1 opacity-80">/ night</span>
+                  <div className="rooms-card-image-wrap" style={{ position: "relative", height: "260px", overflow: "hidden", flexShrink: 0 }}>
+                    <motion.img
+                      src={roomImg}
+                      alt={room.name || "Hotel Room"}
+                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                      whileHover={{ scale: 1.04 }}
+                      transition={{ duration: 0.6, ease: "easeInOut" }}
+                      onError={(e) => { (e.target as HTMLImageElement).src = suiteImage; }}
+                    />
+
+                    {/* Bottom gradient overlay */}
+                    <div style={{
+                      position: "absolute", inset: 0,
+                      background: "linear-gradient(to top, rgba(15,13,8,0.85) 0%, transparent 50%)",
+                      pointerEvents: "none"
+                    }} />
+
+                    {/* Price overlay — bottom-left of image */}
+                    <div style={{
+                      position: "absolute",
+                      bottom: "14px",
+                      left: "16px",
+                      zIndex: 10,
+                      display: "flex",
+                      alignItems: "baseline",
+                      gap: "4px"
+                    }}>
+                      <span style={{
+                        fontFamily: "'Cormorant Garamond', serif",
+                        fontSize: "22px",
+                        fontWeight: 600,
+                        color: "#C9A84C",
+                        lineHeight: 1
+                      }}>
+                        {fmt(room.price)}
+                      </span>
+                      <span style={{ fontSize: "12px", color: "#F5F0E8", opacity: 0.8, fontFamily: "'Inter', sans-serif" }}>/night</span>
                     </div>
+
+                    {/* Fully Booked badge */}
                     {isSoldOut && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
-                        <span className="bg-red-600 text-white px-4 py-1 rounded-full font-bold uppercase tracking-wider text-xs">
-                          Fully Booked
-                        </span>
+                      <div style={{
+                        position: "absolute",
+                        top: "14px",
+                        right: "14px",
+                        zIndex: 20,
+                        background: "rgba(15,13,8,0.85)",
+                        border: "1px solid rgba(201,168,76,0.4)",
+                        color: "#C9A84C",
+                        fontSize: "10px",
+                        letterSpacing: "0.2em",
+                        textTransform: "uppercase",
+                        padding: "5px 12px",
+                        borderRadius: "20px",
+                        fontFamily: "'Inter', sans-serif",
+                        fontWeight: 500
+                      }}>
+                        Fully Booked
+                      </div>
+                    )}
+
+                    {/* Low availability badge */}
+                    {!isSoldOut && available > 0 && available <= 3 && (
+                      <div style={{
+                        position: "absolute",
+                        top: "14px",
+                        right: "14px",
+                        zIndex: 20,
+                        background: "rgba(15,13,8,0.85)",
+                        border: "1px solid rgba(201,168,76,0.3)",
+                        color: "#C9A84C",
+                        fontSize: "10px",
+                        letterSpacing: "0.18em",
+                        textTransform: "uppercase",
+                        padding: "5px 12px",
+                        borderRadius: "20px",
+                        fontFamily: "'Inter', sans-serif",
+                      }}>
+                        Last {available} Units
                       </div>
                     )}
                   </div>
 
                   {/* Content Block */}
-                  <div className="p-6 flex flex-col flex-grow">
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-2xl font-bold text-foreground">{room.name || "Room"}</h3>
-                      {available > 0 && available <= 3 && (
-                        <span className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded">
-                          LAST {available} UNITS
+                  <div style={{ padding: "24px 24px 32px", display: "flex", flexDirection: "column", flexGrow: 1 }}>
+                    {/* Room name */}
+                    <h3 style={{
+                      fontFamily: "'Cormorant Garamond', serif",
+                      fontSize: "26px",
+                      color: "#F5F0E8",
+                      fontWeight: 500,
+                      margin: "0 0 8px 0",
+                      lineHeight: 1.2
+                    }}>
+                      {room.name || "Room"}
+                    </h3>
+
+                    {/* Gold rule beneath name */}
+                    <div style={{ width: "40px", height: "1px", background: "#C9A84C", marginBottom: "18px" }} />
+
+                    {/* Amenity tags */}
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "20px" }}>
+                      {(Array.isArray(room.amenities) ? room.amenities : ["WiFi", "TV", "AC"]).slice(0, 4).map((feature: string, idx: number) => (
+                        <span
+                          key={idx}
+                          style={{
+                            background: "rgba(201,168,76,0.08)",
+                            border: "1px solid rgba(201,168,76,0.2)",
+                            color: "#C9A84C",
+                            fontSize: "11px",
+                            letterSpacing: "0.1em",
+                            padding: "4px 10px",
+                            borderRadius: "4px",
+                            fontFamily: "'Inter', sans-serif",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {feature}
                         </span>
-                      )}
+                      ))}
+
+                      {/* Guest capacity tag */}
+                      <span
+                        style={{
+                          background: "rgba(201,168,76,0.08)",
+                          border: "1px solid rgba(201,168,76,0.2)",
+                          color: "#C9A84C",
+                          fontSize: "11px",
+                          letterSpacing: "0.1em",
+                          padding: "4px 10px",
+                          borderRadius: "4px",
+                          fontFamily: "'Inter', sans-serif",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "5px",
+                        }}
+                      >
+                        <Users style={{ width: "11px", height: "11px", flexShrink: 0 }} />
+                        Up to {room.maxGuests || 2} Guests
+                      </span>
                     </div>
 
-                    <ul className="space-y-3 mb-8">
-                      {(Array.isArray(room.amenities) ? room.amenities : ["WiFi", "TV", "AC"]).slice(0, 4).map((feature: string, idx: number) => (
-                        <li key={idx} className="flex items-center text-muted-foreground">
-                          <Star className="h-4 w-4 text-accent mr-3 flex-shrink-0" />
-                          <span className="text-sm">{feature}</span>
-                        </li>
-                      ))}
-                      <li className="flex items-center text-muted-foreground">
-                        <Users className="h-4 w-4 text-accent mr-3 flex-shrink-0" />
-                        <span className="text-sm">Up to {room.maxGuests || 2} Guests</span>
-                      </li>
-                    </ul>
-
-                    <Button
-                      variant={isSoldOut ? "outline" : "luxury"}
-                      className="w-full mt-auto font-bold"
-                      onClick={() => navigate('/booking')}
-                      disabled={isSoldOut}
-                    >
-                      {isSoldOut ? "Contact Support" : "Book This Room"}
-                    </Button>
+                    {/* CTA Button */}
+                    <div style={{ marginTop: "auto" }}>
+                      {isSoldOut ? (
+                        <button
+                          onClick={() => setShowSupport(true)}
+                          style={{
+                            width: "100%",
+                            background: "transparent",
+                            border: "1px solid rgba(201,168,76,0.55)",
+                            color: "#C9A84C",
+                            fontWeight: 600,
+                            padding: "14px",
+                            borderRadius: "8px",
+                            letterSpacing: "0.06em",
+                            fontSize: "14px",
+                            fontFamily: "'Inter', sans-serif",
+                            cursor: "pointer",
+                            transition: "border-color 0.3s ease, background 0.3s ease",
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.borderColor = "#C9A84C";
+                            e.currentTarget.style.background = "rgba(201,168,76,0.08)";
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.borderColor = "rgba(201,168,76,0.55)";
+                            e.currentTarget.style.background = "transparent";
+                          }}
+                        >
+                          Contact Support
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => navigate('/booking')}
+                          style={{
+                            width: "100%",
+                            background: "#C9A84C",
+                            color: "#0F0D08",
+                            fontWeight: 700,
+                            padding: "14px",
+                            borderRadius: "8px",
+                            letterSpacing: "0.06em",
+                            fontSize: "14px",
+                            fontFamily: "'Inter', sans-serif",
+                            cursor: "pointer",
+                            border: "none",
+                            transition: "background 0.3s ease",
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.background = "#b8963e")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "#C9A84C")}
+                        >
+                          Book This Room
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
 
+          {/* View All button */}
           {!isLoadingRooms && roomsToDisplay.length > 0 && (
-            <motion.div variants={fadeUpItem} className="mt-12 text-center">
-              <Button variant="luxury" size="lg" onClick={() => navigate('/booking')}>
+            <motion.div variants={fadeUpItem} style={{ marginTop: "48px", textAlign: "center" }}>
+              <button
+                onClick={() => navigate('/booking')}
+                style={{
+                  background: "transparent",
+                  border: "1px solid rgba(201,168,76,0.4)",
+                  color: "#C9A84C",
+                  fontWeight: 600,
+                  padding: "14px 40px",
+                  borderRadius: "8px",
+                  letterSpacing: "0.08em",
+                  fontSize: "13px",
+                  fontFamily: "'Inter', sans-serif",
+                  cursor: "pointer",
+                  textTransform: "uppercase",
+                  transition: "border-color 0.3s ease, color 0.3s ease",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = "#C9A84C";
+                  e.currentTarget.style.color = "#F5F0E8";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = "rgba(201,168,76,0.4)";
+                  e.currentTarget.style.color = "#C9A84C";
+                }}
+              >
                 View All Room Types
-              </Button>
+              </button>
             </motion.div>
           )}
         </motion.div>
