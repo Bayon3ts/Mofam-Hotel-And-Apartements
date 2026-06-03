@@ -29,8 +29,11 @@ import {
   Loader2,
   Instagram,
   Facebook,
-  Twitter
+  Twitter,
+  Sun,
+  Moon
 } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
 import { getRooms, getAvailability, type RoomInventory } from "@/lib/roomStore";
 import { supabase } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
@@ -105,6 +108,7 @@ const Index = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [rooms, setRooms] = useState<any[]>([]);
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
+  const { theme, toggleTheme } = useTheme();
 
   const { scrollY } = useScroll();
   const parallaxY = useTransform(scrollY, [0, 1000], [0, 200]);
@@ -277,7 +281,7 @@ const Index = () => {
           transition: "all 0.3s ease",
           opacity: isScrolled ? 1 : 0,
           transform: isScrolled ? "translateY(0)" : "translateY(-100%)",
-          background: "rgba(15,13,8,0.97)",
+          background: theme === 'light' ? "rgba(250,247,242,0.97)" : "rgba(15,13,8,0.97)",
           backdropFilter: "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
           borderBottom: "1px solid rgba(255,255,255,0.1)",
@@ -291,6 +295,31 @@ const Index = () => {
               <img src="/mofam.webp" alt="Mofam Hotel And Apartements" style={{ width: "64px", height: "64px" }} className="object-contain" />
             </div>
             <div className="hidden md:flex items-center justify-end flex-1 space-x-10 pr-6">
+              {/* Theme Toggle — left of first nav link */}
+              <button
+                onClick={toggleTheme}
+                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: 'rgba(201,168,76,0.1)',
+                  border: '1px solid rgba(201,168,76,0.25)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  cursor: 'pointer',
+                  transition: 'border-color 0.2s ease',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.5)')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(201,168,76,0.25)')}
+              >
+                {theme === 'dark'
+                  ? <Sun style={{ width: '20px', height: '20px', color: '#C9A84C', strokeWidth: 1.5 }} />
+                  : <Moon style={{ width: '20px', height: '20px', color: '#C9A84C', strokeWidth: 1.5 }} />
+                }
+              </button>
               {navItems.map((item) => (
                 <button
                   key={item.id}
@@ -302,13 +331,35 @@ const Index = () => {
                 </button>
               ))}
             </div>
-            {/* Mobile Toggle Button */}
-            <button
-              className="md:hidden text-white p-2 -mr-2"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+            {/* Mobile controls: theme toggle + hamburger */}
+            <div className="md:hidden flex items-center gap-2">
+              <button
+                onClick={toggleTheme}
+                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: 'rgba(201,168,76,0.1)',
+                  border: '1px solid rgba(201,168,76,0.25)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                {theme === 'dark'
+                  ? <Sun style={{ width: '16px', height: '16px', color: '#C9A84C', strokeWidth: 1.5 }} />
+                  : <Moon style={{ width: '16px', height: '16px', color: '#C9A84C', strokeWidth: 1.5 }} />
+                }
+              </button>
+              <button
+                className="text-white p-2 -mr-2"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -354,25 +405,25 @@ const Index = () => {
         </motion.div>
 
         {/* Top vignette for navbar legibility */}
-        <div 
+        <div
           className="absolute inset-0 pointer-events-none"
           style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 30%, transparent 60%)", zIndex: 2 }}
         />
 
         {/* Directional overlay */}
         <div className="absolute inset-0 bg-gradient-hero pointer-events-none z-10" />
-        
+
         {/* Film grain overlay */}
         <div className="film-grain" />
 
         {/* Localized gradient for text legibility */}
-        <div 
-          className="absolute inset-y-0 left-0 w-full z-10 pointer-events-none"
-          style={{ background: "linear-gradient(to right, rgba(8,6,1,0.65) 0%, rgba(8,6,1,0.3) 45%, transparent 70%)" }} 
+        <div
+          className="hero-left-gradient absolute inset-y-0 left-0 w-full z-10 pointer-events-none"
+          style={{ background: "linear-gradient(to right, rgba(8,6,1,0.65) 0%, rgba(8,6,1,0.3) 45%, transparent 70%)" }}
         />
 
         {/* Upper right overlay */}
-        <div 
+        <div
           className="absolute inset-0 z-10 pointer-events-none"
           style={{ background: "radial-gradient(ellipse at top right, rgba(0,0,0,0.35) 0%, transparent 60%)" }}
         />
@@ -409,21 +460,21 @@ const Index = () => {
                     className="flex flex-col"
                     style={{ textShadow: "0 2px 24px rgba(0,0,0,0.5)" }}
                   >
-                    <span 
-                      className="text-white whitespace-nowrap leading-none" 
+                    <span
+                      className="text-white whitespace-nowrap leading-none"
                       style={{ fontSize: "clamp(52px, 6.5vw, 82px)", letterSpacing: "-0.03em", fontWeight: 700, fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" }}
                     >
                       Experience
                     </span>
-                    <span 
-                      className="font-serif italic whitespace-nowrap" 
-                      style={{ 
-                        color: "#C9A84C", 
-                        opacity: 1, 
-                        textShadow: "0 2px 20px rgba(0,0,0,0.6)", 
-                        fontSize: "clamp(52px, 6.5vw, 84px)", 
-                        fontFamily: "'Cormorant Garamond', serif", 
-                        lineHeight: 1.05 
+                    <span
+                      className="font-serif italic whitespace-nowrap"
+                      style={{
+                        color: "#C9A84C",
+                        opacity: 1,
+                        textShadow: "0 2px 20px rgba(0,0,0,0.6)",
+                        fontSize: "clamp(52px, 6.5vw, 84px)",
+                        fontFamily: "'Cormorant Garamond', serif",
+                        lineHeight: 1.05
                       }}
                     >
                       Luxury Redefined
@@ -435,7 +486,7 @@ const Index = () => {
                     <p className="text-[16px] text-white/70 tracking-wide font-light">
                       Where elegance meets comfort in the heart of the city
                     </p>
-                    <motion.div 
+                    <motion.div
                       className="h-[1px] bg-champagne mt-5"
                       initial={{ width: 0 }}
                       animate={{ width: 60 }}
@@ -457,7 +508,7 @@ const Index = () => {
                   {/* Card header */}
                   <div className="flex items-center justify-center pb-2">
                     <span style={{ display: "inline-block", width: "36px", height: "1px", background: "#C9A84C", opacity: 0.6, verticalAlign: "middle", margin: "0 10px" }} />
-                    <p 
+                    <p
                       style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.25em", fontFamily: "'Cormorant Garamond', serif", textTransform: "uppercase", textAlign: "center" }}
                     >
                       Begin Your Stay
@@ -841,9 +892,9 @@ const Index = () => {
       </section>
 
       {/* Luxury Section Divider */}
-      <div 
-        ref={dividerRef} 
-        className={`luxury-divider-container ${isDividerVisible ? 'divider-animate' : ''}`} 
+      <div
+        ref={dividerRef}
+        className={`luxury-divider-container ${isDividerVisible ? 'divider-animate' : ''}`}
         style={{ background: "#0F0D08", display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", padding: "48px 0" }}
       >
         <div className="divider-line-left" style={{ width: "120px", height: "1px", background: "linear-gradient(to right, transparent, rgba(201,168,76,0.6))" }} />
@@ -1041,9 +1092,9 @@ const Index = () => {
 
 
       {/* Luxury Section Divider 2 */}
-      <div 
-        ref={dividerRef2} 
-        className={`luxury-divider-container ${isDividerVisible2 ? 'divider-animate' : ''}`} 
+      <div
+        ref={dividerRef2}
+        className={`luxury-divider-container ${isDividerVisible2 ? 'divider-animate' : ''}`}
         style={{ background: "#0F0D08", display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", padding: "48px 0" }}
       >
         <div className="divider-line-left" style={{ width: "120px", height: "1px", background: "linear-gradient(to right, transparent, rgba(201,168,76,0.6))" }} />
@@ -1143,9 +1194,9 @@ const Index = () => {
       </section>
 
       {/* Luxury Section Divider 3 */}
-      <div 
-        ref={dividerRef3} 
-        className={`luxury-divider-container ${isDividerVisible3 ? 'divider-animate' : ''}`} 
+      <div
+        ref={dividerRef3}
+        className={`luxury-divider-container ${isDividerVisible3 ? 'divider-animate' : ''}`}
         style={{ background: "#0F0D08", display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", padding: "48px 0" }}
       >
         <div className="divider-line-left" style={{ width: "120px", height: "1px", background: "linear-gradient(to right, transparent, rgba(201,168,76,0.6))" }} />
@@ -1197,8 +1248,8 @@ const Index = () => {
                 features: ["Outdoor setting", "City views", "Weather protection"]
               }
             ].map((venue, index) => (
-              <motion.div 
-                variants={fadeScaleItem} 
+              <motion.div
+                variants={fadeScaleItem}
                 key={index}
                 className="events-luxury-card"
                 style={{
@@ -1323,9 +1374,9 @@ const Index = () => {
       </section>
 
       {/* Luxury Section Divider 4 */}
-      <div 
-        ref={dividerRef4} 
-        className={`luxury-divider-container ${isDividerVisible4 ? 'divider-animate' : ''}`} 
+      <div
+        ref={dividerRef4}
+        className={`luxury-divider-container ${isDividerVisible4 ? 'divider-animate' : ''}`}
         style={{ background: "#0F0D08", display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", padding: "48px 0" }}
       >
         <div className="divider-line-left" style={{ width: "120px", height: "1px", background: "linear-gradient(to right, transparent, rgba(201,168,76,0.6))" }} />
@@ -1362,7 +1413,7 @@ const Index = () => {
               <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "28px", color: "#F5F0E8", fontWeight: 500, margin: "0 0 32px 0", lineHeight: 1.2 }}>
                 Get in Touch
               </h3>
-              
+
               <div style={{ display: "flex", flexDirection: "column" }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", padding: "20px 0", borderBottom: "1px solid rgba(201,168,76,0.1)" }}>
                   <div style={{ flexShrink: 0, width: "44px", height: "44px", borderRadius: "50%", border: "1px solid rgba(201,168,76,0.4)", background: "rgba(201,168,76,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1404,37 +1455,37 @@ const Index = () => {
                 </h3>
                 <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                    <input 
-                      type="text" 
-                      placeholder="First Name" 
+                    <input
+                      type="text"
+                      placeholder="First Name"
                       className="contact-luxury-input"
-                      style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", transition: "all 0.3s ease" }} 
+                      style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", transition: "all 0.3s ease" }}
                     />
-                    <input 
-                      type="text" 
-                      placeholder="Last Name" 
+                    <input
+                      type="text"
+                      placeholder="Last Name"
                       className="contact-luxury-input"
-                      style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", transition: "all 0.3s ease" }} 
+                      style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", transition: "all 0.3s ease" }}
                     />
                   </div>
-                  <input 
-                    type="email" 
-                    placeholder="Email Address" 
+                  <input
+                    type="email"
+                    placeholder="Email Address"
                     className="contact-luxury-input"
-                    style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", transition: "all 0.3s ease" }} 
+                    style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", transition: "all 0.3s ease" }}
                   />
-                  <input 
-                    type="tel" 
-                    placeholder="Phone Number" 
+                  <input
+                    type="tel"
+                    placeholder="Phone Number"
                     className="contact-luxury-input"
-                    style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", transition: "all 0.3s ease" }} 
+                    style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", transition: "all 0.3s ease" }}
                   />
-                  <textarea 
-                    placeholder="How can we assist you?" 
+                  <textarea
+                    placeholder="How can we assist you?"
                     className="contact-luxury-input"
-                    style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", minHeight: "120px", resize: "vertical", transition: "all 0.3s ease" }} 
+                    style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", minHeight: "120px", resize: "vertical", transition: "all 0.3s ease" }}
                   />
-                  <button 
+                  <button
                     type="submit"
                     style={{ width: "100%", background: "#C9A84C", color: "#0F0D08", fontWeight: 700, padding: "16px", borderRadius: "8px", letterSpacing: "0.06em", fontSize: "15px", fontFamily: "'Inter', sans-serif", border: "none", cursor: "pointer", transition: "background 0.3s ease" }}
                     onMouseEnter={e => e.currentTarget.style.background = "#b8963e"}
@@ -1472,19 +1523,19 @@ const Index = () => {
               {/* Social Icons */}
               <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
                 {[Instagram, Facebook, Twitter].map((Icon, idx) => (
-                  <a key={idx} href="#" target="_blank" style={{ 
-                    width: "36px", height: "36px", borderRadius: "50%", border: "1px solid rgba(201,168,76,0.35)", 
+                  <a key={idx} href="#" target="_blank" style={{
+                    width: "36px", height: "36px", borderRadius: "50%", border: "1px solid rgba(201,168,76,0.35)",
                     display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none",
                     transition: "all 0.3s ease"
                   }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = "#C9A84C";
-                    e.currentTarget.style.background = "rgba(201,168,76,0.1)";
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = "rgba(201,168,76,0.35)";
-                    e.currentTarget.style.background = "transparent";
-                  }}>
+                    onMouseEnter={e => {
+                      e.currentTarget.style.borderColor = "#C9A84C";
+                      e.currentTarget.style.background = "rgba(201,168,76,0.1)";
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.borderColor = "rgba(201,168,76,0.35)";
+                      e.currentTarget.style.background = "transparent";
+                    }}>
                     <Icon style={{ width: "15px", height: "15px", color: "#C9A84C" }} />
                   </a>
                 ))}
@@ -1504,18 +1555,18 @@ const Index = () => {
                   { label: "Dining", href: "#dining" },
                   { label: "Meetings & Events", href: "#events" }
                 ].map((link, idx) => (
-                  <a key={idx} href={link.href} style={{ 
-                    color: "rgba(245,240,232,0.55)", fontSize: "13px", lineHeight: 2.2, textDecoration: "none", 
-                    fontFamily: "'Inter', sans-serif", transition: "all 0.2s ease" 
+                  <a key={idx} href={link.href} style={{
+                    color: "rgba(245,240,232,0.55)", fontSize: "13px", lineHeight: 2.2, textDecoration: "none",
+                    fontFamily: "'Inter', sans-serif", transition: "all 0.2s ease"
                   }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.color = "#C9A84C";
-                    e.currentTarget.style.paddingLeft = "4px";
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.color = "rgba(245,240,232,0.55)";
-                    e.currentTarget.style.paddingLeft = "0";
-                  }}>
+                    onMouseEnter={e => {
+                      e.currentTarget.style.color = "#C9A84C";
+                      e.currentTarget.style.paddingLeft = "4px";
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.color = "rgba(245,240,232,0.55)";
+                      e.currentTarget.style.paddingLeft = "0";
+                    }}>
                     {link.label}
                   </a>
                 ))}
@@ -1530,18 +1581,18 @@ const Index = () => {
               <div style={{ width: "32px", height: "1px", background: "#C9A84C", marginBottom: "20px" }} />
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 {["Concierge", "Room Service", "Spa & Wellness", "Business Center"].map((label, idx) => (
-                  <span key={idx} style={{ 
-                    color: "rgba(245,240,232,0.55)", fontSize: "13px", lineHeight: 2.2, 
+                  <span key={idx} style={{
+                    color: "rgba(245,240,232,0.55)", fontSize: "13px", lineHeight: 2.2,
                     fontFamily: "'Inter', sans-serif", transition: "all 0.2s ease", cursor: "pointer"
                   }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.color = "#C9A84C";
-                    e.currentTarget.style.paddingLeft = "4px";
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.color = "rgba(245,240,232,0.55)";
-                    e.currentTarget.style.paddingLeft = "0";
-                  }}>
+                    onMouseEnter={e => {
+                      e.currentTarget.style.color = "#C9A84C";
+                      e.currentTarget.style.paddingLeft = "4px";
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.color = "rgba(245,240,232,0.55)";
+                      e.currentTarget.style.paddingLeft = "0";
+                    }}>
                     {label}
                   </span>
                 ))}
@@ -1555,18 +1606,18 @@ const Index = () => {
               </h4>
               <div style={{ width: "32px", height: "1px", background: "#C9A84C", marginBottom: "20px" }} />
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                <span style={{ 
-                  color: "rgba(245,240,232,0.55)", fontSize: "13px", lineHeight: 2.2, 
+                <span style={{
+                  color: "rgba(245,240,232,0.55)", fontSize: "13px", lineHeight: 2.2,
                   fontFamily: "'Inter', sans-serif", transition: "all 0.2s ease", cursor: "pointer"
                 }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.color = "#C9A84C";
-                  e.currentTarget.style.paddingLeft = "4px";
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.color = "rgba(245,240,232,0.55)";
-                  e.currentTarget.style.paddingLeft = "0";
-                }}>
+                  onMouseEnter={e => {
+                    e.currentTarget.style.color = "#C9A84C";
+                    e.currentTarget.style.paddingLeft = "4px";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.color = "rgba(245,240,232,0.55)";
+                    e.currentTarget.style.paddingLeft = "0";
+                  }}>
                   Secure Portal Access Required
                 </span>
               </div>

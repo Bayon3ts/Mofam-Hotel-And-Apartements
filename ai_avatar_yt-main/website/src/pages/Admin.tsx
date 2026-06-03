@@ -1,30 +1,22 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
   Shield,
-  Save,
   RotateCcw,
   CheckCircle,
-  AlertCircle,
+  AlertTriangle,
   Hotel,
   Users,
   DoorOpen,
   Lock,
   LogOut,
   Loader2,
-  ClipboardList,
-  CalendarCheck,
   Search as SearchIcon,
   Mail as MailIcon,
   Phone as PhoneIcon,
+  CalendarCheck
 } from "lucide-react";
 import {
   getRooms,
@@ -34,13 +26,14 @@ import {
   type RoomInventory,
 } from "@/lib/roomStore";
 import { toast } from "@/components/ui/sonner";
+import { format } from "date-fns";
 
 const Admin = () => {
   const navigate = useNavigate();
   const [rooms, setRooms] = useState<RoomInventory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   const [editState, setEditState] = useState<
     Record<string, { price: string; totalRooms: string; bookedRooms: string }>
   >({});
@@ -58,14 +51,14 @@ const Admin = () => {
   const fetchRooms = async (showRefresh = false) => {
     if (showRefresh) setIsRefreshing(true);
     else setIsLoading(true);
-    
+
     try {
       const data = await getRooms();
       console.log("[Admin] Fetched rooms:", data);
-      
+
       const safeData = Array.isArray(data) ? data : [];
       setRooms(safeData);
-      
+
       const initial: Record<string, { price: string; totalRooms: string; bookedRooms: string }> = {};
       safeData.forEach((r) => {
         initial[r.id] = {
@@ -157,7 +150,7 @@ const Admin = () => {
     }
 
     setIsSaving(id);
-    
+
     try {
       const updatedRooms = await updateRoom(id, {
         price: parseInt(state.price, 10),
@@ -183,7 +176,7 @@ const Admin = () => {
 
       setSavedId(id);
       toast.success(`${room?.name} updated successfully`);
-      setTimeout(() => setSavedId(null), 3000);
+      setTimeout(() => setSavedId(null), 1500);
     } catch (err) {
       console.error("[Admin] Save error:", err);
       toast.error("Database update failed. Please try again.");
@@ -195,13 +188,13 @@ const Admin = () => {
   // Reset all to defaults
   const handleReset = async () => {
     if (!confirm("Are you sure you want to reset all data to default values?")) return;
-    
+
     setIsRefreshing(true);
     try {
       const fresh = await resetRooms();
       const safeFresh = Array.isArray(fresh) ? fresh : [];
       setRooms(safeFresh);
-      
+
       const initial: Record<string, { price: string; totalRooms: string; bookedRooms: string }> = {};
       safeFresh.forEach((r) => {
         initial[r.id] = {
@@ -231,10 +224,10 @@ const Admin = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div style={{ backgroundColor: '#0F0D08' }} className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 text-accent animate-spin" />
-          <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground animate-pulse">
+          <Loader2 style={{ color: '#C9A84C' }} className="h-10 w-10 animate-spin" />
+          <p style={{ color: 'rgba(245,240,232,0.5)' }} className="text-sm font-bold uppercase tracking-widest animate-pulse">
             Syncing Live Inventory...
           </p>
         </div>
@@ -243,412 +236,467 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20">
-      {/* Header */}
-      <header className="border-b border-border bg-card sticky top-0 z-40 backdrop-blur-sm">
-        <div className="container mx-auto px-4 sm:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
+    <div style={{ backgroundColor: '#0F0D08', fontFamily: 'Inter, sans-serif' }} className="min-h-screen pb-20 font-sans">
+      {/* Top Navigation Bar */}
+      <header style={{ backgroundColor: '#0F0D08', borderBottom: '1px solid rgba(201,168,76,0.15)' }} className="sticky top-0 z-40">
+        <div style={{ padding: '0 40px', maxWidth: '1200px', margin: '0 auto', height: '70px' }} className="flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <button
               onClick={() => navigate("/")}
-              className="flex items-center gap-2"
+              style={{ color: 'rgba(245,240,232,0.5)', fontSize: '12px' }}
+              className="flex items-center gap-2 hover:text-[#C9A84C] transition-colors group"
             >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Public Site</span>
-            </Button>
-            
+              <ArrowLeft className="h-3.5 w-3.5 text-[#C9A84C] group-hover:-translate-x-0.5 transition-transform" />
+              Public Site
+            </button>
+            <div style={{ width: '1px', height: '20px', backgroundColor: 'rgba(201,168,76,0.15)' }}></div>
             <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-accent" />
-              <h1 className="text-lg sm:text-2xl font-bold tracking-tight">
+              <Shield className="h-5 w-5" style={{ color: '#C9A84C' }} />
+              <h1 style={{ fontSize: '18px', color: '#F5F0E8', fontWeight: 600 }}>
                 Staff Management
               </h1>
             </div>
+          </div>
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate("/booking")}
-                className="hidden sm:flex gap-1.5 text-xs font-bold"
-              >
-                <Hotel className="h-3.5 w-3.5" />
-                Booking Page
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleLogout}
-                className="text-red-500 hover:text-red-600 hover:bg-red-50 gap-2 font-bold text-xs"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Logout</span>
-              </Button>
-            </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate("/booking")}
+              style={{
+                backgroundColor: 'transparent',
+                border: '1px solid rgba(201,168,76,0.4)',
+                color: '#C9A84C',
+                fontSize: '12px',
+                padding: '8px 16px',
+                borderRadius: '6px'
+              }}
+              className="hover:bg-[#C9A84C]/10 transition-colors flex items-center gap-2"
+            >
+              <Hotel className="h-3.5 w-3.5" />
+              Booking Page
+            </button>
+            <button
+              onClick={handleLogout}
+              style={{
+                backgroundColor: 'transparent',
+                border: '1px solid rgba(255,80,80,0.3)',
+                color: 'rgba(255,100,100,0.8)',
+                fontSize: '12px',
+                padding: '8px 16px',
+                borderRadius: '6px'
+              }}
+              className="hover:border-[rgba(255,80,80,0.7)] hover:text-[rgba(255,80,80,0.7)] transition-colors flex items-center gap-2"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Logout
+            </button>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 sm:px-6 py-8 max-w-6xl">
-        {/* Navigation Tabs */}
-        <div className="flex gap-2 mb-8 bg-muted/30 p-1.5 rounded-2xl border border-border/50 w-fit">
-          <Button 
-            variant={activeTab === "inventory" ? "luxury" : "ghost"} 
-            size="sm" 
+      <main style={{ padding: '32px 40px', maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Tab Navigation */}
+        <div style={{ borderBottom: '1px solid rgba(201,168,76,0.1)' }} className="flex gap-6 mb-8">
+          <button
             onClick={() => setActiveTab("inventory")}
-            className="rounded-xl font-bold px-6"
+            style={{
+              color: activeTab === "inventory" ? '#C9A84C' : 'rgba(245,240,232,0.4)',
+              fontSize: '14px',
+              borderBottom: activeTab === "inventory" ? '2px solid #C9A84C' : '2px solid transparent',
+              fontWeight: activeTab === "inventory" ? 600 : 400,
+              paddingBottom: '12px'
+            }}
+            className="transition-colors hover:text-[#C9A84C]"
           >
-            <Hotel className="h-4 w-4 mr-2" /> Inventory
-          </Button>
-          <Button 
-            variant={activeTab === "bookings" ? "luxury" : "ghost"} 
-            size="sm" 
+            Inventory Management
+          </button>
+          <button
             onClick={() => setActiveTab("bookings")}
-            className="rounded-xl font-bold px-6"
+            style={{
+              color: activeTab === "bookings" ? '#C9A84C' : 'rgba(245,240,232,0.4)',
+              fontSize: '14px',
+              borderBottom: activeTab === "bookings" ? '2px solid #C9A84C' : '2px solid transparent',
+              fontWeight: activeTab === "bookings" ? 600 : 400,
+              paddingBottom: '12px'
+            }}
+            className="transition-colors hover:text-[#C9A84C]"
           >
-            <ClipboardList className="h-4 w-4 mr-2" /> Bookings
-          </Button>
+            Active Bookings
+          </button>
         </div>
 
         {activeTab === "inventory" ? (
           <>
-            {/* Page Title */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h2 className="text-3xl font-extrabold tracking-tight">
-                Live Inventory & Pricing
-              </h2>
-              {isRefreshing && <Loader2 className="h-5 w-5 text-accent animate-spin" />}
+            {/* Section Heading */}
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 style={{ fontSize: '22px', color: '#F5F0E8', fontWeight: 700 }} className="mb-1">
+                  Live Inventory & Pricing
+                </h2>
+                <p style={{ color: 'rgba(245,240,232,0.45)', fontSize: '13px' }}>
+                  Manage room rates and availability. Changes reflect immediately on the public booking engine.
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={handleReset}
+                  style={{ color: 'rgba(255,80,80,0.5)', fontSize: '11px', background: 'transparent', border: 'none' }}
+                  className="hover:text-red-400 transition-colors flex items-center gap-1 uppercase tracking-wider"
+                >
+                  <AlertTriangle className="h-3 w-3" />
+                  ⚠ Reset
+                </button>
+                <button
+                  onClick={() => fetchRooms(true)}
+                  disabled={isRefreshing}
+                  style={{ border: '1px solid rgba(201,168,76,0.3)', color: '#C9A84C', fontSize: '12px', padding: '8px 16px', borderRadius: '6px' }}
+                  className="flex items-center gap-2 hover:bg-[#C9A84C]/10 transition-colors"
+                >
+                  <RotateCcw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  Refresh
+                </button>
+              </div>
             </div>
-            <p className="text-muted-foreground">
-              Secure Supabase-powered backend. All updates reflect instantly on the public site.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fetchRooms(true)}
-              disabled={isRefreshing}
-              className="gap-1.5 text-xs font-bold"
-            >
-              <RotateCcw className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin")} />
-              Refresh
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleReset}
-              className="gap-1.5 text-xs font-bold text-red-500 hover:text-red-600 hover:bg-red-50"
-            >
-              Reset Database
-            </Button>
-          </div>
-        </div>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: "Total Rooms", value: totalInventory, icon: DoorOpen, color: "text-blue-500" },
-            { label: "Booked", value: totalBooked, icon: Lock, color: "text-amber-500" },
-            { label: "Available", value: totalAvailable, icon: Users, color: "text-emerald-500" },
-            { label: "Occupancy", value: `${occupancyRate}%`, icon: Hotel, color: "text-accent" },
-          ].map(({ label, value, icon: Icon, color }) => (
-            <Card key={label} className="shadow-sm border-border/50">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className={cn("p-2.5 rounded-xl bg-muted/50", color)}>
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    {label}
+            {/* Stats Cards */}
+            <div style={{ gap: '16px' }} className="grid grid-cols-4 mb-10">
+              {[
+                { label: "Total Rooms", value: totalInventory, icon: DoorOpen },
+                { label: "Booked", value: totalBooked, icon: Lock },
+                { label: "Live Available", value: totalAvailable, icon: Users },
+                {
+                  label: "Occupancy",
+                  value: `${occupancyRate}%`,
+                  icon: Hotel,
+                  specialColor: occupancyRate < 30 ? 'rgba(255,180,80,1)' : occupancyRate > 70 ? '#4CAF50' : '#F5F0E8'
+                },
+              ].map(({ label, value, icon: Icon, specialColor }) => (
+                <div
+                  key={label}
+                  style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(201,168,76,0.15)',
+                    borderRadius: '10px',
+                    padding: '20px 24px'
+                  }}
+                  className="flex flex-col gap-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <p style={{ color: '#C9A84C', fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+                      {label}
+                    </p>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(201,168,76,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Icon style={{ color: '#C9A84C', width: '16px', height: '16px' }} />
+                    </div>
+                  </div>
+                  <p style={{ color: specialColor || '#F5F0E8', fontSize: '32px', fontWeight: 700, lineHeight: 1 }}>
+                    {value}
                   </p>
-                  <p className="text-2xl font-black tracking-tight">{value}</p>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              ))}
+            </div>
 
-        {/* Room Cards */}
-        <div className="space-y-4">
-          {safeRoomsList.length === 0 ? (
-             <div className="text-center py-20 bg-muted/20 rounded-2xl border border-dashed border-border">
-                <p className="text-lg font-medium text-muted-foreground">No room data found in the cloud.</p>
-                <Button variant="outline" className="mt-4" onClick={() => fetchRooms(true)}>Retry Sync</Button>
-             </div>
-          ) : safeRoomsList.map((room) => {
-            const available = getAvailability(room);
-            const isSoldOut = available === 0;
-            const isLow = available > 0 && available <= 2;
-            const state = editState[room.id];
-            const error = errors[room.id];
-            const justSaved = savedId === room.id;
-            const savingThis = isSaving === room.id;
+            {/* Room Inventory Rows */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {safeRoomsList.length === 0 ? (
+                <div style={{ padding: '60px 0', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(201,168,76,0.2)', borderRadius: '10px' }}>
+                  <p style={{ color: 'rgba(245,240,232,0.5)' }}>No room data found.</p>
+                </div>
+              ) : safeRoomsList.map((room) => {
+                const available = getAvailability(room);
+                const isSoldOut = available === 0;
+                const isLow = available > 0 && available <= 4;
+                const state = editState[room.id];
+                const error = errors[room.id];
+                const justSaved = savedId === room.id;
+                const savingThis = isSaving === room.id;
 
-            return (
-              <Card
-                key={room.id}
-                className={cn(
-                  "transition-all duration-300 border-border/60",
-                  isSoldOut && "border-red-500/30 bg-red-500/[0.01]",
-                  isLow && "border-amber-500/30 bg-amber-500/[0.01]",
-                  justSaved && "border-emerald-500/50 bg-emerald-500/[0.02] shadow-lg shadow-emerald-500/5",
-                  savingThis && "opacity-70 ring-1 ring-accent/20"
-                )}
-              >
-                <CardContent className="p-5">
-                  <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-                    {/* Room Info */}
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-xl font-black tracking-tight">
+                let availColor = '#F5F0E8';
+                if (available >= 5) availColor = '#4CAF50';
+                else if (available >= 2 && available <= 4) availColor = '#FFA032';
+                else if (available <= 1) availColor = '#FF5252';
+
+                return (
+                  <div
+                    key={room.id}
+                    style={{
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid rgba(201,168,76,0.20)',
+                      borderRadius: '10px',
+                      padding: '20px 24px',
+                      position: 'relative'
+                    }}
+                    className={`flex items-center justify-between ${savingThis ? 'opacity-50' : ''}`}
+                  >
+                    <div className="flex flex-col gap-2 w-1/4">
+                      <div className="flex items-center gap-3">
+                        <h3 style={{ fontSize: '16px', color: '#F5F0E8', fontWeight: 600, whiteSpace: 'nowrap' }}>
                           {room.name}
                         </h3>
+                        {isLow && !isSoldOut && (
+                          <span style={{
+                            background: 'rgba(255,160,50,0.12)',
+                            border: '1px solid rgba(255,160,50,0.4)',
+                            color: '#FFA032',
+                            fontSize: '10px',
+                            letterSpacing: '0.15em',
+                            textTransform: 'uppercase',
+                            borderRadius: '4px',
+                            padding: '3px 10px'
+                          }}>
+                            Only {available} Left
+                          </span>
+                        )}
                         {isSoldOut && (
-                          <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-full bg-red-100 text-red-600 border border-red-200">
+                          <span style={{
+                            background: 'rgba(255,82,82,0.12)',
+                            border: '1px solid rgba(255,82,82,0.4)',
+                            color: '#FF5252',
+                            fontSize: '10px',
+                            letterSpacing: '0.15em',
+                            textTransform: 'uppercase',
+                            borderRadius: '4px',
+                            padding: '3px 10px'
+                          }}>
                             Sold Out
                           </span>
                         )}
-                        {isLow && (
-                          <span className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-full bg-amber-100 text-amber-600 border border-amber-200 animate-pulse">
-                            <AlertCircle className="h-3 w-3" />
-                            Only {available} left
-                          </span>
-                        )}
-                        {justSaved && (
-                          <span className="flex items-center gap-1 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-full bg-emerald-100 text-emerald-600 border border-emerald-200 animate-in fade-in zoom-in">
-                            <CheckCircle className="h-3 w-3" />
-                            Database Updated
-                          </span>
-                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground italic mb-2">{room.tag}</p>
+                      {error && <p style={{ color: '#FF5252', fontSize: '11px' }}>{error}</p>}
                     </div>
 
-                    <Separator
-                      orientation="vertical"
-                      className="h-16 hidden lg:block opacity-30"
-                    />
-
-                    {/* Editable Fields */}
-                    <div className="flex flex-wrap items-end gap-5">
-                      <div className="space-y-1.5 w-36">
-                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1">
+                    <div className="flex items-center gap-12 flex-1 justify-end">
+                      <div className="flex flex-col gap-2">
+                        <label style={{ color: 'rgba(201,168,76,0.6)', fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
                           Room Price (₦)
-                        </Label>
-                        <div className="relative">
-                          <Input
-                            type="number"
-                            min="1"
-                            value={state?.price ?? ""}
-                            onChange={(e) =>
-                              handleChange(room.id, "price", e.target.value)
-                            }
-                            disabled={savingThis}
-                            className="h-11 pl-4 font-black text-accent border-accent/20 focus-visible:ring-accent"
-                          />
+                        </label>
+                        <input
+                          type="number"
+                          value={state?.price ?? ""}
+                          onChange={(e) => handleChange(room.id, "price", e.target.value)}
+                          disabled={savingThis}
+                          style={{
+                            background: 'rgba(255,255,255,0.06)',
+                            border: '1px solid rgba(201,168,76,0.2)',
+                            borderRadius: '6px',
+                            color: '#F5F0E8',
+                            textAlign: 'center',
+                            fontSize: '16px',
+                            fontWeight: 600,
+                            padding: '10px',
+                            width: '120px',
+                            outline: 'none'
+                          }}
+                          className="focus:border-[#C9A84C] transition-colors"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <label style={{ color: 'rgba(201,168,76,0.6)', fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                          Total Inv.
+                        </label>
+                        <input
+                          type="number"
+                          value={state?.totalRooms ?? ""}
+                          onChange={(e) => handleChange(room.id, "totalRooms", e.target.value)}
+                          disabled={savingThis}
+                          style={{
+                            background: 'rgba(255,255,255,0.06)',
+                            border: '1px solid rgba(201,168,76,0.2)',
+                            borderRadius: '6px',
+                            color: '#F5F0E8',
+                            textAlign: 'center',
+                            fontSize: '16px',
+                            fontWeight: 600,
+                            padding: '10px',
+                            width: '90px',
+                            outline: 'none'
+                          }}
+                          className="focus:border-[#C9A84C] transition-colors"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-2 items-center">
+                        <label style={{ color: 'rgba(201,168,76,0.6)', fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                          Booked
+                        </label>
+                        <div style={{ color: 'rgba(245,240,232,0.7)', fontSize: '16px', fontWeight: 600, padding: '10px 0' }}>
+                          {state?.bookedRooms || '0'}
                         </div>
                       </div>
-                      
-                      <div className="space-y-1.5 w-24">
-                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                          Total Inv.
-                        </Label>
-                        <Input
-                          type="number"
-                          min="1"
-                          value={state?.totalRooms ?? ""}
-                          onChange={(e) =>
-                            handleChange(room.id, "totalRooms", e.target.value)
-                          }
-                          disabled={savingThis}
-                          className="h-11 font-bold text-center"
-                        />
-                      </div>
 
-                      <div className="space-y-1.5 w-24">
-                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                          Booked
-                        </Label>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={state?.bookedRooms ?? ""}
-                          onChange={(e) =>
-                            handleChange(room.id, "bookedRooms", e.target.value)
-                          }
-                          disabled={savingThis}
-                          className="h-11 font-bold text-center"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5 w-24 text-center">
-                        <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      <div className="flex flex-col gap-2 items-center w-20">
+                        <label style={{ color: 'rgba(201,168,76,0.6)', fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
                           Live Avail.
-                        </Label>
-                        <div
-                          className={cn(
-                            "h-11 flex items-center justify-center rounded-md border font-black text-xl",
-                            isSoldOut
-                              ? "bg-red-500/10 text-red-600 border-red-500/20"
-                              : isLow
-                              ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                              : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                          )}
-                        >
+                        </label>
+                        <div style={{ color: availColor, fontSize: '20px', fontWeight: 700, padding: '8px 0' }}>
                           {available}
                         </div>
                       </div>
 
-                      <Button
-                        variant={justSaved ? "outline" : "luxury"}
-                        className={cn(
-                          "h-11 px-8 font-bold gap-2 transition-all min-w-[120px]",
-                          justSaved && "border-emerald-500 text-emerald-600 bg-emerald-50 shadow-none"
-                        )}
-                        onClick={() => handleSave(room.id)}
-                        disabled={savingThis || justSaved}
-                      >
-                        {savingThis ? (
-                          <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : justSaved ? (
-                          <>
-                            <CheckCircle className="h-4 w-4" />
-                            Saved
-                          </>
-                        ) : (
-                          <>
-                            <Save className="h-4 w-4" />
-                            Update
-                          </>
-                        )}
-                      </Button>
+                      <div className="flex items-center ml-4">
+                        <button
+                          onClick={() => handleSave(room.id)}
+                          disabled={savingThis || justSaved}
+                          style={{
+                            background: justSaved ? 'rgba(76,175,80,0.1)' : '#C9A84C',
+                            color: justSaved ? '#4CAF50' : '#0F0D08',
+                            fontWeight: 700,
+                            letterSpacing: '0.05em',
+                            padding: '10px 24px',
+                            borderRadius: '8px',
+                            fontSize: '13px',
+                            border: justSaved ? '1px solid rgba(76,175,80,0.3)' : '1px solid transparent',
+                            width: '110px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            transition: 'all 0.2s'
+                          }}
+                          className={justSaved ? "" : "hover:bg-[#b8963e]"}
+                        >
+                          {savingThis ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : justSaved ? (
+                            <span className="flex items-center gap-1.5">✓ Updated</span>
+                          ) : (
+                            "Update"
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Error message */}
-                  {error && (
-                    <div className="mt-4 p-2.5 bg-red-50 border border-red-100 rounded-lg animate-in slide-in-from-top-2">
-                       <p className="text-xs font-bold text-red-500 flex items-center gap-1.5">
-                        <AlertCircle className="h-3.5 w-3.5" />
-                        {error}
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </>
-    ) : (
-      <div className="space-y-6">
-        {/* Bookings Section */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h2 className="text-3xl font-extrabold tracking-tight">Active Reservations</h2>
-              {isBookingsLoading && <Loader2 className="h-5 w-5 text-accent animate-spin" />}
+                );
+              })}
             </div>
-            <p className="text-muted-foreground">Monitor and manage guest bookings in real-time.</p>
-          </div>
-          <div className="relative w-full md:w-72">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search name or email..." 
-              className="pl-10 h-10 border-border/60"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
+          </>
+        ) : (
+          <div className="space-y-6">
+            {/* Bookings Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+              <div>
+                <h2 style={{ fontSize: '22px', color: '#F5F0E8', fontWeight: 700 }} className="mb-1">
+                  Active Reservations
+                </h2>
+                <p style={{ color: 'rgba(245,240,232,0.45)', fontSize: '13px' }}>Monitor and manage guest bookings in real-time.</p>
+              </div>
+              <div className="relative w-full md:w-72">
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: 'rgba(245,240,232,0.4)' }} />
+                <input
+                  placeholder="Search name or email..."
+                  className="pl-10 h-10 w-full outline-none transition-colors"
+                  style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(201,168,76,0.15)',
+                    borderRadius: '6px',
+                    color: '#F5F0E8',
+                    fontSize: '13px'
+                  }}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
 
-        <Card className="rounded-2xl border-border/60 shadow-elegant overflow-hidden">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead>
-                  <tr className="bg-muted/50 border-b border-border/50">
-                    <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Guest / Contact</th>
-                    <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Stay Details</th>
-                    <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Revenue</th>
-                    <th className="px-6 py-4 font-black uppercase tracking-widest text-[10px] text-muted-foreground">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/40">
-                  {isBookingsLoading ? (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-20 text-center">
-                        <Loader2 className="h-8 w-8 text-accent animate-spin mx-auto mb-2" />
-                        <p className="font-bold text-muted-foreground text-xs uppercase tracking-widest">Loading bookings...</p>
-                      </td>
+            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(201,168,76,0.1)', borderRadius: '10px', overflow: 'hidden' }}>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr style={{ background: 'rgba(201,168,76,0.05)', borderBottom: '1px solid rgba(201,168,76,0.1)' }}>
+                      <th style={{ padding: '16px 24px', color: 'rgba(201,168,76,0.6)', fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Guest / Contact</th>
+                      <th style={{ padding: '16px 24px', color: 'rgba(201,168,76,0.6)', fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Stay Details</th>
+                      <th style={{ padding: '16px 24px', color: 'rgba(201,168,76,0.6)', fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Revenue</th>
+                      <th style={{ padding: '16px 24px', color: 'rgba(201,168,76,0.6)', fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Status</th>
                     </tr>
-                  ) : bookings.filter(b => 
-                      b.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                  </thead>
+                  <tbody className="divide-y" style={{ borderColor: 'rgba(201,168,76,0.05)' }}>
+                    {isBookingsLoading ? (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-20 text-center">
+                          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" style={{ color: '#C9A84C' }} />
+                          <p style={{ color: 'rgba(245,240,232,0.4)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Loading bookings...</p>
+                        </td>
+                      </tr>
+                    ) : bookings.filter(b =>
+                      b.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                       b.email?.toLowerCase().includes(searchQuery.toLowerCase())
                     ).length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-20 text-center">
-                        <p className="text-muted-foreground">No reservations found.</p>
-                      </td>
-                    </tr>
-                  ) : bookings
-                      .filter(b => 
-                        b.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                      <tr>
+                        <td colSpan={4} className="px-6 py-20 text-center">
+                          <p style={{ color: 'rgba(245,240,232,0.4)' }}>No reservations found.</p>
+                        </td>
+                      </tr>
+                    ) : bookings
+                      .filter(b =>
+                        b.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                         b.email?.toLowerCase().includes(searchQuery.toLowerCase())
                       )
                       .map((booking) => (
-                    <tr key={booking.id} className="hover:bg-accent/[0.01] transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="space-y-1">
-                          <p className="font-black text-foreground">{booking.full_name}</p>
-                          <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-                            <span className="flex items-center gap-1"><MailIcon className="h-3 w-3" /> {booking.email}</span>
-                            <span className="flex items-center gap-1"><PhoneIcon className="h-3 w-3" /> {booking.phone}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="space-y-1">
-                          <p className="font-bold text-xs uppercase tracking-wider text-accent leading-none mb-1">{booking.room_type}</p>
-                          <div className="flex items-center gap-2 text-xs font-medium">
-                            <CalendarCheck className="h-3 w-3 opacity-50" />
-                            <span>{format(new Date(booking.check_in), "MMM dd")}</span>
-                            <span className="opacity-30">→</span>
-                            <span>{format(new Date(booking.check_out), "MMM dd")}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="font-black text-foreground">₦{Number(booking.total_price).toLocaleString()}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">{booking.guests} Guests</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={cn(
-                          "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
-                          booking.status === "pending" ? "bg-amber-100/50 text-amber-700 border-amber-200" :
-                          booking.status === "confirmed" ? "bg-emerald-100/50 text-emerald-700 border-emerald-200" :
-                          "bg-muted text-muted-foreground"
-                        )}>
-                          {booking.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        <tr key={booking.id} className="hover:bg-white/[0.02] transition-colors">
+                          <td style={{ padding: '16px 24px' }}>
+                            <div className="space-y-1">
+                              <p style={{ color: '#F5F0E8', fontWeight: 600, fontSize: '14px' }}>{booking.full_name}</p>
+                              <div className="flex items-center gap-3" style={{ fontSize: '11px', color: 'rgba(245,240,232,0.5)' }}>
+                                <span className="flex items-center gap-1"><MailIcon className="h-3 w-3" /> {booking.email}</span>
+                                <span className="flex items-center gap-1"><PhoneIcon className="h-3 w-3" /> {booking.phone}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td style={{ padding: '16px 24px' }}>
+                            <div className="space-y-1">
+                              <p style={{ color: '#C9A84C', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{booking.room_type}</p>
+                              <div className="flex items-center gap-2" style={{ fontSize: '12px', color: 'rgba(245,240,232,0.7)' }}>
+                                <CalendarCheck className="h-3 w-3" style={{ opacity: 0.5 }} />
+                                <span>{format(new Date(booking.check_in), "MMM dd")}</span>
+                                <span style={{ opacity: 0.3 }}>→</span>
+                                <span>{format(new Date(booking.check_out), "MMM dd")}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td style={{ padding: '16px 24px' }}>
+                            <p style={{ color: '#F5F0E8', fontWeight: 600, fontSize: '14px' }}>₦{Number(booking.total_price).toLocaleString()}</p>
+                            <p style={{ color: 'rgba(245,240,232,0.4)', fontSize: '10px', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>{booking.guests} Guests</p>
+                          </td>
+                          <td style={{ padding: '16px 24px' }}>
+                            <span style={{
+                              padding: '4px 10px',
+                              borderRadius: '12px',
+                              fontSize: '10px',
+                              fontWeight: 600,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.1em',
+                              background: booking.status === "pending" ? 'rgba(255,160,50,0.1)' :
+                                booking.status === "confirmed" ? 'rgba(76,175,80,0.1)' : 'rgba(255,255,255,0.05)',
+                              color: booking.status === "pending" ? '#FFA032' :
+                                booking.status === "confirmed" ? '#4CAF50' : 'rgba(245,240,232,0.6)',
+                              border: `1px solid ${booking.status === "pending" ? 'rgba(255,160,50,0.3)' :
+                                booking.status === "confirmed" ? 'rgba(76,175,80,0.3)' : 'rgba(255,255,255,0.1)'}`
+                            }}>
+                              {booking.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    )}
+          </div>
+        )}
 
-        <div className="mt-12 p-6 bg-accent/5 rounded-2xl border border-accent/10 border-dashed text-center">
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mb-2">Security Notice</p>
-            <p className="text-sm text-balance">
-                You are currently in the <strong>Management Portal</strong>. All changes made here are instantly pushed to the <strong>Supabase</strong> database and reflected on the live booking site.
-            </p>
+        <div style={{
+          marginTop: '48px',
+          background: 'rgba(201,168,76,0.05)',
+          border: '1px solid rgba(201,168,76,0.15)',
+          borderRadius: '8px',
+          padding: '16px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <Shield style={{ color: '#C9A84C', width: '20px', height: '20px' }} />
+          <p style={{ color: 'rgba(245,240,232,0.5)', fontSize: '12px', margin: 0 }}>
+            You are currently in the Management Portal. All changes made here are instantly pushed to the <strong style={{ color: '#C9A84C', fontWeight: 600 }}>Supabase</strong> database and reflected on the live booking site.
+          </p>
         </div>
       </main>
     </div>

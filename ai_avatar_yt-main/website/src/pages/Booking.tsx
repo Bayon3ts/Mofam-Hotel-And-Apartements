@@ -281,7 +281,7 @@ const Booking = () => {
       });
     } catch (err: any) {
       console.error("[Booking] Reservation failed:", err);
-      
+
       // More detailed logging for debugging
       if (err.code) console.error("Error Code:", err.code);
       if (err.message) console.error("Error Message:", err.message);
@@ -299,7 +299,7 @@ const Booking = () => {
     <div className="min-h-screen text-foreground scroll-smooth" style={{ background: "#0F0D08" }}>
       {/* ── HEADER ─────────────────────────────────────────────────────── */}
       <div style={{ position: "relative", paddingTop: "40px", paddingBottom: "20px", maxWidth: "1200px", margin: "0 auto", paddingLeft: "5%", paddingRight: "5%" }}>
-        <button 
+        <button
           onClick={() => navigate("/")}
           style={{ position: "absolute", top: "40px", left: "5%", display: "flex", alignItems: "center", gap: "8px", color: "#C9A84C", fontSize: "12px", letterSpacing: "0.12em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", fontFamily: "'Inter', sans-serif", fontWeight: 500, transition: "opacity 0.2s ease" }}
           onMouseEnter={e => e.currentTarget.style.opacity = "0.7"}
@@ -307,7 +307,7 @@ const Booking = () => {
         >
           <span style={{ fontSize: "14px" }}>←</span> Back to Hotel
         </button>
-        
+
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
           <img src="/mofam.webp" alt="Mofam Hotel And Apartements" style={{ width: "56px", height: "auto", objectFit: "contain" }} />
           <p style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.25em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif", marginTop: "12px", marginBottom: "16px", fontWeight: 400 }}>
@@ -597,11 +597,11 @@ const Booking = () => {
                         key={room.id}
                         onClick={() => { if (!isSoldOut) { setSelectedRoomId(room.id); setRoomError(""); } }}
                         className="animate-in fade-in slide-in-from-bottom-4 group"
-                        style={{ 
-                          padding: "24px", 
-                          borderRadius: "12px", 
-                          border: "1px solid rgba(201,168,76,0.25)", 
-                          marginBottom: "16px", 
+                        style={{
+                          padding: "24px",
+                          borderRadius: "12px",
+                          border: "1px solid rgba(201,168,76,0.25)",
+                          marginBottom: "16px",
                           background: isSelected ? "rgba(201,168,76,0.05)" : "transparent",
                           cursor: isSoldOut ? "not-allowed" : "pointer",
                           opacity: isSoldOut ? 0.5 : 1,
@@ -652,11 +652,11 @@ const Booking = () => {
                           </div>
 
                           <button
-                            style={{ 
-                              background: isSelected ? "#C9A84C" : "transparent", 
-                              border: isSelected ? "1px solid #C9A84C" : "1px solid rgba(201,168,76,0.55)", 
-                              color: isSelected ? "#0F0D08" : "#C9A84C", 
-                              padding: "10px 24px", 
+                            style={{
+                              background: isSelected ? "#C9A84C" : "transparent",
+                              border: isSelected ? "1px solid #C9A84C" : "1px solid rgba(201,168,76,0.55)",
+                              color: isSelected ? "#0F0D08" : "#C9A84C",
+                              padding: "10px 24px",
                               borderRadius: "8px",
                               fontWeight: 700,
                               cursor: isSoldOut ? "not-allowed" : "pointer",
@@ -794,7 +794,7 @@ const Booking = () => {
       )}
 
       {showResults && selectedRoom && <div className="h-28 lg:hidden" />}
-      
+
       {/* ── PAGE FOOTER STRIP ─────────────────────────────────────── */}
       <footer style={{ borderTop: "1px solid rgba(201,168,76,0.12)", padding: "20px", textAlign: "center", marginTop: "auto" }}>
         <p style={{ color: "rgba(245,240,232,0.3)", fontSize: "12px", fontFamily: "'Inter', sans-serif", margin: 0 }}>

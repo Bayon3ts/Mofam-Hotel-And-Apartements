@@ -203,20 +203,23 @@
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      hsl(45 90% 60% / 0.6) 20%,
-      hsl(45 85% 75% / 0.9) 50%,
-      hsl(45 90% 60% / 0.6) 80%,
-      transparent 100%
-    );
+    background: linear-gradient(90deg,
+        transparent 0%,
+        hsl(45 90% 60% / 0.6) 20%,
+        hsl(45 85% 75% / 0.9) 50%,
+        hsl(45 90% 60% / 0.6) 80%,
+        transparent 100%);
     pointer-events: none;
     z-index: 2;
   }
 
-  .mofam-marquee-hairline-top  { top: 0; }
-  .mofam-marquee-hairline-bottom { bottom: 0; }
+  .mofam-marquee-hairline-top {
+    top: 0;
+  }
+
+  .mofam-marquee-hairline-bottom {
+    bottom: 0;
+  }
 
   /* Scrolling track */
   .mofam-marquee-track {
@@ -249,8 +252,13 @@
 
   /* Keyframe */
   @keyframes mofam-marquee {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-50%);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -278,7 +286,7 @@
 .dining-luxury-card:hover {
   border-color: rgba(201, 168, 76, 0.55) !important;
   transform: translateY(-4px);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 .dining-card-img {
@@ -312,7 +320,8 @@
 .luxury-divider-container .divider-line-left,
 .luxury-divider-container .divider-line-right,
 .luxury-divider-container .divider-star {
-  opacity: 0; /* Hidden initially */
+  opacity: 0;
+  /* Hidden initially */
 }
 
 /* When the animate class is applied */
@@ -335,9 +344,12 @@
     transform: scaleX(0);
     opacity: 0;
   }
+
   1% {
-    opacity: 1; /* Instantly visible to draw */
+    opacity: 1;
+    /* Instantly visible to draw */
   }
+
   100% {
     transform: scaleX(1);
     opacity: 1;
@@ -349,9 +361,11 @@
     transform: scaleX(0);
     opacity: 0;
   }
+
   1% {
     opacity: 1;
   }
+
   100% {
     transform: scaleX(1);
     opacity: 1;
@@ -363,6 +377,7 @@
     transform: scale(0);
     opacity: 0;
   }
+
   100% {
     transform: scale(1);
     opacity: 1;
@@ -375,6 +390,7 @@
   outline: none;
   box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.08);
 }
+
 .contact-luxury-input::placeholder {
   color: rgba(245, 240, 232, 0.35);
 }
@@ -382,9 +398,9 @@
 /* ─── Booking Page Luxury Calendar ───────────────────────────────────────── */
 .booking-calendar-wrapper {
   background: #1A1610;
-  border: 1px solid rgba(201,168,76,0.3);
+  border: 1px solid rgba(201, 168, 76, 0.3);
   border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
 }
 
 .booking-calendar-wrapper .rdp-caption_label {
@@ -399,20 +415,20 @@
 }
 
 .booking-calendar-wrapper .rdp-head_cell {
-  color: rgba(201,168,76,0.6);
+  color: rgba(201, 168, 76, 0.6);
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .booking-calendar-wrapper .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
-  background: rgba(201,168,76,0.15) !important;
+  background: rgba(201, 168, 76, 0.15) !important;
   color: #F5F0E8 !important;
   border-radius: 50%;
 }
 
 .booking-calendar-wrapper .rdp-day {
-  color: rgba(245,240,232,0.7);
+  color: rgba(245, 240, 232, 0.7);
 }
 
 .booking-calendar-wrapper .rdp-day_selected,
@@ -425,5 +441,360 @@
 }
 
 .booking-calendar-wrapper .rdp-day_outside {
-  color: rgba(245,240,232,0.2);
+  color: rgba(245, 240, 232, 0.2);
+}
+
+/* ─── Theme Transition — smooth switch across all elements ──────────────── */
+html,
+body,
+section,
+header,
+footer,
+nav,
+div,
+p,
+h1,
+h2,
+h3,
+h4,
+span,
+a,
+button,
+input,
+textarea {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* ─── Light Mode Overrides ───────────────────────────────────────────────── */
+[data-theme="light"] {
+  /* Full-page background */
+  background-color: #FAF7F2;
+  color: #1A1510;
+}
+
+[data-theme="light"] body {
+  background-color: #FAF7F2;
+  color: #1A1510;
+}
+
+/* Main page wrapper */
+[data-theme="light"] .min-h-screen {
+  background-color: #FAF7F2;
+}
+
+/* ── Navbar (scrolled state) ── */
+[data-theme="light"] nav[style] {
+  background: rgba(250, 247, 242, 0.97) !important;
+}
+
+[data-theme="light"] nav button {
+  color: #1A1510 !important;
+}
+
+[data-theme="light"] nav button:hover {
+  color: #C9A84C !important;
+}
+
+/* ── Sections ── */
+[data-theme="light"] #rooms,
+[data-theme="light"] #amenities,
+[data-theme="light"] #dining,
+[data-theme="light"] #events,
+[data-theme="light"] #contact {
+  background: #FAF7F2 !important;
+}
+
+/* Alternating section backgrounds */
+[data-theme="light"] #amenities,
+[data-theme="light"] #events {
+  background: #F0EBE1 !important;
+}
+
+/* ── Section headings and body text ── */
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4 {
+  color: #1A1510 !important;
+}
+
+[data-theme="light"] p {
+  color: rgba(26, 21, 16, 0.65) !important;
+}
+
+/* Overrides for gold text that should stay gold */
+[data-theme="light"] .keep-gold,
+[data-theme="light"] [style*="color: #C9A84C"],
+[data-theme="light"] [style*="color: \"#C9A84C\""] {
+  color: #C9A84C !important;
+}
+
+/* ── Room & Event cards ── */
+[data-theme="light"] .rooms-luxury-card,
+[data-theme="light"] .dining-luxury-card,
+[data-theme="light"] .events-luxury-card {
+  background: #FFFFFF !important;
+  border-color: rgba(180, 145, 60, 0.2) !important;
+}
+
+[data-theme="light"] .rooms-luxury-card:hover,
+[data-theme="light"] .dining-luxury-card:hover,
+[data-theme="light"] .events-luxury-card:hover {
+  box-shadow: 0 20px 60px rgba(180, 145, 60, 0.15) !important;
+}
+
+/* ── Amenity feature rows ── */
+[data-theme="light"] #amenities p[style*="#F5F0E8"],
+[data-theme="light"] #amenities h3[style*="#F5F0E8"],
+[data-theme="light"] #contact p[style*="#F5F0E8"],
+[data-theme="light"] #contact h3[style*="#F5F0E8"] {
+  color: #1A1510 !important;
+}
+
+
+
+/* ── Ornamental dividers ── */
+[data-theme="light"] .luxury-divider-container {
+  background: transparent !important;
+}
+
+[data-theme="light"] .divider-line-left {
+  background: linear-gradient(to right, transparent, rgba(180, 145, 60, 0.5)) !important;
+}
+
+[data-theme="light"] .divider-line-right {
+  background: linear-gradient(to left, transparent, rgba(180, 145, 60, 0.5)) !important;
+}
+
+[data-theme="light"] .divider-star {
+  color: #C9A84C !important;
+}
+
+/* ── Contact form inputs ── */
+[data-theme="light"] .contact-luxury-input {
+  background: #FFFFFF !important;
+  border-color: rgba(180, 145, 60, 0.3) !important;
+  color: #1A1510 !important;
+}
+
+[data-theme="light"] .contact-luxury-input::placeholder {
+  color: rgba(26, 21, 16, 0.35) !important;
+}
+
+[data-theme="light"] .contact-luxury-input:focus {
+  border-color: rgba(201, 168, 76, 0.7) !important;
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.08) !important;
+}
+
+
+
+/* ── Footer inverts in light mode ── */
+[data-theme="light"] footer {
+  background: #1A1510 !important;
+}
+
+[data-theme="light"] footer p,
+[data-theme="light"] footer p[style],
+[data-theme="light"] footer span,
+[data-theme="light"] footer span[style],
+[data-theme="light"] footer a {
+  color: rgba(245, 240, 232, 0.55) !important;
+}
+
+[data-theme="light"] footer h4 {
+  color: #C9A84C !important;
+}
+
+/* ── Amenity/room tags ── */
+[data-theme="light"] span[style*="rgba(201,168,76,0.08)"] {
+  background: rgba(201, 168, 76, 0.1) !important;
+  border-color: rgba(201, 168, 76, 0.3) !important;
+  color: #8B6914 !important;
+}
+
+/* ── Contact form card wrapper ── */
+[data-theme="light"] div[style*="rgba(255,255,255,0.03)"] {
+  background: #FFFFFF !important;
+  border-color: rgba(180, 145, 60, 0.2) !important;
+}
+
+/* ── Mobile menu ── */
+[data-theme="light"] .bg-charcoal\/95 {
+  background: rgba(250, 247, 242, 0.97) !important;
+}
+
+[data-theme="light"] .bg-charcoal\/95 button {
+  color: #1A1510 !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Fix 1–5: Comprehensive light mode text contrast across all sections
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Fix 3 — Card headings: force deep charcoal on ALL card h3 titles
+   Covers: Event Hall, Executive Boardroom, Garden Terrace, room names, dining names */
+[data-theme="light"] .rooms-luxury-card h3,
+[data-theme="light"] .dining-luxury-card h3,
+[data-theme="light"] .events-luxury-card h3,
+[data-theme="light"] #rooms h3,
+[data-theme="light"] #dining h3,
+[data-theme="light"] #events h3,
+[data-theme="light"] #amenities h3,
+[data-theme="light"] #contact h3 {
+  color: #1A1510 !important;
+}
+
+/* Fix 2 & 5 — Global card body text: p tags in all content sections */
+[data-theme="light"] #rooms p,
+[data-theme="light"] #dining p,
+[data-theme="light"] #events p,
+[data-theme="light"] #amenities p,
+[data-theme="light"] #contact p {
+  color: rgba(26, 21, 16, 0.68) !important;
+}
+
+/* Fix 1 — Events card bullet text: span elements with the off-white inline color
+   These are the list feature items inside each venue card */
+[data-theme="light"] #events span[style*="rgba(245,240,232,0.65)"],
+[data-theme="light"] #events span[style*="rgba(245, 240, 232, 0.65)"] {
+  color: rgba(26, 21, 16, 0.70) !important;
+}
+
+/* Fix 2 — Catch ALL inline-colored body spans across every section
+   Targets the rgba(245,240,232,x) pattern used throughout Index.tsx */
+[data-theme="light"] span[style*="rgba(245,240,232,0.65)"],
+[data-theme="light"] span[style*="rgba(245,240,232,0.55)"],
+[data-theme="light"] span[style*="rgba(245,240,232,0.7)"],
+[data-theme="light"] span[style*="rgba(245,240,232,0.70)"],
+[data-theme="light"] span[style*="rgba(245, 240, 232"] {
+  color: rgba(26, 21, 16, 0.68) !important;
+}
+
+/* Fix 2 — p tags with inline rgba(245,...) body text color */
+[data-theme="light"] p[style*="rgba(245,240,232,0.55)"],
+[data-theme="light"] p[style*="rgba(245,240,232,0.65)"],
+[data-theme="light"] p[style*="rgba(245,240,232,0.7)"],
+[data-theme="light"] p[style*="rgba(245, 240, 232"] {
+  color: rgba(26, 21, 16, 0.68) !important;
+}
+
+/* Fix 5 — Amenity description text */
+[data-theme="light"] #amenities span,
+[data-theme="light"] #amenities div>p {
+  color: rgba(26, 21, 16, 0.68) !important;
+}
+
+/* Fix 5 — Dining card text */
+[data-theme="light"] .dining-luxury-card p,
+[data-theme="light"] .dining-luxury-card span {
+  color: rgba(26, 21, 16, 0.68) !important;
+}
+
+/* Fix 5 — Contact section labels, address text, body text */
+[data-theme="light"] #contact span[style],
+[data-theme="light"] #contact p[style] {
+  color: rgba(26, 21, 16, 0.68) !important;
+}
+
+/* Gold labels (uppercase tracking labels) stay gold — protect with specificity */
+[data-theme="light"] p[style*="color: \"#C9A84C\""],
+[data-theme="light"] p[style*="color: #C9A84C"],
+[data-theme="light"] span[style*="color: #C9A84C"],
+[data-theme="light"] span[style*="color: \"#C9A84C\""],
+[data-theme="light"] div[style*="color: #C9A84C"],
+[data-theme="light"] h4[style*="color: #C9A84C"] {
+  color: #C9A84C !important;
+}
+
+/* Fix 4 — Gold vertical bullet bars: div with background #C9A84C must stay gold */
+[data-theme="light"] div[style*="background: \"#C9A84C\""],
+[data-theme="light"] div[style*="background: #C9A84C"] {
+  background: #C9A84C !important;
+}
+
+/* Fix 5 — Capacity/guest count text (gold, stay gold) */
+[data-theme="light"] div[style*="color: #C9A84C"] {
+  color: #C9A84C !important;
+}
+
+/* Fix 2 — Room card room name text (inline #F5F0E8) */
+[data-theme="light"] h3[style*="color: \"#F5F0E8\""],
+[data-theme="light"] h3[style*="color: #F5F0E8"] {
+  color: #1A1510 !important;
+}
+
+/* Fix 2 — Any remaining inline #F5F0E8 body text in content sections,
+   excluding hero (which sits over video and must stay white) */
+[data-theme="light"] #rooms [style*="color: \"#F5F0E8\""],
+[data-theme="light"] #rooms [style*="color: #F5F0E8"],
+[data-theme="light"] #amenities [style*="color: \"#F5F0E8\""],
+[data-theme="light"] #amenities [style*="color: #F5F0E8"],
+[data-theme="light"] #dining [style*="color: \"#F5F0E8\""],
+[data-theme="light"] #dining [style*="color: #F5F0E8"],
+[data-theme="light"] #events [style*="color: \"#F5F0E8\""],
+[data-theme="light"] #events [style*="color: #F5F0E8"],
+[data-theme="light"] #contact [style*="color: \"#F5F0E8\""],
+[data-theme="light"] #contact [style*="color: #F5F0E8"] {
+  color: rgba(26, 21, 16, 0.68) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Hero Section Fixes (Over video, must stay dark)
+   ══════════════════════════════════════════════════════════════════ */
+[data-theme="light"] #home,
+[data-theme="light"] #home * {
+  /* Base protection for the hero area */
+}
+
+/* Fix 1 — Left gradient */
+[data-theme="light"] .hero-left-gradient {
+  background: linear-gradient(to right, rgba(8, 6, 1, 0.65) 0%, rgba(8, 6, 1, 0.3) 45%, transparent 70%) !important;
+}
+
+/* Fix 2 — CTA glass card */
+[data-theme="light"] .hero-glass-card {
+  background: rgba(20, 16, 6, 0.30) !important;
+  border: 1px solid rgba(201, 168, 76, 0.55) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+/* Fix 3 — "Explore Rooms" button */
+[data-theme="light"] .hero-cta-btn--explore {
+  background: transparent !important;
+  border: 1px solid rgba(201, 168, 76, 0.7) !important;
+  color: #F5F0E8 !important;
+}
+
+/* Fix 4 — "BEGIN YOUR STAY" label */
+[data-theme="light"] #home p[style*="C9A84C"],
+[data-theme="light"] #home .text-champagne\/80 {
+  color: #C9A84C !important;
+}
+
+/* Fix 5 — All hero text */
+[data-theme="light"] #home h1,
+[data-theme="light"] #home h1 span {
+  color: #F5F0E8 !important;
+}
+
+[data-theme="light"] #home h1 span.font-serif {
+  color: #C9A84C !important;
+}
+
+[data-theme="light"] #home p.text-white\/70 {
+  color: rgba(245, 240, 232, 0.75) !important;
+}
+
+/* Fix 6 — Top vignette overlay */
+[data-theme="light"] #home div[style*="linear-gradient(to bottom, rgba(0,0,0,0.55)"] {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.15) 30%, transparent 60%) !important;
+}
+
+/* Fix 7 — Marquee ticker */
+[data-theme="light"] div[style*="rgba(10,8,2"],
+[data-theme="light"] div[aria-label="Mofam Hotel welcome message"] {
+  background: rgba(10, 8, 2, 0.40) !important;
+}
+
+[data-theme="light"] .mofam-marquee-label {
+  color: #C9A84C !important;
 }
