@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   Shield,
   RotateCcw,
-  CheckCircle,
   AlertTriangle,
   Hotel,
   Users,
@@ -16,7 +15,9 @@ import {
   Search as SearchIcon,
   Mail as MailIcon,
   Phone as PhoneIcon,
-  CalendarCheck
+  CalendarCheck,
+  Sun,
+  Moon,
 } from "lucide-react";
 import {
   getRooms,
@@ -25,11 +26,31 @@ import {
   getAvailability,
   type RoomInventory,
 } from "@/lib/roomStore";
+import { useTheme } from "@/hooks/useTheme";
 import { toast } from "@/components/ui/sonner";
 import { format } from "date-fns";
 
 const Admin = () => {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
+  const t = {
+    bg:       isDark ? '#0F0D08'               : '#FAF7F2',
+    surface:  isDark ? 'rgba(255,255,255,0.03)' : '#FFFFFF',
+    border:   isDark ? 'rgba(201,168,76,0.20)'  : 'rgba(180,145,60,0.35)',
+    text:     isDark ? '#F5F0E8'               : '#1A1510',
+    textMuted:isDark ? 'rgba(245,240,232,0.45)': 'rgba(26,21,16,0.60)',
+    inputBg:  isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+    inputBorder: isDark ? 'rgba(201,168,76,0.2)' : 'rgba(180,145,60,0.4)',
+    inputText: isDark ? '#F5F0E8' : '#1A1510',
+    headerBg: isDark ? '#0F0D08'               : 'rgba(250,247,242,0.97)',
+    labelColor: isDark ? 'rgba(201,168,76,0.6)' : 'rgba(180,145,60,0.8)',
+    inactiveTab: isDark ? 'rgba(245,240,232,0.4)' : 'rgba(26,21,16,0.45)',
+    subtext: isDark ? 'rgba(245,240,232,0.45)' : 'rgba(26,21,16,0.55)',
+    noticeBg: isDark ? 'rgba(201,168,76,0.05)' : 'rgba(180,145,60,0.06)',
+    noticeBorder: isDark ? 'rgba(201,168,76,0.15)' : 'rgba(180,145,60,0.2)',
+    noticeText: isDark ? 'rgba(245,240,232,0.5)' : 'rgba(26,21,16,0.55)',
+  };
   const [rooms, setRooms] = useState<RoomInventory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -224,10 +245,10 @@ const Admin = () => {
 
   if (isLoading) {
     return (
-      <div style={{ backgroundColor: '#0F0D08' }} className="min-h-screen flex items-center justify-center">
+      <div style={{ backgroundColor: t.bg }} className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 style={{ color: '#C9A84C' }} className="h-10 w-10 animate-spin" />
-          <p style={{ color: 'rgba(245,240,232,0.5)' }} className="text-sm font-bold uppercase tracking-widest animate-pulse">
+          <p style={{ color: t.textMuted }} className="text-sm font-bold uppercase tracking-widest animate-pulse">
             Syncing Live Inventory...
           </p>
         </div>
@@ -236,14 +257,14 @@ const Admin = () => {
   }
 
   return (
-    <div style={{ backgroundColor: '#0F0D08', fontFamily: 'Inter, sans-serif' }} className="min-h-screen pb-20 font-sans">
+    <div style={{ backgroundColor: t.bg, fontFamily: 'Inter, sans-serif' }} className="min-h-screen pb-20 font-sans">
       {/* Top Navigation Bar */}
-      <header style={{ backgroundColor: '#0F0D08', borderBottom: '1px solid rgba(201,168,76,0.15)' }} className="sticky top-0 z-40">
-        <div style={{ padding: '0 40px', maxWidth: '1200px', margin: '0 auto', height: '70px' }} className="flex items-center justify-between">
-          <div className="flex items-center gap-6">
+      <header style={{ backgroundColor: t.headerBg, borderBottom: '1px solid rgba(201,168,76,0.15)' }} className="sticky top-0 z-40">
+        <div style={{ padding: '0 40px', maxWidth: '1200px', margin: '0 auto', height: '70px', position: 'relative' }} className="flex items-center justify-between">
+          <div className="flex items-center gap-6 z-10">
             <button
               onClick={() => navigate("/")}
-              style={{ color: 'rgba(245,240,232,0.5)', fontSize: '12px' }}
+              style={{ color: t.textMuted, fontSize: '12px' }}
               className="flex items-center gap-2 hover:text-[#C9A84C] transition-colors group"
             >
               <ArrowLeft className="h-3.5 w-3.5 text-[#C9A84C] group-hover:-translate-x-0.5 transition-transform" />
@@ -252,13 +273,18 @@ const Admin = () => {
             <div style={{ width: '1px', height: '20px', backgroundColor: 'rgba(201,168,76,0.15)' }}></div>
             <div className="flex items-center gap-2">
               <Shield className="h-5 w-5" style={{ color: '#C9A84C' }} />
-              <h1 style={{ fontSize: '18px', color: '#F5F0E8', fontWeight: 600 }}>
+              <h1 style={{ fontSize: '18px', color: t.text, fontWeight: 600 }}>
                 Staff Management
               </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* Centered Logo */}
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none">
+            <img src="/mofam.webp" alt="Mofam Hotel Logo" style={{ width: '44px', height: '44px', objectFit: 'contain' }} />
+          </div>
+
+          <div className="flex items-center gap-3 z-10">
             <button
               onClick={() => navigate("/booking")}
               style={{
@@ -273,6 +299,25 @@ const Admin = () => {
             >
               <Hotel className="h-3.5 w-3.5" />
               Booking Page
+            </button>
+            <button
+              onClick={toggleTheme}
+              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              style={{
+                background: 'transparent',
+                border: '1px solid rgba(201,168,76,0.25)',
+                borderRadius: '50%',
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#C9A84C'
+              }}
+              className="hover:border-[#C9A84C] transition-colors"
+            >
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
             <button
               onClick={handleLogout}
@@ -299,7 +344,7 @@ const Admin = () => {
           <button
             onClick={() => setActiveTab("inventory")}
             style={{
-              color: activeTab === "inventory" ? '#C9A84C' : 'rgba(245,240,232,0.4)',
+              color: activeTab === "inventory" ? '#C9A84C' : t.inactiveTab,
               fontSize: '14px',
               borderBottom: activeTab === "inventory" ? '2px solid #C9A84C' : '2px solid transparent',
               fontWeight: activeTab === "inventory" ? 600 : 400,
@@ -312,7 +357,7 @@ const Admin = () => {
           <button
             onClick={() => setActiveTab("bookings")}
             style={{
-              color: activeTab === "bookings" ? '#C9A84C' : 'rgba(245,240,232,0.4)',
+              color: activeTab === "bookings" ? '#C9A84C' : t.inactiveTab,
               fontSize: '14px',
               borderBottom: activeTab === "bookings" ? '2px solid #C9A84C' : '2px solid transparent',
               fontWeight: activeTab === "bookings" ? 600 : 400,
@@ -329,10 +374,10 @@ const Admin = () => {
             {/* Section Heading */}
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 style={{ fontSize: '22px', color: '#F5F0E8', fontWeight: 700 }} className="mb-1">
+                <h2 style={{ fontSize: '22px', color: t.text, fontWeight: 700 }} className="mb-1">
                   Live Inventory & Pricing
                 </h2>
-                <p style={{ color: 'rgba(245,240,232,0.45)', fontSize: '13px' }}>
+                <p style={{ color: t.subtext, fontSize: '13px' }}>
                   Manage room rates and availability. Changes reflect immediately on the public booking engine.
                 </p>
               </div>
@@ -367,16 +412,17 @@ const Admin = () => {
                   label: "Occupancy",
                   value: `${occupancyRate}%`,
                   icon: Hotel,
-                  specialColor: occupancyRate < 30 ? 'rgba(255,180,80,1)' : occupancyRate > 70 ? '#4CAF50' : '#F5F0E8'
+                  specialColor: occupancyRate < 30 ? 'rgba(255,180,80,1)' : occupancyRate > 70 ? '#4CAF50' : t.text
                 },
               ].map(({ label, value, icon: Icon, specialColor }) => (
                 <div
                   key={label}
                   style={{
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(201,168,76,0.15)',
+                    background: t.surface,
+                    border: `1px solid ${t.border}`,
                     borderRadius: '10px',
-                    padding: '20px 24px'
+                    padding: '20px 24px',
+                    boxShadow: isDark ? 'none' : '0 2px 12px rgba(180,145,60,0.08)'
                   }}
                   className="flex flex-col gap-3"
                 >
@@ -388,7 +434,7 @@ const Admin = () => {
                       <Icon style={{ color: '#C9A84C', width: '16px', height: '16px' }} />
                     </div>
                   </div>
-                  <p style={{ color: specialColor || '#F5F0E8', fontSize: '32px', fontWeight: 700, lineHeight: 1 }}>
+                  <p style={{ color: specialColor || t.text, fontSize: '32px', fontWeight: 700, lineHeight: 1 }}>
                     {value}
                   </p>
                 </div>
@@ -398,8 +444,8 @@ const Admin = () => {
             {/* Room Inventory Rows */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {safeRoomsList.length === 0 ? (
-                <div style={{ padding: '60px 0', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(201,168,76,0.2)', borderRadius: '10px' }}>
-                  <p style={{ color: 'rgba(245,240,232,0.5)' }}>No room data found.</p>
+                <div style={{ padding: '60px 0', textAlign: 'center', background: t.surface, border: `1px dashed ${t.border}`, borderRadius: '10px' }}>
+                  <p style={{ color: t.textMuted }}>No room data found.</p>
                 </div>
               ) : safeRoomsList.map((room) => {
                 const available = getAvailability(room);
@@ -410,7 +456,7 @@ const Admin = () => {
                 const justSaved = savedId === room.id;
                 const savingThis = isSaving === room.id;
 
-                let availColor = '#F5F0E8';
+                let availColor = t.text;
                 if (available >= 5) availColor = '#4CAF50';
                 else if (available >= 2 && available <= 4) availColor = '#FFA032';
                 else if (available <= 1) availColor = '#FF5252';
@@ -419,17 +465,18 @@ const Admin = () => {
                   <div
                     key={room.id}
                     style={{
-                      background: 'rgba(255,255,255,0.03)',
-                      border: '1px solid rgba(201,168,76,0.20)',
+                      background: t.surface,
+                      border: `1px solid ${t.border}`,
                       borderRadius: '10px',
                       padding: '20px 24px',
-                      position: 'relative'
+                      position: 'relative',
+                      boxShadow: isDark ? 'none' : '0 1px 8px rgba(180,145,60,0.06)'
                     }}
-                    className={`flex items-center justify-between ${savingThis ? 'opacity-50' : ''}`}
                   >
+                    <div className={`flex items-center justify-between ${savingThis ? 'opacity-50' : ''}`}>
                     <div className="flex flex-col gap-2 w-1/4">
                       <div className="flex items-center gap-3">
-                        <h3 style={{ fontSize: '16px', color: '#F5F0E8', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                        <h3 style={{ fontSize: '16px', color: t.text, fontWeight: 600, whiteSpace: 'nowrap' }}>
                           {room.name}
                         </h3>
                         {isLow && !isSoldOut && (
@@ -466,7 +513,7 @@ const Admin = () => {
 
                     <div className="flex items-center gap-12 flex-1 justify-end">
                       <div className="flex flex-col gap-2">
-                        <label style={{ color: 'rgba(201,168,76,0.6)', fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                        <label style={{ color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
                           Room Price (₦)
                         </label>
                         <input
@@ -475,10 +522,10 @@ const Admin = () => {
                           onChange={(e) => handleChange(room.id, "price", e.target.value)}
                           disabled={savingThis}
                           style={{
-                            background: 'rgba(255,255,255,0.06)',
-                            border: '1px solid rgba(201,168,76,0.2)',
+                            background: t.inputBg,
+                            border: `1px solid ${t.inputBorder}`,
                             borderRadius: '6px',
-                            color: '#F5F0E8',
+                            color: t.inputText,
                             textAlign: 'center',
                             fontSize: '16px',
                             fontWeight: 600,
@@ -491,7 +538,7 @@ const Admin = () => {
                       </div>
 
                       <div className="flex flex-col gap-2">
-                        <label style={{ color: 'rgba(201,168,76,0.6)', fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                        <label style={{ color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
                           Total Inv.
                         </label>
                         <input
@@ -500,10 +547,10 @@ const Admin = () => {
                           onChange={(e) => handleChange(room.id, "totalRooms", e.target.value)}
                           disabled={savingThis}
                           style={{
-                            background: 'rgba(255,255,255,0.06)',
-                            border: '1px solid rgba(201,168,76,0.2)',
+                            background: t.inputBg,
+                            border: `1px solid ${t.inputBorder}`,
                             borderRadius: '6px',
-                            color: '#F5F0E8',
+                            color: t.inputText,
                             textAlign: 'center',
                             fontSize: '16px',
                             fontWeight: 600,
@@ -516,16 +563,32 @@ const Admin = () => {
                       </div>
 
                       <div className="flex flex-col gap-2 items-center">
-                        <label style={{ color: 'rgba(201,168,76,0.6)', fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                        <label style={{ color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
                           Booked
                         </label>
-                        <div style={{ color: 'rgba(245,240,232,0.7)', fontSize: '16px', fontWeight: 600, padding: '10px 0' }}>
-                          {state?.bookedRooms || '0'}
-                        </div>
+                        <input
+                          type="number"
+                          value={state?.bookedRooms ?? ""}
+                          onChange={(e) => handleChange(room.id, "bookedRooms", e.target.value)}
+                          disabled={savingThis}
+                          style={{
+                            background: t.inputBg,
+                            border: `1px solid ${t.inputBorder}`,
+                            borderRadius: '6px',
+                            color: t.inputText,
+                            textAlign: 'center',
+                            fontSize: '16px',
+                            fontWeight: 600,
+                            padding: '10px',
+                            width: '90px',
+                            outline: 'none'
+                          }}
+                          className="focus:border-[#C9A84C] transition-colors"
+                        />
                       </div>
 
                       <div className="flex flex-col gap-2 items-center w-20">
-                        <label style={{ color: 'rgba(201,168,76,0.6)', fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                        <label style={{ color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
                           Live Avail.
                         </label>
                         <div style={{ color: availColor, fontSize: '20px', fontWeight: 700, padding: '8px 0' }}>
@@ -564,6 +627,12 @@ const Admin = () => {
                         </button>
                       </div>
                     </div>
+                    </div>
+                    {isSoldOut && (
+                      <p style={{ color: 'rgba(255,160,50,0.6)', fontSize: '11px', marginTop: '6px', paddingLeft: '2px' }}>
+                        Set Booked Rooms below Total to restore availability
+                      </p>
+                    )}
                   </div>
                 );
               })}
@@ -574,21 +643,21 @@ const Admin = () => {
             {/* Bookings Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
               <div>
-                <h2 style={{ fontSize: '22px', color: '#F5F0E8', fontWeight: 700 }} className="mb-1">
+                <h2 style={{ fontSize: '22px', color: t.text, fontWeight: 700 }} className="mb-1">
                   Active Reservations
                 </h2>
-                <p style={{ color: 'rgba(245,240,232,0.45)', fontSize: '13px' }}>Monitor and manage guest bookings in real-time.</p>
+                <p style={{ color: t.subtext, fontSize: '13px' }}>Monitor and manage guest bookings in real-time.</p>
               </div>
               <div className="relative w-full md:w-72">
-                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: 'rgba(245,240,232,0.4)' }} />
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: t.textMuted }} />
                 <input
                   placeholder="Search name or email..."
                   className="pl-10 h-10 w-full outline-none transition-colors"
                   style={{
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(201,168,76,0.15)',
+                    background: t.inputBg,
+                    border: `1px solid ${t.inputBorder}`,
                     borderRadius: '6px',
-                    color: '#F5F0E8',
+                    color: t.inputText,
                     fontSize: '13px'
                   }}
                   value={searchQuery}
@@ -597,23 +666,23 @@ const Admin = () => {
               </div>
             </div>
 
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(201,168,76,0.1)', borderRadius: '10px', overflow: 'hidden' }}>
+            <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: '10px', overflow: 'hidden' }}>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr style={{ background: 'rgba(201,168,76,0.05)', borderBottom: '1px solid rgba(201,168,76,0.1)' }}>
-                      <th style={{ padding: '16px 24px', color: 'rgba(201,168,76,0.6)', fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Guest / Contact</th>
-                      <th style={{ padding: '16px 24px', color: 'rgba(201,168,76,0.6)', fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Stay Details</th>
-                      <th style={{ padding: '16px 24px', color: 'rgba(201,168,76,0.6)', fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Revenue</th>
-                      <th style={{ padding: '16px 24px', color: 'rgba(201,168,76,0.6)', fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Status</th>
+                    <tr style={{ background: t.noticeBg, borderBottom: `1px solid ${t.noticeBorder}` }}>
+                      <th style={{ padding: '16px 24px', color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Guest / Contact</th>
+                      <th style={{ padding: '16px 24px', color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Stay Details</th>
+                      <th style={{ padding: '16px 24px', color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Revenue</th>
+                      <th style={{ padding: '16px 24px', color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y" style={{ borderColor: 'rgba(201,168,76,0.05)' }}>
+                  <tbody className="divide-y" style={{ borderColor: t.noticeBorder }}>
                     {isBookingsLoading ? (
                       <tr>
                         <td colSpan={4} className="px-6 py-20 text-center">
                           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" style={{ color: '#C9A84C' }} />
-                          <p style={{ color: 'rgba(245,240,232,0.4)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Loading bookings...</p>
+                          <p style={{ color: t.textMuted, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Loading bookings...</p>
                         </td>
                       </tr>
                     ) : bookings.filter(b =>
@@ -622,7 +691,7 @@ const Admin = () => {
                     ).length === 0 ? (
                       <tr>
                         <td colSpan={4} className="px-6 py-20 text-center">
-                          <p style={{ color: 'rgba(245,240,232,0.4)' }}>No reservations found.</p>
+                          <p style={{ color: t.textMuted }}>No reservations found.</p>
                         </td>
                       </tr>
                     ) : bookings
@@ -631,11 +700,11 @@ const Admin = () => {
                         b.email?.toLowerCase().includes(searchQuery.toLowerCase())
                       )
                       .map((booking) => (
-                        <tr key={booking.id} className="hover:bg-white/[0.02] transition-colors">
+                        <tr key={booking.id} className={isDark ? "hover:bg-white/[0.02] transition-colors" : "hover:bg-black/[0.02] transition-colors"}>
                           <td style={{ padding: '16px 24px' }}>
                             <div className="space-y-1">
-                              <p style={{ color: '#F5F0E8', fontWeight: 600, fontSize: '14px' }}>{booking.full_name}</p>
-                              <div className="flex items-center gap-3" style={{ fontSize: '11px', color: 'rgba(245,240,232,0.5)' }}>
+                              <p style={{ color: t.text, fontWeight: 600, fontSize: '14px' }}>{booking.full_name}</p>
+                              <div className="flex items-center gap-3" style={{ fontSize: '11px', color: t.textMuted }}>
                                 <span className="flex items-center gap-1"><MailIcon className="h-3 w-3" /> {booking.email}</span>
                                 <span className="flex items-center gap-1"><PhoneIcon className="h-3 w-3" /> {booking.phone}</span>
                               </div>
@@ -644,7 +713,7 @@ const Admin = () => {
                           <td style={{ padding: '16px 24px' }}>
                             <div className="space-y-1">
                               <p style={{ color: '#C9A84C', fontWeight: 600, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{booking.room_type}</p>
-                              <div className="flex items-center gap-2" style={{ fontSize: '12px', color: 'rgba(245,240,232,0.7)' }}>
+                              <div className="flex items-center gap-2" style={{ fontSize: '12px', color: t.textMuted }}>
                                 <CalendarCheck className="h-3 w-3" style={{ opacity: 0.5 }} />
                                 <span>{format(new Date(booking.check_in), "MMM dd")}</span>
                                 <span style={{ opacity: 0.3 }}>→</span>
@@ -653,8 +722,8 @@ const Admin = () => {
                             </div>
                           </td>
                           <td style={{ padding: '16px 24px' }}>
-                            <p style={{ color: '#F5F0E8', fontWeight: 600, fontSize: '14px' }}>₦{Number(booking.total_price).toLocaleString()}</p>
-                            <p style={{ color: 'rgba(245,240,232,0.4)', fontSize: '10px', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>{booking.guests} Guests</p>
+                            <p style={{ color: t.text, fontWeight: 600, fontSize: '14px' }}>₦{Number(booking.total_price).toLocaleString()}</p>
+                            <p style={{ color: t.textMuted, fontSize: '10px', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>{booking.guests} Guests</p>
                           </td>
                           <td style={{ padding: '16px 24px' }}>
                             <span style={{
@@ -667,9 +736,9 @@ const Admin = () => {
                               background: booking.status === "pending" ? 'rgba(255,160,50,0.1)' :
                                 booking.status === "confirmed" ? 'rgba(76,175,80,0.1)' : 'rgba(255,255,255,0.05)',
                               color: booking.status === "pending" ? '#FFA032' :
-                                booking.status === "confirmed" ? '#4CAF50' : 'rgba(245,240,232,0.6)',
+                                booking.status === "confirmed" ? '#4CAF50' : t.textMuted,
                               border: `1px solid ${booking.status === "pending" ? 'rgba(255,160,50,0.3)' :
-                                booking.status === "confirmed" ? 'rgba(76,175,80,0.3)' : 'rgba(255,255,255,0.1)'}`
+                                booking.status === "confirmed" ? 'rgba(76,175,80,0.3)' : t.border}`
                             }}>
                               {booking.status}
                             </span>
@@ -685,8 +754,8 @@ const Admin = () => {
 
         <div style={{
           marginTop: '48px',
-          background: 'rgba(201,168,76,0.05)',
-          border: '1px solid rgba(201,168,76,0.15)',
+          background: t.noticeBg,
+          border: `1px solid ${t.noticeBorder}`,
           borderRadius: '8px',
           padding: '16px 24px',
           display: 'flex',
@@ -694,7 +763,7 @@ const Admin = () => {
           gap: '12px'
         }}>
           <Shield style={{ color: '#C9A84C', width: '20px', height: '20px' }} />
-          <p style={{ color: 'rgba(245,240,232,0.5)', fontSize: '12px', margin: 0 }}>
+          <p style={{ color: t.noticeText, fontSize: '12px', margin: 0 }}>
             You are currently in the Management Portal. All changes made here are instantly pushed to the <strong style={{ color: '#C9A84C', fontWeight: 600 }}>Supabase</strong> database and reflected on the live booking site.
           </p>
         </div>

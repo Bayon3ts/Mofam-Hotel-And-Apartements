@@ -253,15 +253,19 @@ const Booking = () => {
 
       console.log("[Booking] Insert success:", data);
 
-      // Trigger Emails AFTER successful insert
-      await sendBookingEmails({
+      // Trigger Emails AFTER successful insert — use the real Supabase-generated ID
+      const emailSent = await sendBookingEmails({
         ...bookingData,
-        id: data.id,
+        id: data.id,          // Must be the real ID from Supabase response
         check_in: checkIn!,
         check_out: checkOut!
       });
 
-      toast.success("Reservation confirmed! Emails sent.");
+      if (!emailSent) {
+        toast.warning("Booking confirmed! Note: confirmation email could not be sent. Please contact the hotel directly.");
+      } else {
+        toast.success("Reservation confirmed! Confirmation email sent.");
+      }
 
       // Navigate to confirmation page ONLY on success
       navigate("/bookingconfirmation", {

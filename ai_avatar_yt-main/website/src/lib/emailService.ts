@@ -60,6 +60,7 @@ export async function sendBookingEmails(booking: BookingData): Promise<boolean> 
     return true;
   } catch (err) {
     // Network / CORS errors should not break the booking flow
+    console.warn('⚠️ Email service unavailable — RESEND_API_KEY may not be configured in environment variables.');
     console.error('❌ Failed to reach email API:', err);
     return false;
   }

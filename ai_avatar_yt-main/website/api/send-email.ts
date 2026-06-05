@@ -4,8 +4,9 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const HOTEL_NAME = 'Mofam Hotel And Apartements';
-const ADMIN_EMAIL = 'reservations@mofamhotel.com'; // ← update to real admin inbox
-const FROM_EMAIL  = 'onboarding@resend.dev';        // ← use your Resend verified domain in prod
+const ADMIN_EMAIL = 'reservations@mofamhotel.com';
+// Ensure mofamhotel.com is verified in Resend dashboard before going live
+const FROM_EMAIL  = 'reservations@mofamhotel.com';
 
 // ─── HTML Email Templates ────────────────────────────────────────────────────
 
@@ -96,16 +97,16 @@ function guestTemplate(b: {
 
         <!-- Policy Info -->
         <tr>
-          <td style="padding:24px 40px 0;background:#121212;">
+          <td style="padding:24px 40px 0;background:rgba(233,195,73,0.05);border-top:1px solid rgba(233,195,73,0.15);border-bottom:1px solid rgba(233,195,73,0.15);">
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td width="50%" style="padding-right:12px;">
                   <p style="margin:0 0 4px;font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#e9c349;">Check-In Time</p>
-                  <p style="margin:0;font-size:13px;color:#aaa;">From 3:00 PM</p>
+                  <p style="margin:0;font-size:15px;font-weight:700;color:#f5f0e8;">From 3:00 PM</p>
                 </td>
-                <td width="50%" style="border-left:1px solid #2a2a2a;padding-left:16px;">
+                <td width="50%" style="border-left:1px solid rgba(233,195,73,0.2);padding-left:16px;">
                   <p style="margin:0 0 4px;font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#e9c349;">Check-Out Time</p>
-                  <p style="margin:0;font-size:13px;color:#aaa;">By 11:00 AM</p>
+                  <p style="margin:0;font-size:15px;font-weight:700;color:#f5f0e8;">By 11:00 AM</p>
                 </td>
               </tr>
             </table>
@@ -142,7 +143,7 @@ function adminTemplate(b: {
   const rows: [string, string][] = [
     ['Guest Name', b.full_name],
     ['Email', b.email],
-    ['Phone', b.phone],
+    ['📞 Phone', b.phone],
     ['Room Type', b.room_type],
     ['Check-In', b.check_in],
     ['Check-Out', b.check_out],
@@ -150,11 +151,14 @@ function adminTemplate(b: {
     ['Total Amount', b.total_price],
   ];
 
-  const rowsHtml = rows.map(([label, value]) => `
+  const rowsHtml = rows.map(([label, value]) => {
+    const isPhone = label.startsWith('📞');
+    return `
     <tr>
-      <td style="padding:10px 0;border-bottom:1px solid #222;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:#666;font-weight:700;width:40%;">${label}</td>
-      <td style="padding:10px 0;border-bottom:1px solid #222;font-size:14px;font-weight:700;color:#f5f0e8;text-align:right;">${value}</td>
-    </tr>`).join('');
+      <td style="padding:10px 0;border-bottom:1px solid #222;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:${isPhone ? '#e9c349' : '#666'};font-weight:700;width:40%;">${label}</td>
+      <td style="padding:10px 0;border-bottom:1px solid #222;font-size:${isPhone ? '16px' : '14px'};font-weight:${isPhone ? '900' : '700'};color:${isPhone ? '#e9c349' : '#f5f0e8'};text-align:right;">${value}</td>
+    </tr>`;
+  }).join('');
 
   return `<!DOCTYPE html>
 <html lang="en">
