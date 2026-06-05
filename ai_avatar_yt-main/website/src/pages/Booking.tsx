@@ -34,6 +34,7 @@ import { getRooms, getAvailability, type RoomInventory } from "@/lib/roomStore";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/lib/supabaseClient";
 import { sendBookingEmails } from "@/lib/emailService";
+import { useTheme } from "@/hooks/useTheme";
 
 // ─── Amenity Icon Map ────────────────────────────────────────────────────────
 const AmenityIcon = ({ name }: { name: string }) => {
@@ -68,6 +69,22 @@ const fmt = (n: number) => `₦${n.toLocaleString("en-NG")}`;
 // ─── Component ───────────────────────────────────────────────────────────────
 const Booking = () => {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
+
+  const isDark = theme === 'dark';
+  const t = {
+    bg: isDark ? '#0F0D08' : '#FAF7F2',
+    surface: isDark ? 'rgba(255,255,255,0.03)' : '#FFFFFF',
+    border: isDark ? 'rgba(201,168,76,0.25)' : 'rgba(180,145,60,0.3)',
+    text: isDark ? '#F5F0E8' : '#1A1510',
+    textMuted: isDark ? 'rgba(245,240,232,0.55)' : 'rgba(26,21,16,0.60)',
+    inputBg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+    shadow: isDark ? 'none' : '0 2px 12px rgba(180,145,60,0.08)',
+    headerBg: isDark ? '#0F0D08' : 'rgba(250,247,242,0.97)',
+    dropdownBg: isDark ? '#1A1610' : '#FFFFFF',
+    dropdownColor: isDark ? '#F5F0E8' : '#1A1510',
+    dropdownBorder: isDark ? '1px solid rgba(201,168,76,0.3)' : '1px solid rgba(180,145,60,0.3)',
+  };
 
   // Date state
   const [checkIn, setCheckIn] = useState<Date | undefined>(undefined);
@@ -300,7 +317,7 @@ const Booking = () => {
   const guestLabel = `${numRooms} Room${numRooms > 1 ? "s" : ""} · ${adults} Adult${adults > 1 ? "s" : ""}${children > 0 ? ` · ${children} Child${children > 1 ? "ren" : ""}` : ""}`;
 
   return (
-    <div className="min-h-screen text-foreground scroll-smooth" style={{ background: "#0F0D08" }}>
+    <div className="min-h-screen text-foreground scroll-smooth" style={{ background: t.bg }}>
       {/* ── HEADER ─────────────────────────────────────────────────────── */}
       <div style={{ position: "relative", paddingTop: "40px", paddingBottom: "20px", maxWidth: "1200px", margin: "0 auto", paddingLeft: "5%", paddingRight: "5%" }}>
         <button
@@ -317,10 +334,10 @@ const Booking = () => {
           <p style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.25em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif", marginTop: "12px", marginBottom: "16px", fontWeight: 400 }}>
             RESERVE YOUR STAY
           </p>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(36px, 4vw, 56px)", color: "#F5F0E8", fontWeight: 600, margin: 0, lineHeight: 1.1, textAlign: "center" }}>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(36px, 4vw, 56px)", color: t.text, fontWeight: 600, margin: 0, lineHeight: 1.1, textAlign: "center" }}>
             Book Your Stay at Mofam
           </h1>
-          <p style={{ color: "rgba(245,240,232,0.55)", fontSize: "15px", fontFamily: "'Inter', sans-serif", marginTop: "8px", marginBottom: "0", textAlign: "center", lineHeight: 1.6 }}>
+          <p style={{ color: t.textMuted, fontSize: "15px", fontFamily: "'Inter', sans-serif", marginTop: "8px", marginBottom: "0", textAlign: "center", lineHeight: 1.6 }}>
             Experience Nigeria's hospitality at its finest
           </p>
           <div style={{ width: "60px", height: "1px", background: "#C9A84C", margin: "16px auto 40px" }} />
@@ -330,20 +347,20 @@ const Booking = () => {
       <main style={{ width: "100%", maxWidth: "100%", padding: 0 }}>
 
         {/* ── UNIFIED BOOKING BAR ─────────────────────────────────────── */}
-        <div className="p-5 lg:p-7" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(201,168,76,0.3)", borderRadius: "12px", maxWidth: "1100px", margin: "0 auto 10px auto", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative" }}>
+        <div className="p-5 lg:p-7" style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: "12px", maxWidth: "1100px", margin: "0 auto 10px auto", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", boxShadow: t.shadow }}>
           <div className="flex flex-col lg:grid lg:grid-cols-[1fr_1px_1fr_1px_1fr_auto] gap-6 lg:items-end">
             {/* Check-In */}
             <div className="flex-1 space-y-2">
               <Label style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "8px", display: "block" }}>Check-In</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <button className="contact-luxury-input" style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: checkIn ? "#F5F0E8" : "rgba(245,240,232,0.35)", padding: "14px 16px", display: "flex", alignItems: "center", gap: "8px", fontFamily: "'Inter', sans-serif", fontSize: "14px", cursor: "pointer", transition: "all 0.3s ease" }}>
+                  <button className="contact-luxury-input" style={{ width: "100%", background: t.inputBg, border: `1px solid ${t.border}`, borderRadius: "8px", color: checkIn ? t.text : t.textMuted, padding: "14px 16px", display: "flex", alignItems: "center", gap: "8px", fontFamily: "'Inter', sans-serif", fontSize: "14px", cursor: "pointer", transition: "all 0.3s ease" }}>
                     <CalendarIcon style={{ color: "#C9A84C", width: "16px", height: "16px" }} />
                     {checkIn ? format(checkIn, "EEE, MMM dd") : "Add check-in date"}
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 border-0 bg-transparent" align="start">
-                  <div className="booking-calendar-wrapper" style={{ padding: "16px" }}>
+                  <div className="booking-calendar-wrapper" style={{ padding: "16px", background: t.dropdownBg, color: t.dropdownColor, border: t.dropdownBorder, borderRadius: "12px", boxShadow: t.shadow }}>
                     <Calendar
                       mode="single"
                       selected={checkIn}
@@ -363,13 +380,13 @@ const Booking = () => {
               <Label style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "8px", display: "block" }}>Check-Out</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <button className="contact-luxury-input" style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: checkOut ? "#F5F0E8" : "rgba(245,240,232,0.35)", padding: "14px 16px", display: "flex", alignItems: "center", gap: "8px", fontFamily: "'Inter', sans-serif", fontSize: "14px", cursor: "pointer", transition: "all 0.3s ease" }}>
+                  <button className="contact-luxury-input" style={{ width: "100%", background: t.inputBg, border: `1px solid ${t.border}`, borderRadius: "8px", color: checkOut ? t.text : t.textMuted, padding: "14px 16px", display: "flex", alignItems: "center", gap: "8px", fontFamily: "'Inter', sans-serif", fontSize: "14px", cursor: "pointer", transition: "all 0.3s ease" }}>
                     <CalendarIcon style={{ color: "#C9A84C", width: "16px", height: "16px" }} />
                     {checkOut ? format(checkOut, "EEE, MMM dd") : "Add check-out date"}
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 border-0 bg-transparent" align="start">
-                  <div className="booking-calendar-wrapper" style={{ padding: "16px" }}>
+                  <div className="booking-calendar-wrapper" style={{ padding: "16px", background: t.dropdownBg, color: t.dropdownColor, border: t.dropdownBorder, borderRadius: "12px", boxShadow: t.shadow }}>
                     <Calendar
                       mode="single"
                       selected={checkOut}
@@ -387,7 +404,7 @@ const Booking = () => {
             {/* Guests & Rooms */}
             <div className="flex-1 space-y-2 relative" ref={guestDropRef}>
               <Label style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "8px", display: "block" }}>Guests & Rooms</Label>
-              <button className="contact-luxury-input" onClick={() => setGuestDropOpen(!guestDropOpen)} style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", fontFamily: "'Inter', sans-serif", fontSize: "14px", cursor: "pointer", transition: "all 0.3s ease" }}>
+              <button className="contact-luxury-input" onClick={() => setGuestDropOpen(!guestDropOpen)} style={{ width: "100%", background: t.inputBg, border: `1px solid ${t.border}`, borderRadius: "8px", color: t.text, padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", fontFamily: "'Inter', sans-serif", fontSize: "14px", cursor: "pointer", transition: "all 0.3s ease" }}>
                 <span className="flex items-center gap-2 overflow-hidden truncate">
                   <Users style={{ color: "#C9A84C", width: "16px", height: "16px" }} />
                   <span className="truncate">{guestLabel}</span>
@@ -395,7 +412,7 @@ const Booking = () => {
                 <ChevronDown className={cn("h-4 w-4 transition-transform", guestDropOpen && "rotate-180")} style={{ color: "#C9A84C" }} />
               </button>
               {guestDropOpen && (
-                <div className="absolute left-0 top-[calc(100%+8px)] w-[300px] z-[51] rounded-xl shadow-2xl p-5 space-y-5" style={{ background: "#1A1610", border: "1px solid rgba(201,168,76,0.3)" }}>
+                <div className="absolute left-0 top-[calc(100%+8px)] w-[300px] z-[51] rounded-xl shadow-2xl p-5 space-y-5" style={{ background: t.dropdownBg, color: t.dropdownColor, border: t.dropdownBorder, boxShadow: t.shadow }}>
                   {[
                     { label: "Rooms", count: numRooms, set: setNumRooms, min: 1, desc: "" },
                     { label: "Adults", count: adults, set: setAdults, min: 1, desc: "Ages 18+" },
@@ -403,14 +420,14 @@ const Booking = () => {
                   ].map((item) => (
                     <div key={item.label} className="flex items-center justify-between">
                       <div>
-                        <p style={{ fontWeight: 600, fontSize: "14px", color: "#F5F0E8" }}>{item.label}</p>
+                        <p style={{ fontWeight: 600, fontSize: "14px", color: t.dropdownColor }}>{item.label}</p>
                         {item.desc && <p style={{ fontSize: "10px", color: "rgba(201,168,76,0.6)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{item.desc}</p>}
                       </div>
                       <div className="flex items-center gap-4">
                         <button onClick={() => item.set(Math.max(item.min, item.count - 1))} disabled={item.count <= item.min} style={{ width: "32px", height: "32px", borderRadius: "50%", border: "1px solid rgba(201,168,76,0.3)", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", color: "#C9A84C", cursor: item.count <= item.min ? "not-allowed" : "pointer", opacity: item.count <= item.min ? 0.3 : 1 }}>
                           <Minus className="h-3 w-3" />
                         </button>
-                        <span style={{ width: "20px", textAlign: "center", fontWeight: 700, color: "#F5F0E8" }}>{item.count}</span>
+                        <span style={{ width: "20px", textAlign: "center", fontWeight: 700, color: t.dropdownColor }}>{item.count}</span>
                         <button onClick={() => item.set(item.count + 1)} style={{ width: "32px", height: "32px", borderRadius: "50%", border: "1px solid rgba(201,168,76,0.3)", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", color: "#C9A84C", cursor: "pointer" }}>
                           <Plus className="h-3 w-3" />
                         </button>
@@ -450,7 +467,7 @@ const Booking = () => {
               <div style={{ width: "40px", height: "40px", borderRadius: "50%", border: "1px solid rgba(201,168,76,0.4)", background: "rgba(201,168,76,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {item.icon}
               </div>
-              <span style={{ color: "rgba(245,240,232,0.6)", fontSize: "12px", letterSpacing: "0.08em", fontFamily: "'Inter', sans-serif" }}>
+              <span style={{ color: t.textMuted, fontSize: "12px", letterSpacing: "0.08em", fontFamily: "'Inter', sans-serif" }}>
                 {item.label}
               </span>
             </div>
@@ -460,10 +477,10 @@ const Booking = () => {
         {/* ── CUSTOMER DETAILS FORM (STEP 2) ────────────────────────── */}
         {isDetailsStep && (
           <div className="animate-in fade-in slide-in-from-bottom-5 duration-500" style={{ maxWidth: "1100px", margin: "0 auto", marginBottom: "40px" }}>
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(201,168,76,0.25)", borderRadius: "12px", padding: "40px" }}>
+            <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: "12px", padding: "40px", boxShadow: t.shadow }}>
               <div className="flex items-start justify-between" style={{ borderBottom: "1px solid rgba(201,168,76,0.15)", paddingBottom: "32px", marginBottom: "32px" }}>
                 <div>
-                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "32px", color: "#F5F0E8", fontWeight: 600, margin: 0 }}>Customer Information</h3>
+                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "32px", color: t.text, fontWeight: 600, margin: 0 }}>Customer Information</h3>
                   <div style={{ width: "48px", height: "1px", background: "#C9A84C", margin: "8px 0 4px" }} />
                   <p style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.25em", textTransform: "uppercase", margin: 0 }}>Details for your reservation</p>
                 </div>
@@ -483,7 +500,7 @@ const Booking = () => {
                       onChange={(e) => { setFullName(e.target.value); if (formErrors.fullName) setFormErrors(prev => ({ ...prev, fullName: "" })); }}
                       disabled={isSubmitting}
                       className="placeholder:text-[rgba(245,240,232,0.3)]"
-                      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", outline: "none", width: "100%", transition: "all 0.2s" }}
+                      style={{ background: t.inputBg, border: `1px solid ${t.border}`, borderRadius: "8px", color: t.text, padding: "14px 16px", fontSize: "14px", outline: "none", width: "100%", transition: "all 0.2s" }}
                       onFocus={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.7)"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(201,168,76,0.08)"; }}
                       onBlur={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.2)"; e.currentTarget.style.boxShadow = "none"; }}
                     />
@@ -501,7 +518,7 @@ const Booking = () => {
                       onChange={(e) => { setEmail(e.target.value); if (formErrors.email) setFormErrors(prev => ({ ...prev, email: "" })); }}
                       disabled={isSubmitting}
                       className="placeholder:text-[rgba(245,240,232,0.3)]"
-                      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", outline: "none", width: "100%", transition: "all 0.2s" }}
+                      style={{ background: t.inputBg, border: `1px solid ${t.border}`, borderRadius: "8px", color: t.text, padding: "14px 16px", fontSize: "14px", outline: "none", width: "100%", transition: "all 0.2s" }}
                       onFocus={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.7)"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(201,168,76,0.08)"; }}
                       onBlur={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.2)"; e.currentTarget.style.boxShadow = "none"; }}
                     />
@@ -519,7 +536,7 @@ const Booking = () => {
                       onChange={(e) => { setPhone(e.target.value); if (formErrors.phone) setFormErrors(prev => ({ ...prev, phone: "" })); }}
                       disabled={isSubmitting}
                       className="placeholder:text-[rgba(245,240,232,0.3)]"
-                      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", outline: "none", width: "100%", transition: "all 0.2s" }}
+                      style={{ background: t.inputBg, border: `1px solid ${t.border}`, borderRadius: "8px", color: t.text, padding: "14px 16px", fontSize: "14px", outline: "none", width: "100%", transition: "all 0.2s" }}
                       onFocus={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.7)"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(201,168,76,0.08)"; }}
                       onBlur={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.2)"; e.currentTarget.style.boxShadow = "none"; }}
                     />
@@ -532,7 +549,7 @@ const Booking = () => {
                     <h4 style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", margin: 0 }}>
                       <Lock style={{ width: "12px", height: "12px" }} /> Secure Checkout
                     </h4>
-                    <p style={{ color: "rgba(245,240,232,0.55)", fontSize: "13px", lineHeight: 1.7, margin: "0" }}>
+                    <p style={{ color: t.textMuted, fontSize: "13px", lineHeight: 1.7, margin: "0" }}>
                       Your data is encrypted and used only for managing your reservation. By clicking confirm, you agree to our terms of service and editorial standards.
                     </p>
                   </div>
@@ -562,7 +579,7 @@ const Booking = () => {
             {/* Left: Rooms */}
             <div style={{ flex: 1, maxWidth: "720px", display: "flex", flexDirection: "column", gap: "16px" }} className="w-full">
               <div className="flex items-center justify-between mb-2 px-1">
-                <h3 className="text-xl font-extrabold tracking-tight" style={{ color: "#F5F0E8" }}>
+                <h3 className="text-xl font-extrabold tracking-tight" style={{ color: t.text }}>
                   {isSearching ? "Finding Best Rates…" : `${safeRoomData.length} Room Types Available`}
                 </h3>
               </div>
@@ -604,20 +621,21 @@ const Booking = () => {
                         style={{
                           padding: "24px",
                           borderRadius: "12px",
-                          border: "1px solid rgba(201,168,76,0.25)",
+                          border: `1px solid ${t.border}`,
                           marginBottom: "16px",
-                          background: isSelected ? "rgba(201,168,76,0.05)" : "transparent",
+                          background: isSelected ? "rgba(201,168,76,0.05)" : t.surface,
                           cursor: isSoldOut ? "not-allowed" : "pointer",
                           opacity: isSoldOut ? 0.5 : 1,
                           animationDelay: `${idx * 80}ms`,
-                          transition: "all 0.3s ease"
+                          transition: "all 0.3s ease",
+                          boxShadow: t.shadow
                         }}
                       >
                         {/* Top: Name + Badge + Price Row */}
                         <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
                           <div className="space-y-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h4 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", color: "#F5F0E8", margin: 0, fontWeight: 600 }}>{room.name}</h4>
+                              <h4 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", color: t.text, margin: 0, fontWeight: 600 }}>{room.name}</h4>
                               {room.badge && !isSoldOut && (
                                 <span className={cn("px-2.5 py-0.5 text-[10px] font-black uppercase tracking-tighter rounded-full border", badgeVariant(room.badge))}>
                                   {room.badge}
@@ -645,7 +663,7 @@ const Booking = () => {
                         </div>
 
                         {/* Middle: Description */}
-                        <p style={{ fontSize: "14px", color: "rgba(245,240,232,0.6)", lineHeight: 1.7, margin: "0 0 24px 0" }}>{room.description}</p>
+                        <p style={{ fontSize: "14px", color: t.textMuted, lineHeight: 1.7, margin: "0 0 24px 0" }}>{room.description}</p>
 
                         {/* Bottom: Amenities + Action */}
                         <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mt-auto pt-4" style={{ borderTop: "1px solid rgba(201,168,76,0.15)" }}>
@@ -683,21 +701,21 @@ const Booking = () => {
 
             {/* Right: Sticky Summary */}
             <div style={{ width: "340px", flexShrink: 0, position: "sticky", top: "24px" }} className="hidden lg:block">
-              <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(201,168,76,0.3)", borderRadius: "12px", padding: "28px" }}>
+              <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: "12px", padding: "28px", boxShadow: t.shadow }}>
                 <div>
-                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", color: "#F5F0E8", margin: "0 0 24px 0", fontWeight: 600 }}>Your Reservation</h3>
+                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", color: t.text, margin: "0 0 24px 0", fontWeight: 600 }}>Your Reservation</h3>
                 </div>
 
                 <div className="space-y-6">
                   {checkIn && checkOut && (
                     <div className="grid grid-cols-2 gap-3">
-                      <div style={{ background: "rgba(255,255,255,0.03)", padding: "16px", borderRadius: "8px", border: "1px solid rgba(201,168,76,0.15)" }}>
+                      <div style={{ background: t.inputBg, padding: "16px", borderRadius: "8px", border: `1px solid ${t.border}` }}>
                         <p style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "8px", margin: 0 }}>Check-In</p>
-                        <p style={{ color: "#F5F0E8", fontSize: "15px", margin: 0 }}>{format(checkIn, "MMM dd, yyyy")}</p>
+                        <p style={{ color: t.text, fontSize: "15px", margin: 0 }}>{format(checkIn, "MMM dd, yyyy")}</p>
                       </div>
-                      <div style={{ background: "rgba(255,255,255,0.03)", padding: "16px", borderRadius: "8px", border: "1px solid rgba(201,168,76,0.15)" }}>
+                      <div style={{ background: t.inputBg, padding: "16px", borderRadius: "8px", border: `1px solid ${t.border}` }}>
                         <p style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "8px", margin: 0 }}>Check-Out</p>
-                        <p style={{ color: "#F5F0E8", fontSize: "15px", margin: 0 }}>{format(checkOut, "MMM dd, yyyy")}</p>
+                        <p style={{ color: t.text, fontSize: "15px", margin: 0 }}>{format(checkOut, "MMM dd, yyyy")}</p>
                       </div>
                     </div>
                   )}
@@ -705,17 +723,17 @@ const Booking = () => {
                   <div className="flex justify-between items-center px-1">
                     <div className="flex flex-col gap-1 items-center">
                       <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>Nights</span>
-                      <span style={{ color: "#F5F0E8", fontSize: "15px" }}>{nights}</span>
+                      <span style={{ color: t.text, fontSize: "15px" }}>{nights}</span>
                     </div>
                     <Separator orientation="vertical" className="h-8 bg-[rgba(201,168,76,0.15)]" />
                     <div className="flex flex-col gap-1 items-center">
                       <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>Rooms</span>
-                      <span style={{ color: "#F5F0E8", fontSize: "15px" }}>{numRooms}</span>
+                      <span style={{ color: t.text, fontSize: "15px" }}>{numRooms}</span>
                     </div>
                     <Separator orientation="vertical" className="h-8 bg-[rgba(201,168,76,0.15)]" />
                     <div className="flex flex-col gap-1 items-center">
                       <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>Guests</span>
-                      <span style={{ color: "#F5F0E8", fontSize: "15px" }}>{totalGuests}</span>
+                      <span style={{ color: t.text, fontSize: "15px" }}>{totalGuests}</span>
                     </div>
                   </div>
 
@@ -727,22 +745,22 @@ const Booking = () => {
                         <p style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "4px" }}>Selected Accommodation</p>
                         <div className="flex justify-between items-end">
                           <div>
-                            <p style={{ color: "#F5F0E8", fontSize: "15px", margin: 0, fontWeight: 600 }}>{selectedRoom.name}</p>
+                            <p style={{ color: t.text, fontSize: "15px", margin: 0, fontWeight: 600 }}>{selectedRoom.name}</p>
                             <p style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.8, margin: 0 }}>{selectedRoom.tag}</p>
                           </div>
-                          <p style={{ color: "rgba(245,240,232,0.6)", fontSize: "14px", margin: 0 }}>{fmt(selectedRoom.price)}/nt</p>
+                          <p style={{ color: t.textMuted, fontSize: "14px", margin: 0 }}>{fmt(selectedRoom.price)}/nt</p>
                         </div>
                       </div>
 
-                      <div style={{ background: "rgba(255,255,255,0.03)", padding: "16px", borderRadius: "8px", border: "1px solid rgba(201,168,76,0.15)" }} className="space-y-3">
+                      <div style={{ background: t.inputBg, padding: "16px", borderRadius: "8px", border: `1px solid ${t.border}` }} className="space-y-3">
                         <div className="flex justify-between">
                           <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>Room Charge</span>
-                          <span style={{ color: "#F5F0E8", fontSize: "15px" }}>{fmt(selectedRoom.price * nights)}</span>
+                          <span style={{ color: t.text, fontSize: "15px" }}>{fmt(selectedRoom.price * nights)}</span>
                         </div>
                         {numRooms > 1 && (
                           <div className="flex justify-between">
                             <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>× {numRooms} Rooms</span>
-                            <span style={{ color: "#F5F0E8", fontSize: "15px" }}>{fmt(selectedRoom.price * nights * numRooms)}</span>
+                            <span style={{ color: t.text, fontSize: "15px" }}>{fmt(selectedRoom.price * nights * numRooms)}</span>
                           </div>
                         )}
                         <div className="flex justify-between">

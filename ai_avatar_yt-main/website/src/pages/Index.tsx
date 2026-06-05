@@ -1504,7 +1504,7 @@ const Index = () => {
       <footer style={{ background: "#0A0800", position: "relative" }}>
         {/* Top ornamental border with static divider */}
         <div style={{ position: "relative", width: "100%", height: "1px", background: "rgba(201,168,76,0.25)" }}>
-          <div style={{ position: "absolute", top: "-24px", left: "50%", transform: "translateX(-50%)", display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", background: "#0A0800", padding: "0 24px" }}>
+          <div className="footer-star-bg" style={{ position: "absolute", top: "-24px", left: "50%", transform: "translateX(-50%)", display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", background: "transparent", padding: "0 24px" }}>
             <div style={{ width: "40px", height: "1px", background: "linear-gradient(to right, transparent, rgba(201,168,76,0.6))" }} />
             <span style={{ color: "#C9A84C", fontSize: "14px", display: "inline-block" }}>✦</span>
             <div style={{ width: "40px", height: "1px", background: "linear-gradient(to left, transparent, rgba(201,168,76,0.6))" }} />

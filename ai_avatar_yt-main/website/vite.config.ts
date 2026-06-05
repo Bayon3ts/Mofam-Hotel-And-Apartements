@@ -6,13 +6,8 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    proxy: {
-      "/api": {
-        target: "http://localhost:5001",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, "")
-      }
-    }
+    // /api routes are Vercel serverless functions — they only run on Vercel,
+    // not locally via npm run dev. Email sending is gracefully skipped in dev.
   },
   plugins: [
     react(),

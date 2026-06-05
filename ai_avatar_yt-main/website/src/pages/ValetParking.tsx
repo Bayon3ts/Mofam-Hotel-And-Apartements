@@ -12,11 +12,15 @@ import {
   Phone,
   MapPin,
   Banknote,
-  CheckCircle
+  CheckCircle,
+  Sun,
+  Moon
 } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
 
 const ValetParking = () => {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   const services = [
     {
@@ -108,6 +112,23 @@ const ValetParking = () => {
             Back to Home
           </Button>
           <div className="flex items-center gap-4">
+            <button
+              onClick={toggleTheme}
+              style={{
+                background: 'transparent',
+                border: '1px solid rgba(201,168,76,0.25)',
+                borderRadius: '50%',
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#C9A84C'
+              }}
+            >
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
             <Button variant="outline" className="flex items-center gap-2">
               <Phone className="h-4 w-4" />
               Call Valet

@@ -24,6 +24,13 @@ export interface BookingData {
 }
 
 export async function sendBookingEmails(booking: BookingData): Promise<boolean> {
+  // Vercel serverless functions are unavailable in local dev (npm run dev).
+  // Skip the API call silently so the booking flow is never blocked locally.
+  if (import.meta.env.DEV) {
+    console.info('[Mofam] Local dev: email send skipped (Vercel functions not available). Emails will send on the deployed site.');
+    return true;
+  }
+
   console.log('──────────────────────────────────────────');
   console.log('📧 Sending booking emails via Resend...');
 
@@ -60,7 +67,7 @@ export async function sendBookingEmails(booking: BookingData): Promise<boolean> 
     return true;
   } catch (err) {
     // Network / CORS errors should not break the booking flow
-    console.warn('⚠️ Email service unavailable — RESEND_API_KEY may not be configured in environment variables.');
+    console.warn('[Mofam] Email delivery failed. Check: 1) RESEND_API_KEY in Vercel env vars, 2) Domain verification on Resend dashboard for mofamhotelandapartments.com');
     console.error('❌ Failed to reach email API:', err);
     return false;
   }

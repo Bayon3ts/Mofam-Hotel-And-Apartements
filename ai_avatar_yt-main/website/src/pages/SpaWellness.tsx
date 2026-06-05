@@ -10,8 +10,11 @@ import {
   Phone,
   Calendar,
   Flame,
+  Sun,
+  Moon,
 } from "lucide-react";
 import spaImage from "@/assets/spa-amenities.jpg";
+import { useTheme } from "@/hooks/useTheme";
 
 // ─── Ornamental Divider ───────────────────────────────────────────────────────
 const OrnamentalDivider = () => {
@@ -51,12 +54,12 @@ const SectionHeading = ({ eyebrow, title, subtitle }: { eyebrow: string; title: 
     <p style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.25em", textTransform: "uppercase", marginBottom: "14px" }}>
       {eyebrow}
     </p>
-    <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(32px, 4vw, 48px)", color: "#F5F0E8", fontWeight: 600, margin: "0 0 12px 0" }}>
+    <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(32px, 4vw, 48px)", color: "var(--text-heading, #F5F0E8)", fontWeight: 600, margin: "0 0 12px 0" }}>
       {title}
     </h2>
     <div style={{ width: "60px", height: "1px", background: "#C9A84C", margin: "12px auto 20px" }} />
     {subtitle && (
-      <p style={{ color: "rgba(245,240,232,0.55)", fontSize: "15px", maxWidth: "560px", margin: "0 auto", lineHeight: 1.8 }}>
+      <p style={{ color: "var(--text-muted, rgba(245,240,232,0.55))", fontSize: "15px", maxWidth: "560px", margin: "0 auto", lineHeight: 1.8 }}>
         {subtitle}
       </p>
     )}
@@ -177,12 +180,25 @@ const policies = [
 // ─── Component ────────────────────────────────────────────────────────────────
 const SpaWellness = () => {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
+
+  const isDark = theme === 'dark';
+  const t = {
+    bg: isDark ? '#0F0D08' : '#FAF7F2',
+    surface: isDark ? 'rgba(255,255,255,0.03)' : '#FFFFFF',
+    border: isDark ? 'rgba(201,168,76,0.25)' : 'rgba(180,145,60,0.3)',
+    text: isDark ? '#F5F0E8' : '#1A1510',
+    textMuted: isDark ? 'rgba(245,240,232,0.55)' : 'rgba(26,21,16,0.60)',
+    inputBg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+    shadow: isDark ? 'none' : '0 2px 12px rgba(180,145,60,0.08)',
+    headerBg: isDark ? '#0F0D08' : 'rgba(250,247,242,0.97)',
+  };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0F0D08", fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: t.bg, fontFamily: "'Inter', sans-serif" }}>
 
       {/* ── NAVIGATION BAR ─────────────────────────────────────────────── */}
-      <header style={{ background: "#0F0D08", borderBottom: "1px solid rgba(201,168,76,0.12)", position: "sticky", top: 0, zIndex: 50, padding: "0 40px" }}>
+      <header style={{ background: t.headerBg, borderBottom: `1px solid ${t.border}`, position: "sticky", top: 0, zIndex: 50, padding: "0 40px" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button
             onClick={() => navigate("/")}
@@ -195,6 +211,23 @@ const SpaWellness = () => {
           </button>
 
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <button
+              onClick={toggleTheme}
+              style={{
+                background: 'transparent',
+                border: '1px solid rgba(201,168,76,0.25)',
+                borderRadius: '50%',
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#C9A84C'
+              }}
+            >
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
             <a
               href="tel:+2347069206935"
               style={{ display: "flex", alignItems: "center", gap: "8px", background: "transparent", border: "1px solid rgba(201,168,76,0.5)", color: "#C9A84C", borderRadius: "8px", padding: "9px 18px", fontSize: "13px", letterSpacing: "0.05em", textDecoration: "none", transition: "all 0.3s ease" }}
@@ -253,13 +286,14 @@ const SpaWellness = () => {
               <div
                 key={idx}
                 style={{
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(201,168,76,0.25)",
+                  background: t.surface,
+                  border: `1px solid ${t.border}`,
                   borderRadius: "12px",
                   padding: "28px 24px",
                   textAlign: "center",
                   transition: "border-color 0.3s ease, transform 0.3s ease",
                   cursor: "default",
+                  boxShadow: t.shadow,
                 }}
                 onMouseEnter={e => {
                   (e.currentTarget as HTMLElement).style.borderColor = "rgba(201,168,76,0.55)";
@@ -273,10 +307,10 @@ const SpaWellness = () => {
                 <div style={{ width: "52px", height: "52px", borderRadius: "50%", border: "1px solid rgba(201,168,76,0.4)", background: "rgba(201,168,76,0.08)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
                   {facility.icon}
                 </div>
-                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "20px", color: "#F5F0E8", fontWeight: 600, margin: "0 0 10px 0" }}>
+                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "20px", color: t.text, fontWeight: 600, margin: "0 0 10px 0" }}>
                   {facility.name}
                 </h3>
-                <p style={{ color: "rgba(245,240,232,0.6)", fontSize: "14px", lineHeight: 1.7, margin: 0 }}>
+                <p style={{ color: t.textMuted, fontSize: "14px", lineHeight: 1.7, margin: 0 }}>
                   {facility.description}
                 </p>
               </div>
@@ -295,8 +329,8 @@ const SpaWellness = () => {
           />
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
-            {treatments.map((t, idx) => (
-              <TreatmentCard key={idx} treatment={t} onBook={() => navigate("/booking")} />
+            {treatments.map((tItem, idx) => (
+              <TreatmentCard key={idx} treatment={tItem} onBook={() => navigate("/booking")} t={t} />
             ))}
           </div>
         </FadeSection>
@@ -313,12 +347,12 @@ const SpaWellness = () => {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
 
             {/* Operating Hours */}
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "12px", padding: "28px 32px" }}>
+            <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: "12px", padding: "28px 32px", boxShadow: t.shadow }}>
               <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "24px" }}>
                 <div style={{ width: "40px", height: "40px", borderRadius: "50%", border: "1px solid rgba(201,168,76,0.4)", background: "rgba(201,168,76,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Clock style={{ width: "17px", height: "17px", color: "#C9A84C" }} />
                 </div>
-                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", color: "#F5F0E8", fontWeight: 600, margin: 0 }}>
+                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", color: t.text, fontWeight: 600, margin: 0 }}>
                   Operating Hours
                 </h3>
               </div>
@@ -328,7 +362,7 @@ const SpaWellness = () => {
                   <div key={idx}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 0" }}>
                       <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase" }}>{day}</span>
-                      <span style={{ color: "rgba(245,240,232,0.7)", fontSize: "14px" }}>{time}</span>
+                      <span style={{ color: t.text, fontSize: "14px" }}>{time}</span>
                     </div>
                     {idx < hours.length - 1 && <div style={{ borderTop: "1px solid rgba(201,168,76,0.1)" }} />}
                   </div>
@@ -336,19 +370,19 @@ const SpaWellness = () => {
               </div>
 
               <div style={{ borderTop: "1px solid rgba(201,168,76,0.1)", marginTop: "16px", paddingTop: "16px" }}>
-                <p style={{ color: "rgba(245,240,232,0.4)", fontSize: "12px", lineHeight: 1.7, margin: 0 }}>
+                <p style={{ color: t.textMuted, fontSize: "12px", lineHeight: 1.7, margin: 0 }}>
                   Last treatment bookings accepted 90 minutes before closing.
                 </p>
               </div>
             </div>
 
             {/* Spa Policies */}
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "12px", padding: "28px 32px" }}>
+            <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: "12px", padding: "28px 32px", boxShadow: t.shadow }}>
               <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "24px" }}>
                 <div style={{ width: "40px", height: "40px", borderRadius: "50%", border: "1px solid rgba(201,168,76,0.4)", background: "rgba(201,168,76,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Sparkles style={{ width: "17px", height: "17px", color: "#C9A84C" }} />
                 </div>
-                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", color: "#F5F0E8", fontWeight: 600, margin: 0 }}>
+                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", color: t.text, fontWeight: 600, margin: 0 }}>
                   Spa Policies
                 </h3>
               </div>
@@ -357,7 +391,7 @@ const SpaWellness = () => {
                 {policies.map((policy, idx) => (
                   <li key={idx} style={{ display: "flex", alignItems: "flex-start", gap: "14px" }}>
                     <div style={{ width: "2px", height: "16px", background: "#C9A84C", flexShrink: 0, marginTop: "3px", opacity: 0.7 }} />
-                    <span style={{ color: "rgba(245,240,232,0.7)", fontSize: "14px", lineHeight: 1.6 }}>{policy}</span>
+                    <span style={{ color: t.text, fontSize: "14px", lineHeight: 1.6 }}>{policy}</span>
                   </li>
                 ))}
               </ul>
@@ -365,14 +399,14 @@ const SpaWellness = () => {
           </div>
 
           {/* CTA Strip */}
-          <div style={{ marginTop: "48px", textAlign: "center", padding: "40px 32px", background: "rgba(201,168,76,0.04)", border: "1px solid rgba(201,168,76,0.15)", borderRadius: "12px" }}>
+          <div style={{ marginTop: "48px", textAlign: "center", padding: "40px 32px", background: "rgba(201,168,76,0.04)", border: "1px solid rgba(201,168,76,0.15)", borderRadius: "12px", boxShadow: t.shadow }}>
             <p style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.25em", textTransform: "uppercase", marginBottom: "12px" }}>
               READY TO UNWIND?
             </p>
-            <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(24px, 3vw, 36px)", color: "#F5F0E8", fontWeight: 600, margin: "0 0 8px 0" }}>
+            <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(24px, 3vw, 36px)", color: t.text, fontWeight: 600, margin: "0 0 8px 0" }}>
               Reserve Your Treatment Today
             </h3>
-            <p style={{ color: "rgba(245,240,232,0.5)", fontSize: "14px", margin: "0 0 28px 0" }}>
+            <p style={{ color: t.textMuted, fontSize: "14px", margin: "0 0 28px 0" }}>
               Call us directly or make a booking online — our team is happy to help
             </p>
             <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
@@ -413,29 +447,32 @@ const SpaWellness = () => {
 const TreatmentCard = ({
   treatment,
   onBook,
+  t,
 }: {
   treatment: { name: string; duration: string; price: string; description: string };
   onBook: () => void;
+  t: Record<string, string>;
 }) => {
   const [hovered, setHovered] = useState(false);
 
   return (
     <div
       style={{
-        background: "rgba(255,255,255,0.03)",
-        border: `1px solid ${hovered ? "rgba(201,168,76,0.5)" : "rgba(201,168,76,0.25)"}`,
+        background: t.surface,
+        border: `1px solid ${hovered ? "rgba(201,168,76,0.5)" : t.border}`,
         borderRadius: "12px",
         padding: "24px",
         display: "flex",
         flexDirection: "column",
         transition: "border-color 0.3s ease, transform 0.3s ease",
         transform: hovered ? "translateY(-4px)" : "translateY(0)",
+        boxShadow: t.shadow,
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
-        <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "20px", color: "#F5F0E8", fontWeight: 600, margin: 0, flex: 1, paddingRight: "12px" }}>
+        <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "20px", color: t.text, fontWeight: 600, margin: 0, flex: 1, paddingRight: "12px" }}>
           {treatment.name}
         </h3>
         <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "20px", color: "#C9A84C", fontWeight: 600, flexShrink: 0 }}>
@@ -445,10 +482,10 @@ const TreatmentCard = ({
 
       <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "14px" }}>
         <Clock style={{ width: "12px", height: "12px", color: "#C9A84C" }} />
-        <span style={{ color: "rgba(245,240,232,0.55)", fontSize: "12px" }}>{treatment.duration}</span>
+        <span style={{ color: t.textMuted, fontSize: "12px" }}>{treatment.duration}</span>
       </div>
 
-      <p style={{ color: "rgba(245,240,232,0.6)", fontSize: "13px", lineHeight: 1.7, margin: "0 0 auto 0", flexGrow: 1 }}>
+      <p style={{ color: t.textMuted, fontSize: "13px", lineHeight: 1.7, margin: "0 0 auto 0", flexGrow: 1 }}>
         {treatment.description}
       </p>
 
@@ -457,7 +494,7 @@ const TreatmentCard = ({
         style={{
           marginTop: "20px",
           background: hovered ? "#C9A84C" : "transparent",
-          border: "1px solid rgba(201,168,76,0.45)",
+          border: `1px solid ${hovered ? "rgba(201,168,76,0.45)" : t.border}`,
           color: hovered ? "#0F0D08" : "#C9A84C",
           width: "100%",
           padding: "10px",

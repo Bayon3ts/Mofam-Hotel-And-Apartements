@@ -1,12 +1,18 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Resend } from 'resend';
 
+// REQUIRED ENVIRONMENT VARIABLES (set in Vercel Dashboard → Settings → Environment Variables):
+// RESEND_API_KEY=re_xxxxxxxxxxxx  (get from resend.com dashboard)
+// Sender domain mofamhotelandapartments.com must be verified in Resend before going live
+
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const HOTEL_NAME = 'Mofam Hotel And Apartements';
-const ADMIN_EMAIL = 'reservations@mofamhotel.com';
-// Ensure mofamhotel.com is verified in Resend dashboard before going live
-const FROM_EMAIL  = 'reservations@mofamhotel.com';
+const HOTEL_NAME  = 'Mofam Hotel And Apartments';
+const ADMIN_EMAIL = 'info@mofamhotelandapartments.com';         // ← Hotel's real inbox
+// Domain verified on Resend? Use the real address below:
+// const FROM_EMAIL  = 'reservations@mofamhotelandapartments.com';
+// Domain NOT yet verified? Use the sandbox address (can only send to your Resend account email):
+const FROM_EMAIL  = 'onboarding@resend.dev';
 
 // ─── HTML Email Templates ────────────────────────────────────────────────────
 
@@ -129,6 +135,58 @@ function guestTemplate(b: {
 </html>`;
 }
 
+function confirmedTemplate(b: { guest_name: string; booking_id: string; room_type: string; check_in: string; check_out: string }): string {
+  return `<!DOCTYPE html>
+  <html><body style="background:#0e0e0e;font-family:'Segoe UI',Arial,sans-serif;color:#e8e0d0;margin:0;padding:32px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+      <table width="600" style="background:#161616;border-radius:16px;border:1px solid #2a2a2a;overflow:hidden;">
+        <tr><td style="padding:40px;background:#0a1a0a;border-bottom:1px solid #1a3a1a;text-align:center;">
+          <p style="color:#4CAF50;font-size:32px;margin:0;">✓</p>
+          <h1 style="color:#f5f0e8;margin:8px 0 0;font-size:24px;">Booking Confirmed!</h1>
+          <p style="color:#888;margin:8px 0 0;">Your reservation at ${HOTEL_NAME} is confirmed.</p>
+        </td></tr>
+        <tr><td style="padding:32px 40px;">
+          <p style="color:#aaa;margin:0 0 16px;">Dear <strong style="color:#f5f0e8;">${b.guest_name}</strong>,</p>
+          <p style="color:#aaa;line-height:1.7;">Great news — your booking has been <strong style="color:#4CAF50;">confirmed</strong> by our team. We look forward to welcoming you.</p>
+          <table width="100%" style="margin:24px 0;border-top:1px solid #2a2a2a;border-bottom:1px solid #2a2a2a;padding:16px 0;">
+            <tr><td style="color:#666;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;">Reference</td><td style="color:#e9c349;font-size:16px;font-weight:700;text-align:right;">${b.booking_id}</td></tr>
+            <tr><td style="color:#666;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;padding-top:8px;">Room</td><td style="color:#f5f0e8;font-weight:600;text-align:right;padding-top:8px;">${b.room_type}</td></tr>
+            <tr><td style="color:#666;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;padding-top:8px;">Check-In</td><td style="color:#f5f0e8;text-align:right;padding-top:8px;">${b.check_in}</td></tr>
+            <tr><td style="color:#666;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;padding-top:8px;">Check-Out</td><td style="color:#f5f0e8;text-align:right;padding-top:8px;">${b.check_out}</td></tr>
+          </table>
+          <p style="color:#aaa;font-size:13px;">Need help? Contact us at <a href="mailto:${ADMIN_EMAIL}" style="color:#e9c349;">${ADMIN_EMAIL}</a> or call <strong style="color:#f5f0e8;">+234 (706) 920-6935</strong>.</p>
+        </td></tr>
+        <tr><td style="padding:24px 40px;text-align:center;border-top:1px solid #2a2a2a;">
+          <p style="color:#444;font-size:11px;margin:0;">© ${new Date().getFullYear()} ${HOTEL_NAME} · 19 Ofatedo Road, Osogbo, Osun State</p>
+        </td></tr>
+      </table>
+    </td></tr></table>
+  </body></html>`;
+}
+
+function cancelledTemplate(b: { guest_name: string; booking_id: string }): string {
+  return `<!DOCTYPE html>
+  <html><body style="background:#0e0e0e;font-family:'Segoe UI',Arial,sans-serif;color:#e8e0d0;margin:0;padding:32px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+      <table width="600" style="background:#161616;border-radius:16px;border:1px solid #2a2a2a;overflow:hidden;">
+        <tr><td style="padding:40px;background:#1a0a0a;border-bottom:1px solid #3a1a1a;text-align:center;">
+          <h1 style="color:#f5f0e8;margin:0;font-size:24px;">Booking Update</h1>
+          <p style="color:#888;margin:8px 0 0;">${HOTEL_NAME}</p>
+        </td></tr>
+        <tr><td style="padding:32px 40px;">
+          <p style="color:#aaa;margin:0 0 16px;">Dear <strong style="color:#f5f0e8;">${b.guest_name}</strong>,</p>
+          <p style="color:#aaa;line-height:1.7;">We regret to inform you that your reservation (Ref: <strong style="color:#e9c349;">${b.booking_id}</strong>) has been cancelled.</p>
+          <p style="color:#aaa;line-height:1.7;margin-top:16px;">If you believe this is an error or would like to make a new booking, please contact us directly.</p>
+          <p style="color:#aaa;font-size:13px;margin-top:24px;">Contact: <a href="mailto:${ADMIN_EMAIL}" style="color:#e9c349;">${ADMIN_EMAIL}</a> · <strong style="color:#f5f0e8;">+234 (706) 920-6935</strong></p>
+        </td></tr>
+        <tr><td style="padding:24px 40px;text-align:center;border-top:1px solid #2a2a2a;">
+          <p style="color:#444;font-size:11px;margin:0;">© ${new Date().getFullYear()} ${HOTEL_NAME} · 19 Ofatedo Road, Osogbo, Osun State</p>
+        </td></tr>
+      </table>
+    </td></tr></table>
+  </body></html>`;
+}
+
 function adminTemplate(b: {
   full_name: string;
   email: string;
@@ -217,6 +275,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'Email service not configured.' });
   }
 
+  if (req.body.type === 'status_update') {
+    const { guest_email, guest_name, status, booking_id, room_type, check_in, check_out } = req.body;
+
+    const subject = status === 'confirmed'
+      ? `Your Booking is Confirmed — ${HOTEL_NAME}`
+      : `Booking Update — ${HOTEL_NAME}`;
+
+    const html = status === 'confirmed'
+      ? confirmedTemplate({ guest_name, booking_id, room_type, check_in, check_out })
+      : cancelledTemplate({ guest_name, booking_id });
+
+    await resend.emails.send({
+      from: `${HOTEL_NAME} <${FROM_EMAIL}>`,
+      to: [guest_email],
+      reply_to: ADMIN_EMAIL,
+      subject,
+      html,
+    });
+
+    return res.status(200).json({ success: true });
+  }
+
   const booking = req.body as {
     full_name: string;
     email: string;
@@ -245,13 +325,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       resend.emails.send({
         from: `${HOTEL_NAME} <${FROM_EMAIL}>`,
         to: [booking.email],
-        subject: `Booking Confirmed - ${HOTEL_NAME}`,
+        reply_to: ADMIN_EMAIL, // ← Guest replies go to hotel
+        subject: `✅ Booking Confirmed — ${HOTEL_NAME} | Ref: ${bookingId}`,
         html: guestTemplate(commonData),
       }),
       resend.emails.send({
         from: `Booking System <${FROM_EMAIL}>`,
         to: [ADMIN_EMAIL],
-        subject: `New Booking - ${booking.room_type} - ${bookingId}`,
+        reply_to: booking.email, // ← Hotel can reply directly to guest
+        subject: `🔔 New Booking: ${booking.room_type} | ${bookingId} | ${booking.full_name}`,
         html: adminTemplate(commonData),
       }),
     ]);

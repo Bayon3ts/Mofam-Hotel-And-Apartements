@@ -14,6 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import { format } from "date-fns";
+import { useTheme } from "@/hooks/useTheme";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface RoomData {
@@ -45,12 +46,13 @@ interface BookingState {
 const fmt = (n: number) => `₦${n.toLocaleString("en-NG")}`;
 
 // ─── Luxury Card ─────────────────────────────────────────────────────────────
-const LuxuryCard = ({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) => (
+const LuxuryCard = ({ children, style = {}, t }: { children: React.ReactNode; style?: React.CSSProperties, t: Record<string, string> }) => (
   <div style={{
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(201,168,76,0.2)",
+    background: t.surface,
+    border: `1px solid ${t.border}`,
     borderRadius: "12px",
     padding: "28px 32px",
+    boxShadow: t.shadow,
     ...style
   }}>
     {children}
@@ -69,22 +71,22 @@ const CardIcon = ({ icon }: { icon: React.ReactNode }) => (
 );
 
 // ─── Card Heading ─────────────────────────────────────────────────────────────
-const CardHeading = ({ icon, title }: { icon: React.ReactNode; title: string }) => (
+const CardHeading = ({ icon, title, t }: { icon: React.ReactNode; title: string, t: Record<string, string> }) => (
   <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "24px" }}>
     <CardIcon icon={icon} />
-    <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", color: "#F5F0E8", fontWeight: 600, margin: 0 }}>
+    <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", color: t.text, fontWeight: 600, margin: 0 }}>
       {title}
     </h2>
   </div>
 );
 
 // ─── Field Label + Value ──────────────────────────────────────────────────────
-const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
+const Field = ({ label, value, t }: { label: string; value: React.ReactNode, t: Record<string, string> }) => (
   <div>
     <p style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "6px", margin: "0 0 6px 0" }}>
       {label}
     </p>
-    <p style={{ color: "#F5F0E8", fontSize: "16px", fontWeight: 500, margin: 0 }}>{value}</p>
+    <p style={{ color: t.text, fontSize: "16px", fontWeight: 500, margin: 0 }}>{value}</p>
   </div>
 );
 
@@ -98,6 +100,18 @@ const BookingConfirmation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [iconVisible, setIconVisible] = useState(false);
+  const { theme } = useTheme();
+
+  const isDark = theme === 'dark';
+  const t = {
+    bg: isDark ? '#0F0D08' : '#FAF7F2',
+    surface: isDark ? 'rgba(255,255,255,0.03)' : '#FFFFFF',
+    border: isDark ? 'rgba(201,168,76,0.25)' : 'rgba(180,145,60,0.3)',
+    text: isDark ? '#F5F0E8' : '#1A1510',
+    textMuted: isDark ? 'rgba(245,240,232,0.55)' : 'rgba(26,21,16,0.60)',
+    inputBg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+    shadow: isDark ? 'none' : '0 2px 12px rgba(180,145,60,0.08)',
+  };
 
   const state = location.state as BookingState | null;
 
@@ -114,13 +128,13 @@ const BookingConfirmation = () => {
   // ── Fallback screen ──────────────────────────────────────────────────────
   if (!state) {
     return (
-      <div style={{ minHeight: "100vh", background: "#0F0D08", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ minHeight: "100vh", background: t.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ textAlign: "center", padding: "0 24px" }}>
           <Calendar style={{ width: "56px", height: "56px", color: "#C9A84C", opacity: 0.4, margin: "0 auto 20px" }} />
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "28px", color: "#F5F0E8", marginBottom: "12px" }}>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "28px", color: t.text, marginBottom: "12px" }}>
             No booking data found
           </h2>
-          <p style={{ color: "rgba(245,240,232,0.55)", fontSize: "14px", maxWidth: "340px", margin: "0 auto 24px" }}>
+          <p style={{ color: t.textMuted, fontSize: "14px", maxWidth: "340px", margin: "0 auto 24px" }}>
             It looks like you navigated here directly. Redirecting you back to the booking page…
           </p>
           <button
@@ -141,7 +155,7 @@ const BookingConfirmation = () => {
   const checkOutDate = new Date(checkOut);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0F0D08", fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: t.bg, fontFamily: "'Inter', sans-serif" }}>
 
       {/* ── BACK LINK ─────────────────────────────────────────────────────── */}
       <div style={{ padding: "24px 40px" }}>
@@ -176,7 +190,7 @@ const BookingConfirmation = () => {
           </div>
 
           {/* Heading */}
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(36px, 5vw, 60px)", color: "#F5F0E8", fontWeight: 600, margin: "0 0 20px 0" }}>
+          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(36px, 5vw, 60px)", color: t.text, fontWeight: 600, margin: "0 0 20px 0" }}>
             Booking Confirmed!
           </h1>
 
@@ -189,11 +203,11 @@ const BookingConfirmation = () => {
           </div>
 
           {/* Confirmation message */}
-          <p style={{ color: "rgba(245,240,232,0.65)", fontSize: "15px", lineHeight: 1.8, maxWidth: "560px", margin: "0 auto" }}>
+          <p style={{ color: t.textMuted, fontSize: "15px", lineHeight: 1.8, maxWidth: "560px", margin: "0 auto" }}>
             Thank you for choosing Mofam Hotel &amp; Apartments,{" "}
-            <span style={{ color: "#F5F0E8", fontWeight: 600 }}>{customer.fullName}</span>.
+            <span style={{ color: t.text, fontWeight: 600 }}>{customer.fullName}</span>.
             Your reservation has been successfully processed and a confirmation email has been sent to{" "}
-            <span style={{ color: "#F5F0E8", fontWeight: 600 }}>{customer.email}</span>.
+            <span style={{ color: t.text, fontWeight: 600 }}>{customer.email}</span>.
           </p>
         </div>
 
@@ -204,17 +218,17 @@ const BookingConfirmation = () => {
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
 
             {/* Your Stay */}
-            <LuxuryCard>
-              <CardHeading icon={<Calendar style={{ width: "18px", height: "18px", color: "#C9A84C" }} />} title="Your Stay" />
+            <LuxuryCard t={t}>
+              <CardHeading icon={<Calendar style={{ width: "18px", height: "18px", color: "#C9A84C" }} />} title="Your Stay" t={t} />
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "20px" }}>
                 <div>
-                  <Field label="Check-In" value={format(checkInDate, "EEE, MMM dd yyyy")} />
-                  <p style={{ color: "rgba(245,240,232,0.4)", fontSize: "12px", marginTop: "4px" }}>From 3:00 PM</p>
+                  <Field label="Check-In" value={format(checkInDate, "EEE, MMM dd yyyy")} t={t} />
+                  <p style={{ color: "rgba(201,168,76,0.6)", fontSize: "12px", marginTop: "4px" }}>From 3:00 PM</p>
                 </div>
                 <div>
-                  <Field label="Check-Out" value={format(checkOutDate, "EEE, MMM dd yyyy")} />
-                  <p style={{ color: "rgba(245,240,232,0.4)", fontSize: "12px", marginTop: "4px" }}>By 11:00 AM</p>
+                  <Field label="Check-Out" value={format(checkOutDate, "EEE, MMM dd yyyy")} t={t} />
+                  <p style={{ color: "rgba(201,168,76,0.6)", fontSize: "12px", marginTop: "4px" }}>By 11:00 AM</p>
                 </div>
               </div>
 
@@ -229,37 +243,37 @@ const BookingConfirmation = () => {
                 ].map(({ label, value }) => (
                   <div key={label} style={{ textAlign: "center", padding: "14px 8px", background: "rgba(201,168,76,0.05)", border: "1px solid rgba(201,168,76,0.12)", borderRadius: "8px" }}>
                     <p style={{ color: "#C9A84C", fontSize: "9px", letterSpacing: "0.2em", textTransform: "uppercase", margin: "0 0 6px 0" }}>{label}</p>
-                    <p style={{ color: "#F5F0E8", fontSize: "20px", fontWeight: 600, margin: 0 }}>{value}</p>
+                    <p style={{ color: t.text, fontSize: "20px", fontWeight: 600, margin: 0 }}>{value}</p>
                   </div>
                 ))}
               </div>
             </LuxuryCard>
 
             {/* Room Details */}
-            <LuxuryCard>
-              <CardHeading icon={<Home style={{ width: "18px", height: "18px", color: "#C9A84C" }} />} title="Room Details" />
+            <LuxuryCard t={t}>
+              <CardHeading icon={<Home style={{ width: "18px", height: "18px", color: "#C9A84C" }} />} title="Room Details" t={t} />
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
                 <div>
-                  <h3 style={{ color: "#F5F0E8", fontSize: "18px", fontFamily: "'Cormorant Garamond', serif", fontWeight: 600, margin: "0 0 6px 0" }}>
+                  <h3 style={{ color: t.text, fontSize: "18px", fontFamily: "'Cormorant Garamond', serif", fontWeight: 600, margin: "0 0 6px 0" }}>
                     {selectedRoom.name} Room
                   </h3>
                   <p style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 10px 0" }}>{selectedRoom.tag}</p>
-                  <p style={{ color: "rgba(245,240,232,0.55)", fontSize: "14px", lineHeight: 1.7, margin: 0, maxWidth: "420px" }}>
+                  <p style={{ color: t.textMuted, fontSize: "14px", lineHeight: 1.7, margin: 0, maxWidth: "420px" }}>
                     {selectedRoom.description}
                   </p>
                 </div>
                 <div style={{ textAlign: "right", flexShrink: 0 }}>
                   <p style={{ color: "#C9A84C", fontSize: "22px", fontWeight: 700, margin: "0 0 2px 0" }}>{fmt(selectedRoom.price)}</p>
-                  <p style={{ color: "rgba(245,240,232,0.4)", fontSize: "11px", margin: 0 }}>per night</p>
+                  <p style={{ color: "rgba(201,168,76,0.6)", fontSize: "11px", margin: 0 }}>per night</p>
                 </div>
               </div>
             </LuxuryCard>
 
             {/* Reservation Holder */}
-            <LuxuryCard>
-              <CardHeading icon={<Mail style={{ width: "18px", height: "18px", color: "#C9A84C" }} />} title="Reservation Holder" />
+            <LuxuryCard t={t}>
+              <CardHeading icon={<Mail style={{ width: "18px", height: "18px", color: "#C9A84C" }} />} title="Reservation Holder" t={t} />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-                <Field label="Full Name" value={customer.fullName} />
+                <Field label="Full Name" value={customer.fullName} t={t} />
                 <div>
                   <p style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "8px", margin: "0 0 8px 0" }}>
                     Contact Status
@@ -268,18 +282,18 @@ const BookingConfirmation = () => {
                     <Check style={{ width: "10px", height: "10px" }} /> Verified
                   </span>
                 </div>
-                <Field label="Email Address" value={customer.email} />
-                <Field label="Phone Number" value={customer.phone} />
+                <Field label="Email Address" value={customer.email} t={t} />
+                <Field label="Phone Number" value={customer.phone} t={t} />
               </div>
             </LuxuryCard>
 
             {/* Hotel Information */}
-            <LuxuryCard>
-              <CardHeading icon={<MapPin style={{ width: "18px", height: "18px", color: "#C9A84C" }} />} title="Hotel Information" />
+            <LuxuryCard t={t}>
+              <CardHeading icon={<MapPin style={{ width: "18px", height: "18px", color: "#C9A84C" }} />} title="Hotel Information" t={t} />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "20px" }}>
                 <div>
                   <p style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", margin: "0 0 8px 0" }}>Address</p>
-                  <p style={{ color: "rgba(245,240,232,0.7)", fontSize: "14px", lineHeight: 1.8, margin: 0 }}>
+                  <p style={{ color: t.textMuted, fontSize: "14px", lineHeight: 1.8, margin: 0 }}>
                     19 Ofatedo Road,<br />
                     Osogbo,<br />
                     Osun State, Nigeria
@@ -308,10 +322,10 @@ const BookingConfirmation = () => {
 
               <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "16px", background: "rgba(201,168,76,0.04)", border: "1px solid rgba(201,168,76,0.1)", borderRadius: "8px" }}>
                 <Clock style={{ width: "14px", height: "14px", color: "#C9A84C", flexShrink: 0, marginTop: "2px" }} />
-                <div style={{ fontSize: "13px", color: "rgba(245,240,232,0.6)", lineHeight: 1.8 }}>
-                  <p style={{ margin: 0 }}><span style={{ color: "#F5F0E8", fontWeight: 600 }}>Check-In:</span> From 3:00 PM</p>
-                  <p style={{ margin: 0 }}><span style={{ color: "#F5F0E8", fontWeight: 600 }}>Check-Out:</span> By 11:00 AM</p>
-                  <p style={{ margin: "4px 0 0 0", color: "rgba(245,240,232,0.4)" }}>Early check-in and late check-out may be available upon request.</p>
+                <div style={{ fontSize: "13px", color: t.textMuted, lineHeight: 1.8 }}>
+                  <p style={{ margin: 0 }}><span style={{ color: t.text, fontWeight: 600 }}>Check-In:</span> From 3:00 PM</p>
+                  <p style={{ margin: 0 }}><span style={{ color: t.text, fontWeight: 600 }}>Check-Out:</span> By 11:00 AM</p>
+                  <p style={{ margin: "4px 0 0 0", color: "rgba(201,168,76,0.6)" }}>Early check-in and late check-out may be available upon request.</p>
                 </div>
               </div>
             </LuxuryCard>
@@ -319,28 +333,28 @@ const BookingConfirmation = () => {
 
           {/* ── RIGHT COLUMN: Price Summary ────────────────────────────────── */}
           <div style={{ position: "sticky", top: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-            <LuxuryCard>
-              <CardHeading icon={<CreditCard style={{ width: "18px", height: "18px", color: "#C9A84C" }} />} title="Price Summary" />
+            <LuxuryCard t={t}>
+              <CardHeading icon={<CreditCard style={{ width: "18px", height: "18px", color: "#C9A84C" }} />} title="Price Summary" t={t} />
 
               <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "16px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "rgba(245,240,232,0.6)", fontSize: "14px" }}>{selectedRoom.name} Room</span>
-                  <span style={{ color: "rgba(245,240,232,0.6)", fontSize: "14px" }}>{fmt(selectedRoom.price)} / night</span>
+                  <span style={{ color: t.textMuted, fontSize: "14px" }}>{selectedRoom.name} Room</span>
+                  <span style={{ color: t.textMuted, fontSize: "14px" }}>{fmt(selectedRoom.price)} / night</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "rgba(245,240,232,0.6)", fontSize: "14px" }}>× {nights} night{nights !== 1 ? "s" : ""}</span>
+                  <span style={{ color: t.textMuted, fontSize: "14px" }}>× {nights} night{nights !== 1 ? "s" : ""}</span>
                 </div>
                 {numRooms > 1 && (
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "rgba(245,240,232,0.6)", fontSize: "14px" }}>× {numRooms} rooms</span>
+                    <span style={{ color: t.textMuted, fontSize: "14px" }}>× {numRooms} rooms</span>
                   </div>
                 )}
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "rgba(245,240,232,0.6)", fontSize: "14px" }}>Total guests</span>
-                  <span style={{ color: "rgba(245,240,232,0.6)", fontSize: "14px" }}>{totalGuests}</span>
+                  <span style={{ color: t.textMuted, fontSize: "14px" }}>Total guests</span>
+                  <span style={{ color: t.textMuted, fontSize: "14px" }}>{totalGuests}</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "rgba(245,240,232,0.6)", fontSize: "14px" }}>Taxes &amp; fees</span>
+                  <span style={{ color: t.textMuted, fontSize: "14px" }}>Taxes &amp; fees</span>
                   <span style={{ color: "#C9A84C", fontSize: "14px", fontWeight: 500 }}>Included</span>
                 </div>
               </div>
@@ -350,7 +364,7 @@ const BookingConfirmation = () => {
                   <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>Total</span>
                   <span style={{ color: "#C9A84C", fontSize: "20px", fontWeight: 700 }}>{fmt(totalPrice)}</span>
                 </div>
-                <p style={{ color: "rgba(245,240,232,0.3)", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", textAlign: "right", margin: "4px 0 0 0" }}>Guaranteed reservation</p>
+                <p style={{ color: "rgba(201,168,76,0.5)", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", textAlign: "right", margin: "4px 0 0 0" }}>Guaranteed reservation</p>
               </div>
 
               <div style={{ borderTop: "1px solid rgba(201,168,76,0.1)", marginTop: "20px", paddingTop: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>

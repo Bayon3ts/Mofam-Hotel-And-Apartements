@@ -117,6 +117,40 @@ const Admin = () => {
     }
   };
 
+  const handleUpdateBookingStatus = async (bookingId: string, newStatus: 'confirmed' | 'cancelled') => {
+    if (newStatus === 'cancelled') {
+      if (!confirm(`Are you sure you want to cancel this booking?`)) return;
+    }
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status: newStatus })
+        .eq('id', bookingId);
+      if (error) throw error;
+      toast.success(`Booking ${newStatus} successfully`);
+      fetchBookings();
+    } catch (err) {
+      console.error('[Admin] Status update error:', err);
+      toast.error('Failed to update booking status');
+    }
+  };
+
+  const handleDeleteBooking = async (bookingId: string) => {
+    if (!confirm('Permanently delete this booking? This cannot be undone.')) return;
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .delete()
+        .eq('id', bookingId);
+      if (error) throw error;
+      toast.success('Booking deleted');
+      fetchBookings();
+    } catch (err) {
+      console.error('[Admin] Delete error:', err);
+      toast.error('Failed to delete booking');
+    }
+  };
+
   useEffect(() => {
     fetchRooms();
     fetchBookings();
@@ -675,12 +709,13 @@ const Admin = () => {
                       <th style={{ padding: '16px 24px', color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Stay Details</th>
                       <th style={{ padding: '16px 24px', color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Revenue</th>
                       <th style={{ padding: '16px 24px', color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Status</th>
+                      <th style={{ padding: '16px 24px', color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y" style={{ borderColor: t.noticeBorder }}>
                     {isBookingsLoading ? (
                       <tr>
-                        <td colSpan={4} className="px-6 py-20 text-center">
+                        <td colSpan={5} className="px-6 py-20 text-center">
                           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" style={{ color: '#C9A84C' }} />
                           <p style={{ color: t.textMuted, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Loading bookings...</p>
                         </td>
@@ -690,7 +725,7 @@ const Admin = () => {
                       b.email?.toLowerCase().includes(searchQuery.toLowerCase())
                     ).length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="px-6 py-20 text-center">
+                        <td colSpan={5} className="px-6 py-20 text-center">
                           <p style={{ color: t.textMuted }}>No reservations found.</p>
                         </td>
                       </tr>
@@ -733,15 +768,83 @@ const Admin = () => {
                               fontWeight: 600,
                               textTransform: 'uppercase',
                               letterSpacing: '0.1em',
-                              background: booking.status === "pending" ? 'rgba(255,160,50,0.1)' :
-                                booking.status === "confirmed" ? 'rgba(76,175,80,0.1)' : 'rgba(255,255,255,0.05)',
-                              color: booking.status === "pending" ? '#FFA032' :
-                                booking.status === "confirmed" ? '#4CAF50' : t.textMuted,
-                              border: `1px solid ${booking.status === "pending" ? 'rgba(255,160,50,0.3)' :
-                                booking.status === "confirmed" ? 'rgba(76,175,80,0.3)' : t.border}`
+                              background: booking.status === 'pending' ? 'rgba(255,160,50,0.1)' :
+                                booking.status === 'confirmed' ? 'rgba(76,175,80,0.1)' :
+                                booking.status === 'cancelled' ? 'rgba(255,82,82,0.1)' : 'rgba(255,255,255,0.05)',
+                              color: booking.status === 'pending' ? '#FFA032' :
+                                booking.status === 'confirmed' ? '#4CAF50' :
+                                booking.status === 'cancelled' ? '#FF5252' : 'rgba(245,240,232,0.6)',
+                              border: `1px solid ${booking.status === 'pending' ? 'rgba(255,160,50,0.3)' :
+                                booking.status === 'confirmed' ? 'rgba(76,175,80,0.3)' :
+                                booking.status === 'cancelled' ? 'rgba(255,82,82,0.3)' : 'rgba(255,255,255,0.1)'}`
                             }}>
                               {booking.status}
                             </span>
+                          </td>
+                          <td style={{ padding: '16px 24px' }}>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                              {booking.status === 'pending' && (
+                                <button
+                                  onClick={() => handleUpdateBookingStatus(booking.id, 'confirmed')}
+                                  style={{
+                                    background: 'rgba(76,175,80,0.1)',
+                                    border: '1px solid rgba(76,175,80,0.3)',
+                                    color: '#4CAF50',
+                                    fontSize: '10px',
+                                    letterSpacing: '0.1em',
+                                    textTransform: 'uppercase',
+                                    padding: '5px 12px',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    fontWeight: 600,
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                  className="hover:bg-green-500/20 transition-colors"
+                                >
+                                  ✓ Confirm
+                                </button>
+                              )}
+                              {booking.status !== 'cancelled' && (
+                                <button
+                                  onClick={() => handleUpdateBookingStatus(booking.id, 'cancelled')}
+                                  style={{
+                                    background: 'rgba(255,160,50,0.08)',
+                                    border: '1px solid rgba(255,160,50,0.25)',
+                                    color: '#FFA032',
+                                    fontSize: '10px',
+                                    letterSpacing: '0.1em',
+                                    textTransform: 'uppercase',
+                                    padding: '5px 12px',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    fontWeight: 600,
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                  className="hover:bg-orange-500/20 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleDeleteBooking(booking.id)}
+                                style={{
+                                  background: 'rgba(255,82,82,0.08)',
+                                  border: '1px solid rgba(255,82,82,0.2)',
+                                  color: '#FF5252',
+                                  fontSize: '10px',
+                                  letterSpacing: '0.1em',
+                                  textTransform: 'uppercase',
+                                  padding: '5px 12px',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer',
+                                  fontWeight: 600,
+                                  whiteSpace: 'nowrap'
+                                }}
+                                className="hover:bg-red-500/20 transition-colors"
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}

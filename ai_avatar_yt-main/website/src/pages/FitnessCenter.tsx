@@ -9,7 +9,10 @@ import {
   Calendar,
   Heart,
   ShowerHead,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
 
 // ─── Ornamental Divider ───────────────────────────────────────────────────────
 const OrnamentalDivider = () => {
@@ -49,12 +52,12 @@ const SectionHeading = ({ eyebrow, title, subtitle }: { eyebrow: string; title: 
     <p style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.25em", textTransform: "uppercase", marginBottom: "14px" }}>
       {eyebrow}
     </p>
-    <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(32px, 4vw, 48px)", color: "#F5F0E8", fontWeight: 600, margin: "0 0 12px 0" }}>
+    <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(32px, 4vw, 48px)", color: "var(--text-heading, #F5F0E8)", fontWeight: 600, margin: "0 0 12px 0" }}>
       {title}
     </h2>
     <div style={{ width: "60px", height: "1px", background: "#C9A84C", margin: "12px auto 20px" }} />
     {subtitle && (
-      <p style={{ color: "rgba(245,240,232,0.55)", fontSize: "15px", maxWidth: "560px", margin: "0 auto", lineHeight: 1.8 }}>
+      <p style={{ color: "var(--text-muted, rgba(245,240,232,0.55))", fontSize: "15px", maxWidth: "560px", margin: "0 auto", lineHeight: 1.8 }}>
         {subtitle}
       </p>
     )}
@@ -150,19 +153,20 @@ const policies = [
 ];
 
 // ─── Facility Card ────────────────────────────────────────────────────────────
-const FacilityCard = ({ facility }: { facility: typeof facilities[0] }) => {
+const FacilityCard = ({ facility, t }: { facility: typeof facilities[0], t: Record<string, string> }) => {
   const [hovered, setHovered] = useState(false);
   return (
     <div
       style={{
-        background: "rgba(255,255,255,0.03)",
-        border: `1px solid ${hovered ? "rgba(201,168,76,0.55)" : "rgba(201,168,76,0.25)"}`,
+        background: t.surface,
+        border: `1px solid ${hovered ? "rgba(201,168,76,0.55)" : t.border}`,
         borderRadius: "12px",
         padding: "28px 24px",
         textAlign: "center",
         transition: "border-color 0.3s ease, transform 0.3s ease",
         transform: hovered ? "translateY(-4px)" : "translateY(0)",
         cursor: "default",
+        boxShadow: t.shadow,
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -170,10 +174,10 @@ const FacilityCard = ({ facility }: { facility: typeof facilities[0] }) => {
       <div style={{ width: "52px", height: "52px", borderRadius: "50%", border: "1px solid rgba(201,168,76,0.4)", background: "rgba(201,168,76,0.08)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
         {facility.icon}
       </div>
-      <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "20px", color: "#F5F0E8", fontWeight: 600, margin: "0 0 10px 0" }}>
+      <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "20px", color: t.text, fontWeight: 600, margin: "0 0 10px 0" }}>
         {facility.name}
       </h3>
-      <p style={{ color: "rgba(245,240,232,0.6)", fontSize: "14px", lineHeight: 1.7, margin: 0 }}>
+      <p style={{ color: t.textMuted, fontSize: "14px", lineHeight: 1.7, margin: 0 }}>
         {facility.description}
       </p>
     </div>
@@ -181,24 +185,25 @@ const FacilityCard = ({ facility }: { facility: typeof facilities[0] }) => {
 };
 
 // ─── Class Card ───────────────────────────────────────────────────────────────
-const ClassCard = ({ cls }: { cls: typeof classes[0] }) => {
+const ClassCard = ({ cls, t }: { cls: typeof classes[0], t: Record<string, string> }) => {
   const [hovered, setHovered] = useState(false);
   return (
     <div
       style={{
-        background: "rgba(255,255,255,0.03)",
-        border: `1px solid ${hovered ? "rgba(201,168,76,0.45)" : "rgba(201,168,76,0.2)"}`,
+        background: t.surface,
+        border: `1px solid ${hovered ? "rgba(201,168,76,0.45)" : t.border}`,
         borderRadius: "12px",
         padding: "24px",
         transition: "border-color 0.3s ease, transform 0.3s ease",
         transform: hovered ? "translateY(-4px)" : "translateY(0)",
         cursor: "default",
+        boxShadow: t.shadow,
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
-        <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "20px", color: "#F5F0E8", fontWeight: 600, margin: 0, flex: 1, paddingRight: "12px" }}>
+        <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "20px", color: t.text, fontWeight: 600, margin: 0, flex: 1, paddingRight: "12px" }}>
           {cls.name}
         </h3>
         <span style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.3)", color: "#C9A84C", fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", borderRadius: "20px", padding: "4px 12px", flexShrink: 0 }}>
@@ -207,18 +212,18 @@ const ClassCard = ({ cls }: { cls: typeof classes[0] }) => {
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
         <Clock style={{ width: "13px", height: "13px", color: "#C9A84C", flexShrink: 0 }} />
-        <span style={{ color: "rgba(245,240,232,0.6)", fontSize: "13px" }}>{cls.time}</span>
+        <span style={{ color: t.textMuted, fontSize: "13px" }}>{cls.time}</span>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
         <Calendar style={{ width: "13px", height: "13px", color: "#C9A84C", flexShrink: 0 }} />
-        <span style={{ color: "rgba(245,240,232,0.6)", fontSize: "13px" }}>Duration: {cls.duration}</span>
+        <span style={{ color: t.textMuted, fontSize: "13px" }}>Duration: {cls.duration}</span>
       </div>
     </div>
   );
 };
 
 // ─── Gallery Photo ────────────────────────────────────────────────────────────
-const GalleryPhoto = ({ src, alt }: { src: string; alt: string }) => {
+const GalleryPhoto = ({ src, alt, t }: { src: string; alt: string; t: Record<string, string> }) => {
   const [hovered, setHovered] = useState(false);
   return (
     <div
@@ -226,10 +231,11 @@ const GalleryPhoto = ({ src, alt }: { src: string; alt: string }) => {
         position: "relative",
         overflow: "hidden",
         borderRadius: "12px",
-        border: `1px solid ${hovered ? "rgba(201,168,76,0.5)" : "rgba(201,168,76,0.2)"}`,
+        border: `1px solid ${hovered ? "rgba(201,168,76,0.5)" : t.border}`,
         aspectRatio: "4/3",
         cursor: "pointer",
         transition: "border-color 0.3s ease",
+        boxShadow: t.shadow,
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -256,15 +262,27 @@ const GalleryPhoto = ({ src, alt }: { src: string; alt: string }) => {
   );
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
 const FitnessCenter = () => {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
+
+  const isDark = theme === 'dark';
+  const t = {
+    bg: isDark ? '#0F0D08' : '#FAF7F2',
+    surface: isDark ? 'rgba(255,255,255,0.03)' : '#FFFFFF',
+    border: isDark ? 'rgba(201,168,76,0.25)' : 'rgba(180,145,60,0.3)',
+    text: isDark ? '#F5F0E8' : '#1A1510',
+    textMuted: isDark ? 'rgba(245,240,232,0.55)' : 'rgba(26,21,16,0.60)',
+    inputBg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+    shadow: isDark ? 'none' : '0 2px 12px rgba(180,145,60,0.08)',
+    headerBg: isDark ? '#0F0D08' : 'rgba(250,247,242,0.97)',
+  };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0F0D08", fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: t.bg, fontFamily: "'Inter', sans-serif" }}>
 
       {/* ── NAVIGATION BAR ─────────────────────────────────────────────── */}
-      <header style={{ background: "#0F0D08", borderBottom: "1px solid rgba(201,168,76,0.12)", position: "sticky", top: 0, zIndex: 50, padding: "0 40px" }}>
+      <header style={{ background: t.headerBg, borderBottom: `1px solid ${t.border}`, position: "sticky", top: 0, zIndex: 50, padding: "0 40px" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button
             onClick={() => navigate("/")}
@@ -277,6 +295,23 @@ const FitnessCenter = () => {
           </button>
 
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <button
+              onClick={toggleTheme}
+              style={{
+                background: 'transparent',
+                border: '1px solid rgba(201,168,76,0.25)',
+                borderRadius: '50%',
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#C9A84C'
+              }}
+            >
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
             <a
               href="tel:+2347069206935"
               style={{ display: "flex", alignItems: "center", gap: "8px", background: "transparent", border: "1px solid rgba(201,168,76,0.5)", color: "#C9A84C", borderRadius: "8px", padding: "9px 18px", fontSize: "13px", letterSpacing: "0.05em", textDecoration: "none", transition: "all 0.3s ease" }}
@@ -345,7 +380,7 @@ const FitnessCenter = () => {
           />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "24px" }}>
             {facilities.map((facility, idx) => (
-              <FacilityCard key={idx} facility={facility} />
+              <FacilityCard key={idx} facility={facility} t={t} />
             ))}
           </div>
         </FadeSection>
@@ -365,7 +400,7 @@ const FitnessCenter = () => {
               { src: "/Mofam_pictures/fitness-dsc545.jpg", alt: "Mofam Gym Equipment" },
               { src: "/Mofam_pictures/fitness-dsc547.jpg", alt: "Mofam Training Area" },
             ].map(({ src, alt }, idx) => (
-              <GalleryPhoto key={idx} src={src} alt={alt} />
+              <GalleryPhoto key={idx} src={src} alt={alt} t={t} />
             ))}
           </div>
         </FadeSection>
@@ -381,7 +416,7 @@ const FitnessCenter = () => {
           />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
             {classes.map((cls, idx) => (
-              <ClassCard key={idx} cls={cls} />
+              <ClassCard key={idx} cls={cls} t={t} />
             ))}
           </div>
         </FadeSection>
@@ -398,12 +433,12 @@ const FitnessCenter = () => {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
 
             {/* Facility Hours */}
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "12px", padding: "28px 32px" }}>
+            <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: "12px", padding: "28px 32px", boxShadow: t.shadow }}>
               <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "24px" }}>
                 <div style={{ width: "40px", height: "40px", borderRadius: "50%", border: "1px solid rgba(201,168,76,0.4)", background: "rgba(201,168,76,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Clock style={{ width: "17px", height: "17px", color: "#C9A84C" }} />
                 </div>
-                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", color: "#F5F0E8", fontWeight: 600, margin: 0 }}>
+                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", color: t.text, fontWeight: 600, margin: 0 }}>
                   Facility Hours
                 </h3>
               </div>
@@ -413,7 +448,7 @@ const FitnessCenter = () => {
                   <div key={idx}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 0", gap: "16px" }}>
                       <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.15em", textTransform: "uppercase", flexShrink: 0 }}>{label}</span>
-                      <span style={{ color: "rgba(245,240,232,0.7)", fontSize: "14px", textAlign: "right" }}>{value}</span>
+                      <span style={{ color: t.text, fontSize: "14px", textAlign: "right" }}>{value}</span>
                     </div>
                     {idx < hours.length - 1 && <div style={{ borderTop: "1px solid rgba(201,168,76,0.1)" }} />}
                   </div>
@@ -421,19 +456,19 @@ const FitnessCenter = () => {
               </div>
 
               <div style={{ borderTop: "1px solid rgba(201,168,76,0.1)", marginTop: "16px", paddingTop: "16px" }}>
-                <p style={{ color: "rgba(245,240,232,0.4)", fontSize: "12px", lineHeight: 1.7, margin: 0 }}>
+                <p style={{ color: t.textMuted, fontSize: "12px", lineHeight: 1.7, margin: 0 }}>
                   Complimentary access for all hotel guests with valid room key.
                 </p>
               </div>
             </div>
 
             {/* Policies */}
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "12px", padding: "28px 32px" }}>
+            <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: "12px", padding: "28px 32px", boxShadow: t.shadow }}>
               <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "24px" }}>
                 <div style={{ width: "40px", height: "40px", borderRadius: "50%", border: "1px solid rgba(201,168,76,0.4)", background: "rgba(201,168,76,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Dumbbell style={{ width: "17px", height: "17px", color: "#C9A84C" }} />
                 </div>
-                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", color: "#F5F0E8", fontWeight: 600, margin: 0 }}>
+                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", color: t.text, fontWeight: 600, margin: 0 }}>
                   Gym Policies
                 </h3>
               </div>
@@ -442,7 +477,7 @@ const FitnessCenter = () => {
                 {policies.map((policy, idx) => (
                   <li key={idx} style={{ display: "flex", alignItems: "flex-start", gap: "14px" }}>
                     <div style={{ width: "2px", height: "16px", background: "#C9A84C", flexShrink: 0, marginTop: "3px", opacity: 0.7 }} />
-                    <span style={{ color: "rgba(245,240,232,0.7)", fontSize: "14px", lineHeight: 1.6 }}>{policy}</span>
+                    <span style={{ color: t.text, fontSize: "14px", lineHeight: 1.6 }}>{policy}</span>
                   </li>
                 ))}
               </ul>
@@ -450,14 +485,14 @@ const FitnessCenter = () => {
           </div>
 
           {/* CTA Strip */}
-          <div style={{ marginTop: "48px", textAlign: "center", padding: "40px 32px", background: "rgba(201,168,76,0.04)", border: "1px solid rgba(201,168,76,0.15)", borderRadius: "12px" }}>
+          <div style={{ marginTop: "48px", textAlign: "center", padding: "40px 32px", background: "rgba(201,168,76,0.04)", border: "1px solid rgba(201,168,76,0.15)", borderRadius: "12px", boxShadow: t.shadow }}>
             <p style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.25em", textTransform: "uppercase", marginBottom: "12px" }}>
               READY TO TRAIN?
             </p>
-            <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(24px, 3vw, 36px)", color: "#F5F0E8", fontWeight: 600, margin: "0 0 8px 0" }}>
+            <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(24px, 3vw, 36px)", color: t.text, fontWeight: 600, margin: "0 0 8px 0" }}>
               Book a Personal Training Session
             </h3>
-            <p style={{ color: "rgba(245,240,232,0.5)", fontSize: "14px", margin: "0 0 28px 0" }}>
+            <p style={{ color: t.textMuted, fontSize: "14px", margin: "0 0 28px 0" }}>
               Contact the front desk to arrange a one-on-one session with our in-house trainer
             </p>
             <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
