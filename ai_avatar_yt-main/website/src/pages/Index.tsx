@@ -483,8 +483,8 @@ const Index = () => {
 
                   {/* Subtitle */}
                   <motion.div variants={fadeUpItem} style={{ marginTop: "24px" }}>
-                    <p className="text-[16px] text-white/70 tracking-wide font-light">
-                      Where elegance meets comfort in the heart of the city
+                    <p className="text-[15px] text-white/70 tracking-wide font-light">
+                      Home of Bliss, where elegance and comfort meet in the heart of the city
                     </p>
                     <motion.div
                       className="h-[1px] bg-champagne mt-5"
