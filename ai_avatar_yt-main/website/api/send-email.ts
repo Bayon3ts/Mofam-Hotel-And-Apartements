@@ -8,11 +8,9 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const HOTEL_NAME  = 'Mofam Hotel And Apartments';
-const ADMIN_EMAIL = 'info@mofamhotelandapartments.com';         // ← Hotel's real inbox
-// Domain verified on Resend? Use the real address below:
-// const FROM_EMAIL  = 'reservations@mofamhotelandapartments.com';
-// Domain NOT yet verified? Use the sandbox address (can only send to your Resend account email):
-const FROM_EMAIL  = 'onboarding@resend.dev';
+const ADMIN_EMAIL = 'info@mofamhotelandapartments.com';
+const FROM_EMAIL  = 'reservations@mofamhotelandapartments.com';
+// const FROM_EMAIL = 'onboarding@resend.dev'; // ← no longer needed, domain verified
 
 // ─── HTML Email Templates ────────────────────────────────────────────────────
 
@@ -271,8 +269,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (!process.env.RESEND_API_KEY) {
-    console.error('[send-email] RESEND_API_KEY is not configured.');
-    return res.status(500).json({ error: 'Email service not configured.' });
+    console.error('[send-email] RESEND_API_KEY is not configured in this environment.');
+    return res.status(500).json({
+      error: 'Email service not configured.',
+      hint: 'RESEND_API_KEY missing in Vercel environment variables. Add it in Project Settings → Environment Variables, then redeploy.'
+    });
   }
 
   if (req.body.type === 'status_update') {

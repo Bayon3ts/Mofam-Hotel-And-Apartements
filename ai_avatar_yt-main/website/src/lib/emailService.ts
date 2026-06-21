@@ -24,6 +24,7 @@ export interface BookingData {
 }
 
 export async function sendBookingEmails(booking: BookingData): Promise<boolean> {
+
   // Vercel serverless functions are unavailable in local dev (npm run dev).
   // Skip the API call silently so the booking flow is never blocked locally.
   if (import.meta.env.DEV) {
