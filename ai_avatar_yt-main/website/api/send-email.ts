@@ -290,7 +290,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await resend.emails.send({
       from: `${HOTEL_NAME} <${FROM_EMAIL}>`,
       to: [guest_email],
-      reply_to: ADMIN_EMAIL,
+      replyTo: ADMIN_EMAIL,
       subject,
       html,
     });
@@ -326,14 +326,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       resend.emails.send({
         from: `${HOTEL_NAME} <${FROM_EMAIL}>`,
         to: [booking.email],
-        reply_to: ADMIN_EMAIL, // ← Guest replies go to hotel
+        replyTo: ADMIN_EMAIL, // ← Guest replies go to hotel
         subject: `✅ Booking Confirmed — ${HOTEL_NAME} | Ref: ${bookingId}`,
         html: guestTemplate(commonData),
       }),
       resend.emails.send({
         from: `Booking System <${FROM_EMAIL}>`,
         to: [ADMIN_EMAIL],
-        reply_to: booking.email, // ← Hotel can reply directly to guest
+        replyTo: booking.email, // ← Hotel can reply directly to guest
         subject: `🔔 New Booking: ${booking.room_type} | ${bookingId} | ${booking.full_name}`,
         html: adminTemplate(commonData),
       }),
