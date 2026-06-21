@@ -43,8 +43,10 @@ import heroVideo from "@/assets/hero-video.mp4";
 import suiteImage from "@/assets/suite-room.jpg";
 import diningImage from "../../mofam_roomsPicture/A_photorealistic,_ultra-high_resolution_luxury_202605240116.jpeg";
 import meetingImage from "@/assets/meeting-room.jpg";
+import eventHallVideo from "../../mofam_roomsPicture/event-hall.mp4";
 import spaImage from "../../mofam_roomsPicture/DSC00314poolside.jpg";
 import loungeImage from "../../mofam_roomsPicture/A_photorealistic,_ultra-high_resolution_luxury_202605240102lo.jpeg";
+import gardenImage from "../../mofam_roomsPicture/garden.jpg";
 import standardRoomImageOne from "../../mofam_roomsPicture/DSC00552.jpg";
 import standardRoomImageTwo from "../../mofam_roomsPicture/A_photorealistic,_ultra-high_resolution_hotel_202605231131.jpeg";
 import standardRoomImageThree from "../../mofam_roomsPicture/DSC00552_Standardroom3.jpg";
@@ -483,8 +485,8 @@ const Index = () => {
 
                   {/* Subtitle */}
                   <motion.div variants={fadeUpItem} style={{ marginTop: "24px" }}>
-                    <p className="text-[15px] text-white/70 tracking-wide font-light">
-                      Home of Bliss, where elegance and comfort meet in the heart of the city
+                    <p className="text-[14px] text-white/70 tracking-wide font-light">
+                      A Home of Bliss, where elegance and comfort meet in the heart of the city.
                     </p>
                     <motion.div
                       className="h-[1px] bg-champagne mt-5"
@@ -1233,6 +1235,7 @@ const Index = () => {
                 title: "Event Hall",
                 capacity: "300 guests",
                 image: meetingImage,
+                video: eventHallVideo,
                 features: ["Spacious hall ideal for weddings, conferences & celebrations", "Professional sound & lighting system", "Dedicated event coordinator on-site"]
               },
               {
@@ -1243,9 +1246,9 @@ const Index = () => {
               },
               {
                 title: "Garden Terrace",
-                capacity: "150 guests",
-                image: loungeImage,
-                features: ["Outdoor setting", "City views", "Weather protection"]
+                capacity: "",
+                image: gardenImage,
+                features: ["Outdoor setting", "Poolside views", "Covered cabana & umbrella shade", "Lounge & café seating"]
               }
             ].map((venue, index) => (
               <motion.div
@@ -1269,13 +1272,26 @@ const Index = () => {
                 }}
               >
                 <div style={{ position: "relative", height: "240px", overflow: "hidden", flexShrink: 0 }}>
-                  <motion.img
-                    src={venue.image}
-                    alt={venue.title}
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                    whileHover={{ scale: 1.04 }}
-                    transition={{ duration: 0.6, ease: "easeInOut" }}
-                  />
+                  {venue.video ? (
+                    <motion.video
+                      src={venue.video}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                      whileHover={{ scale: 1.04 }}
+                      transition={{ duration: 0.6, ease: "easeInOut" }}
+                    />
+                  ) : (
+                    <motion.img
+                      src={venue.image}
+                      alt={venue.title}
+                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                      whileHover={{ scale: 1.04 }}
+                      transition={{ duration: 0.6, ease: "easeInOut" }}
+                    />
+                  )}
                   <div style={{
                     position: "absolute", inset: 0,
                     background: "linear-gradient(to top, rgba(15,13,8,0.85) 0%, transparent 50%)",
@@ -1295,20 +1311,22 @@ const Index = () => {
                     }}>
                       {venue.title}
                     </h3>
-                    <div style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      color: "#C9A84C",
-                      fontSize: "12px",
-                      letterSpacing: "0.08em",
-                      fontFamily: "'Inter', sans-serif",
-                      textTransform: "uppercase",
-                      marginTop: "6px"
-                    }}>
-                      <Users style={{ width: "12px", height: "12px" }} />
-                      {venue.capacity}
-                    </div>
+                    {venue.capacity && (
+                      <div style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        color: "#C9A84C",
+                        fontSize: "12px",
+                        letterSpacing: "0.08em",
+                        fontFamily: "'Inter', sans-serif",
+                        textTransform: "uppercase",
+                        marginTop: "6px"
+                      }}>
+                        <Users style={{ width: "12px", height: "12px" }} />
+                        {venue.capacity}
+                      </div>
+                    )}
                   </div>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px", flexGrow: 1 }}>
