@@ -803,35 +803,6 @@ const Index = () => {
 
                     {/* CTA Button */}
                     <div style={{ marginTop: "auto" }}>
-                      {isSoldOut ? (
-                        <button
-                          onClick={() => setShowSupport(true)}
-                          style={{
-                            width: "100%",
-                            background: "transparent",
-                            border: "1px solid rgba(201,168,76,0.55)",
-                            color: "#C9A84C",
-                            fontWeight: 600,
-                            padding: "14px",
-                            borderRadius: "8px",
-                            letterSpacing: "0.06em",
-                            fontSize: "14px",
-                            fontFamily: "'Inter', sans-serif",
-                            cursor: "pointer",
-                            transition: "border-color 0.3s ease, background 0.3s ease",
-                          }}
-                          onMouseEnter={e => {
-                            e.currentTarget.style.borderColor = "#C9A84C";
-                            e.currentTarget.style.background = "rgba(201,168,76,0.08)";
-                          }}
-                          onMouseLeave={e => {
-                            e.currentTarget.style.borderColor = "rgba(201,168,76,0.55)";
-                            e.currentTarget.style.background = "transparent";
-                          }}
-                        >
-                          Contact Support
-                        </button>
-                      ) : (
                         <button
                           onClick={() => navigate('/booking')}
                           style={{
@@ -853,7 +824,6 @@ const Index = () => {
                         >
                           Book This Room
                         </button>
-                      )}
                     </div>
                   </div>
                 </motion.div>
