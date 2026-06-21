@@ -47,6 +47,7 @@ import eventHallVideo from "../../mofam_roomsPicture/event-hall.mp4";
 import spaImage from "../../mofam_roomsPicture/DSC00314poolside.jpg";
 import loungeImage from "../../mofam_roomsPicture/A_photorealistic,_ultra-high_resolution_luxury_202605240102lo.jpeg";
 import gardenImage from "../../mofam_roomsPicture/garden.jpg";
+import greenImage from "../../mofam_roomsPicture/green.jpg";
 import standardRoomImageOne from "../../mofam_roomsPicture/DSC00552.jpg";
 import standardRoomImageTwo from "../../mofam_roomsPicture/A_photorealistic,_ultra-high_resolution_hotel_202605231131.jpeg";
 import standardRoomImageThree from "../../mofam_roomsPicture/DSC00552_Standardroom3.jpg";
@@ -1239,13 +1240,13 @@ const Index = () => {
                 features: ["Spacious hall ideal for weddings, conferences & celebrations", "Professional sound & lighting system", "Dedicated event coordinator on-site"]
               },
               {
-                title: "Executive Boardroom",
-                capacity: "20 guests",
-                image: meetingImage,
-                features: ["Private entrance", "High-tech presentation", "Catering available"]
+                title: "The Jungle Lounge",
+                capacity: "",
+                image: greenImage,
+                features: ["Private seating nooks", "Ambient LED lighting", "Sound system on-site"]
               },
               {
-                title: "Garden Terrace",
+                title: "Pool Terrace",
                 capacity: "",
                 image: gardenImage,
                 features: ["Outdoor setting", "Poolside views", "Covered cabana & umbrella shade", "Lounge & café seating"]
