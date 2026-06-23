@@ -53,6 +53,8 @@ import standardRoomImageTwo from "../../mofam_roomsPicture/A_photorealistic,_ult
 import standardRoomImageThree from "../../mofam_roomsPicture/DSC00552_Standardroom3.jpg";
 import standardRoomImageFour from "../../mofam_roomsPicture/DSC00553_standardroom4.jpg";
 import vvipAptRoomImage from "../../mofam_roomsPicture/DSC00495VVIP1.jpg";
+import businessRoomImage from "../../mofam_roomsPicture/WhatsApp Image 2026-06-23 at 2.53.09 AM.jpeg";
+import executiveRoomImage from "../../mofam_roomsPicture/WhatsApp Image 2026-06-23 at 2.53.52 AM.jpeg";
 import royalAptRoomImageOne from "../../mofam_roomsPicture/DSC00391 Royal1.jpg";
 import royalAptRoomImageTwo from "../../mofam_roomsPicture/DSC00393Royal2.jpg";
 import royalAptRoomImageThree from "../../mofam_roomsPicture/DSC00394Royal 3.jpg";
@@ -66,7 +68,7 @@ const ROYAL_APT_IMAGES = [
   royalAptRoomImageThree,
   royalAptRoomImageFour
 ];
-const EXECUTIVE_ROOM_IMAGE = ROYAL_APT_IMAGES[0];
+const EXECUTIVE_ROOM_IMAGE = executiveRoomImage;
 
 const staggerContainer: Variants = {
   hidden: { opacity: 0 },
@@ -217,7 +219,8 @@ const Index = () => {
     try {
       if (!id) return index % 2 === 0 ? loungeImage : suiteImage;
       const safeId = String(id).toLowerCase();
-      if (safeId.includes("business")) return vvipAptRoomImage;
+      if (safeId.includes("business")) return businessRoomImage;
+      if (safeId.includes("executive")) return EXECUTIVE_ROOM_IMAGE;
       if (safeId.includes("suite")) return suiteImage;
       if (safeId.includes("apartment")) return loungeImage;
       if (safeId.includes("royal") || safeId.includes("presidential") || safeId.includes("vvip")) return suiteImage;
