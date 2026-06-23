@@ -16,6 +16,7 @@ import {
   Mail as MailIcon,
   Phone as PhoneIcon,
   CalendarCheck,
+  CalendarDays,
   Sun,
   Moon,
 } from "lucide-react";
@@ -63,10 +64,15 @@ const Admin = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<"inventory" | "bookings">("inventory");
+  const [activeTab, setActiveTab] = useState<"inventory" | "bookings" | "calendar">("inventory");
   const [bookings, setBookings] = useState<any[]>([]);
   const [isBookingsLoading, setIsBookingsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Booking Calendar tab state
+  const [calendarRoomName, setCalendarRoomName] = useState<string>("");
+  const [calendarBookings, setCalendarBookings] = useState<any[]>([]);
+  const [isCalendarLoading, setIsCalendarLoading] = useState(false);
 
   // Fetch rooms on mount
   const fetchRooms = async (showRefresh = false) => {
@@ -117,7 +123,7 @@ const Admin = () => {
     }
   };
 
-  const handleUpdateBookingStatus = async (bookingId: string, newStatus: 'confirmed' | 'cancelled') => {
+  const handleUpdateBookingStatus = async (bookingId: string, newStatus: 'confirmed' | 'cancelled' | 'pending') => {
     if (newStatus === 'cancelled') {
       if (!confirm(`Are you sure you want to cancel this booking?`)) return;
     }
@@ -151,10 +157,52 @@ const Admin = () => {
     }
   };
 
+  const expireStaleBookings = async () => {
+    const graceCutoff = new Date(
+      Date.now() - 6 * 60 * 60 * 1000 // keep in sync with PENDING_BOOKING_GRACE_PERIOD_HOURS
+    ).toISOString();
+
+    const { error } = await supabase
+      .from('bookings')
+      .update({ status: 'expired' })
+      .eq('status', 'pending')
+      .lt('created_at', graceCutoff);
+
+    if (error) console.error('[Admin] Failed to expire stale bookings:', error);
+  };
+
   useEffect(() => {
-    fetchRooms();
-    fetchBookings();
+    expireStaleBookings().then(() => {
+      fetchRooms();
+      fetchBookings();
+    });
   }, []);
+
+  // Fetch bookings for the Booking Calendar tab (by room display name)
+  const fetchCalendarBookings = async (roomName: string) => {
+    if (!roomName) { setCalendarBookings([]); return; }
+    setIsCalendarLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('id, full_name, check_in, check_out, status')
+        .eq('room_type', roomName)
+        .neq('status', 'cancelled')
+        .order('check_in', { ascending: true });
+
+      if (error) throw error;
+      setCalendarBookings(data || []);
+    } catch (err) {
+      console.error('[Admin] Calendar fetch error:', err);
+      toast.error('Failed to load calendar bookings');
+    } finally {
+      setIsCalendarLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCalendarBookings(calendarRoomName);
+  }, [calendarRoomName]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -400,6 +448,20 @@ const Admin = () => {
             className="transition-colors hover:text-[#C9A84C]"
           >
             Active Bookings
+          </button>
+          <button
+            onClick={() => setActiveTab("calendar")}
+            style={{
+              color: activeTab === "calendar" ? '#C9A84C' : t.inactiveTab,
+              fontSize: '14px',
+              borderBottom: activeTab === "calendar" ? '2px solid #C9A84C' : '2px solid transparent',
+              fontWeight: activeTab === "calendar" ? 600 : 400,
+              paddingBottom: '12px'
+            }}
+            className="transition-colors hover:text-[#C9A84C] flex items-center gap-2"
+          >
+            <CalendarDays className="h-3.5 w-3.5" />
+            Booking Calendar
           </button>
         </div>
 
@@ -672,7 +734,7 @@ const Admin = () => {
               })}
             </div>
           </>
-        ) : (
+        ) : activeTab === "bookings" ? (
           <div className="space-y-6">
             {/* Bookings Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
@@ -770,13 +832,16 @@ const Admin = () => {
                               letterSpacing: '0.1em',
                               background: booking.status === 'pending' ? 'rgba(255,160,50,0.1)' :
                                 booking.status === 'confirmed' ? 'rgba(76,175,80,0.1)' :
-                                booking.status === 'cancelled' ? 'rgba(255,82,82,0.1)' : 'rgba(255,255,255,0.05)',
+                                booking.status === 'cancelled' ? 'rgba(255,82,82,0.1)' :
+                                booking.status === 'expired' ? 'rgba(150,150,150,0.1)' : 'rgba(255,255,255,0.05)',
                               color: booking.status === 'pending' ? '#FFA032' :
                                 booking.status === 'confirmed' ? '#4CAF50' :
-                                booking.status === 'cancelled' ? '#FF5252' : 'rgba(245,240,232,0.6)',
+                                booking.status === 'cancelled' ? '#FF5252' :
+                                booking.status === 'expired' ? '#999999' : 'rgba(245,240,232,0.6)',
                               border: `1px solid ${booking.status === 'pending' ? 'rgba(255,160,50,0.3)' :
                                 booking.status === 'confirmed' ? 'rgba(76,175,80,0.3)' :
-                                booking.status === 'cancelled' ? 'rgba(255,82,82,0.3)' : 'rgba(255,255,255,0.1)'}`
+                                booking.status === 'cancelled' ? 'rgba(255,82,82,0.3)' :
+                                booking.status === 'expired' ? 'rgba(150,150,150,0.3)' : 'rgba(255,255,255,0.1)'}`
                             }}>
                               {booking.status}
                             </span>
@@ -802,6 +867,27 @@ const Admin = () => {
                                   className="hover:bg-green-500/20 transition-colors"
                                 >
                                   ✓ Confirm
+                                </button>
+                              )}
+                              {booking.status === 'expired' && (
+                                <button
+                                  onClick={() => handleUpdateBookingStatus(booking.id, 'pending')}
+                                  style={{
+                                    background: 'rgba(255,255,255,0.05)',
+                                    border: '1px solid rgba(255,255,255,0.2)',
+                                    color: t.text,
+                                    fontSize: '10px',
+                                    letterSpacing: '0.1em',
+                                    textTransform: 'uppercase',
+                                    padding: '5px 12px',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    fontWeight: 600,
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                  className="hover:bg-white/10 transition-colors"
+                                >
+                                  Reinstate
                                 </button>
                               )}
                               {booking.status !== 'cancelled' && (
@@ -853,7 +939,135 @@ const Admin = () => {
               </div>
             </div>
           </div>
-        )}
+        ) : activeTab === "calendar" ? (
+          <div className="space-y-6">
+            {/* Booking Calendar Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+              <div>
+                <h2 style={{ fontSize: '22px', color: t.text, fontWeight: 700 }} className="mb-1">
+                  Booking Calendar
+                </h2>
+                <p style={{ color: t.subtext, fontSize: '13px' }}>
+                  View all confirmed &amp; pending bookings for a specific room type, sorted by check-in date.
+                </p>
+              </div>
+              {/* Room type selector */}
+              <div className="flex items-center gap-3">
+                <label style={{ color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                  Room Type
+                </label>
+                <select
+                  value={calendarRoomName}
+                  onChange={e => setCalendarRoomName(e.target.value)}
+                  style={{
+                    background: t.inputBg,
+                    border: `1px solid ${t.inputBorder}`,
+                    borderRadius: '6px',
+                    color: t.inputText,
+                    fontSize: '13px',
+                    padding: '8px 14px',
+                    outline: 'none',
+                    minWidth: '200px'
+                  }}
+                  className="focus:border-[#C9A84C] transition-colors cursor-pointer"
+                >
+                  <option value="" style={{ background: t.bg, color: t.text }}>&mdash; Select a room type &mdash;</option>
+                  {safeRoomsList.map(room => (
+                    <option key={room.id} value={room.name} style={{ background: t.bg, color: t.text }}>{room.name}</option>
+                  ))}
+                </select>
+                {calendarRoomName && (
+                  <button
+                    onClick={() => fetchCalendarBookings(calendarRoomName)}
+                    style={{ border: '1px solid rgba(201,168,76,0.3)', color: '#C9A84C', fontSize: '12px', padding: '8px 16px', borderRadius: '6px' }}
+                    className="flex items-center gap-2 hover:bg-[#C9A84C]/10 transition-colors"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    Refresh
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {!calendarRoomName ? (
+              <div style={{ background: t.surface, border: `1px dashed ${t.border}`, borderRadius: '10px', padding: '60px 0', textAlign: 'center' }}>
+                <CalendarDays style={{ color: '#C9A84C', width: '36px', height: '36px', margin: '0 auto 12px', opacity: 0.4 }} />
+                <p style={{ color: t.textMuted }}>Select a room type above to view its booking calendar.</p>
+              </div>
+            ) : isCalendarLoading ? (
+              <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '60px 0', textAlign: 'center' }}>
+                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" style={{ color: '#C9A84C' }} />
+                <p style={{ color: t.textMuted, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Loading calendar...</p>
+              </div>
+            ) : calendarBookings.length === 0 ? (
+              <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: '10px', padding: '60px 0', textAlign: 'center' }}>
+                <p style={{ color: t.textMuted }}>No active bookings found for <strong style={{ color: '#C9A84C' }}>{calendarRoomName}</strong>.</p>
+              </div>
+            ) : (
+              <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: '10px', overflow: 'hidden' }}>
+                {/* Header row */}
+                <div style={{ background: t.noticeBg, borderBottom: `1px solid ${t.noticeBorder}`, display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr', padding: '14px 24px', gap: '16px' }}>
+                  <span style={{ color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Guest Name</span>
+                  <span style={{ color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Date Range</span>
+                  <span style={{ color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Status</span>
+                </div>
+                {/* Booking rows */}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {calendarBookings.map((booking, idx) => (
+                    <div
+                      key={booking.id}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '2fr 1.5fr 1fr',
+                        padding: '16px 24px',
+                        gap: '16px',
+                        alignItems: 'center',
+                        borderBottom: idx < calendarBookings.length - 1 ? `1px solid ${t.noticeBorder}` : 'none',
+                        transition: 'background 0.15s'
+                      }}
+                      className={isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-black/[0.02]'}
+                    >
+                      {/* Guest Name */}
+                      <p style={{ color: t.text, fontWeight: 600, fontSize: '14px', margin: 0 }}>{booking.full_name}</p>
+
+                      {/* Date Range */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: t.textMuted }}>
+                        <CalendarCheck className="h-3.5 w-3.5" style={{ color: '#C9A84C', opacity: 0.7, flexShrink: 0 }} />
+                        <span>{format(new Date(booking.check_in), 'MMM d')}</span>
+                        <span style={{ opacity: 0.35 }}>&#8594;</span>
+                        <span>{format(new Date(booking.check_out), 'MMM d, yyyy')}</span>
+                      </div>
+
+                      {/* Status Badge */}
+                      <span style={{
+                        padding: '4px 10px',
+                        borderRadius: '12px',
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.1em',
+                        display: 'inline-block',
+                        background: booking.status === 'pending' ? 'rgba(255,160,50,0.1)' :
+                          booking.status === 'confirmed' ? 'rgba(76,175,80,0.1)' : 'rgba(255,255,255,0.05)',
+                        color: booking.status === 'pending' ? '#FFA032' :
+                          booking.status === 'confirmed' ? '#4CAF50' : 'rgba(245,240,232,0.6)',
+                        border: `1px solid ${booking.status === 'pending' ? 'rgba(255,160,50,0.3)' :
+                          booking.status === 'confirmed' ? 'rgba(76,175,80,0.3)' : 'rgba(255,255,255,0.1)'}`
+                      }}>
+                        {booking.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Human-readable note */}
+            <p style={{ color: t.noticeText, fontSize: '12px', marginTop: '8px', fontStyle: 'italic' }}>
+              This calendar shows a human-readable backup of the automated overbooking check. Review before manually confirming pending bookings.
+            </p>
+          </div>
+        ) : null}
 
         <div style={{
           marginTop: '48px',

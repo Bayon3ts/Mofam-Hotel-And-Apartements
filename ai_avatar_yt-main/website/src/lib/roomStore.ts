@@ -158,3 +158,85 @@ export function getAvailability(room: RoomInventory): number {
   if (!room) return 0;
   return Math.max(0, (room.totalRooms || 0) - (room.bookedRooms || 0));
 }
+
+// ─── Date-Aware Availability ─────────────────────────────────────────────────
+//
+// NOTE: The bookings table stores the room display name in the `room_type`
+// column (e.g. "Business"), NOT a room id. All queries below use room_type
+// to link a booking to a room type.
+//
+// NOTE: This check has a small race-condition window — if two guests submit
+// a booking for the last available room within milliseconds of each other,
+// both could pass this check before either insert completes. For a hotel
+// at this booking volume the risk is minimal, but if volume grows significantly,
+// consider moving this validation into a Postgres function/trigger with a
+// proper transaction lock, or use Supabase Edge Functions with row-level locking.
+
+/**
+ * Returns how many rooms of a given type are already booked
+ * for ANY night overlapping the requested check-in/check-out range.
+ * Two date ranges overlap if: existing.check_in < newCheckOut AND existing.check_out > newCheckIn
+ *
+ * @param roomName - The room display name as stored in bookings.room_type (e.g. "Business")
+ * @param checkIn  - 'yyyy-MM-dd' string for the requested check-in date
+ * @param checkOut - 'yyyy-MM-dd' string for the requested check-out date
+ */
+const PENDING_BOOKING_GRACE_PERIOD_HOURS = 6; // adjust as needed for hotel workflow
+
+export async function getOverlappingBookingsCount(
+  roomName: string,
+  checkIn: string,  // 'yyyy-MM-dd'
+  checkOut: string  // 'yyyy-MM-dd'
+): Promise<number> {
+  try {
+    const graceCutoff = new Date(
+      Date.now() - PENDING_BOOKING_GRACE_PERIOD_HOURS * 60 * 60 * 1000
+    ).toISOString();
+
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('id, check_in, check_out, status, created_at')
+      .eq('room_type', roomName)          // bookings table stores the display name
+      .neq('status', 'cancelled')         // cancelled bookings don't count
+      .lt('check_in', checkOut)           // existing check_in < new check_out
+      .gt('check_out', checkIn);          // existing check_out > new check_in
+
+    if (error) throw error;
+
+    const relevant = (data || []).filter((b) => {
+      if (b.status === 'cancelled') return false;
+      if (b.status === 'confirmed') return true;
+      if (b.status === 'pending') {
+        // Only count pending bookings created within the grace period
+        return b.created_at >= graceCutoff;
+      }
+      return false;
+    });
+
+    return relevant.length;
+  } catch (err) {
+    console.error('[roomStore] Error checking overlapping bookings:', err);
+    // Fail safe: if the check itself fails, block the booking rather than risk overbooking
+    throw new Error('Unable to verify availability. Please try again.');
+  }
+}
+
+/**
+ * Returns true if there is at least one room of this type free
+ * for the requested date range.
+ *
+ * @param roomName   - The room display name as stored in bookings.room_type (e.g. "Business")
+ * @param totalRooms - Total physical rooms of this type in inventory
+ * @param checkIn    - 'yyyy-MM-dd' string
+ * @param checkOut   - 'yyyy-MM-dd' string
+ */
+export async function isRoomAvailableForDates(
+  roomName: string,
+  totalRooms: number,
+  checkIn: string,
+  checkOut: string
+): Promise<{ available: boolean; bookedCount: number; remaining: number }> {
+  const bookedCount = await getOverlappingBookingsCount(roomName, checkIn, checkOut);
+  const remaining = Math.max(0, totalRooms - bookedCount);
+  return { available: remaining > 0, bookedCount, remaining };
+}

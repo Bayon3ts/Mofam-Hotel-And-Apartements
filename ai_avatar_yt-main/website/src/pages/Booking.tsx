@@ -30,7 +30,7 @@ import { format, differenceInDays, isBefore, startOfToday, addDays } from "date-
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getRooms, getAvailability, type RoomInventory } from "@/lib/roomStore";
+import { getRooms, getAvailability, isRoomAvailableForDates, type RoomInventory } from "@/lib/roomStore";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/lib/supabaseClient";
 import { sendBookingEmails } from "@/lib/emailService";
@@ -103,6 +103,10 @@ const Booking = () => {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [roomData, setRoomData] = useState<RoomInventory[]>([]);
 
+  // Date-aware availability: remaining rooms per room id, keyed by room.id
+  // Populated/refreshed whenever check-in or check-out changes
+  const [dateAwareAvailability, setDateAwareAvailability] = useState<Record<string, number>>({});
+
   // Validation errors
   const [dateError, setDateError] = useState("");
   const [roomError, setRoomError] = useState("");
@@ -166,6 +170,33 @@ const Booking = () => {
       window.removeEventListener("focus", refreshRoomData);
     };
   }, [showResults]);
+
+  // ── Date-Aware Availability Effect ────────────────────────────────────────
+  // Re-run whenever dates or room list change to update remaining counts
+  useEffect(() => {
+    if (!checkIn || !checkOut || safeRoomData.length === 0) return;
+    const checkInStr = format(checkIn, "yyyy-MM-dd");
+    const checkOutStr = format(checkOut, "yyyy-MM-dd");
+
+    (async () => {
+      const results: Record<string, number> = {};
+      for (const room of safeRoomData) {
+        try {
+          const { remaining } = await isRoomAvailableForDates(
+            room.name,       // bookings table stores display name in room_type
+            room.totalRooms,
+            checkInStr,
+            checkOutStr
+          );
+          results[room.id] = remaining;
+        } catch {
+          // On error, fall back to flat counter so the UI keeps working
+          results[room.id] = getAvailability(room);
+        }
+      }
+      setDateAwareAvailability(results);
+    })();
+  }, [checkIn, checkOut, safeRoomData]);
 
   // ── Search handler — reads LIVE data from Supabase ─────────────────────
   const handleSearch = async () => {
@@ -243,6 +274,36 @@ const Booking = () => {
     if (!selectedRoom) return;
 
     setIsSubmitting(true);
+
+    // ── Date-aware availability guard (last check before insert) ───────────
+    // This runs as close as possible to the insert to minimise the race-condition
+    // window between two guests booking the last available room simultaneously.
+    try {
+      const checkInStr = format(checkIn!, "yyyy-MM-dd");
+      const checkOutStr = format(checkOut!, "yyyy-MM-dd");
+      const { available, remaining } = await isRoomAvailableForDates(
+        selectedRoom.name,
+        selectedRoom.totalRooms,
+        checkInStr,
+        checkOutStr
+      );
+
+      if (!available) {
+        toast.error(
+          `Sorry, ${selectedRoom.name} is fully booked for these dates. Please choose different dates or another room type.`
+        );
+        setIsSubmitting(false);
+        return; // Stop here — do not insert the booking
+      }
+
+      // Log remaining for debugging
+      console.log(`[Booking] Date-aware check passed: ${remaining} room(s) remaining for '${selectedRoom.name}' on ${checkInStr}→${checkOutStr}`);
+    } catch (err: any) {
+      console.error('[Booking] Availability pre-check failed:', err);
+      toast.error(err?.message || 'Unable to verify availability. Please try again.');
+      setIsSubmitting(false);
+      return;
+    }
 
     // Prepare booking data
     const bookingData = {
@@ -609,7 +670,11 @@ const Booking = () => {
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   {safeRoomData.map((room, idx) => {
                     const isSelected = selectedRoomId === room.id;
-                    const available = getAvailability(room);
+                    // Use date-aware remaining count when dates are selected,
+                    // falling back to flat global counter if dates haven't been applied yet
+                    const available = (checkIn && checkOut && room.id in dateAwareAvailability)
+                      ? dateAwareAvailability[room.id]
+                      : getAvailability(room);
                     const isSoldOut = available <= 0;
                     const onlyFewLeft = available > 0 && available <= 2;
 
