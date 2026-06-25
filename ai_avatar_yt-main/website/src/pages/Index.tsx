@@ -806,27 +806,27 @@ const Index = () => {
 
                     {/* CTA Button */}
                     <div style={{ marginTop: "auto" }}>
-                        <button
-                          onClick={() => navigate('/booking')}
-                          style={{
-                            width: "100%",
-                            background: "#C9A84C",
-                            color: "#0F0D08",
-                            fontWeight: 700,
-                            padding: "14px",
-                            borderRadius: "8px",
-                            letterSpacing: "0.06em",
-                            fontSize: "14px",
-                            fontFamily: "'Inter', sans-serif",
-                            cursor: "pointer",
-                            border: "none",
-                            transition: "background 0.3s ease",
-                          }}
-                          onMouseEnter={e => (e.currentTarget.style.background = "#b8963e")}
-                          onMouseLeave={e => (e.currentTarget.style.background = "#C9A84C")}
-                        >
-                          Book This Room
-                        </button>
+                      <button
+                        onClick={() => navigate('/booking')}
+                        style={{
+                          width: "100%",
+                          background: "#C9A84C",
+                          color: "#0F0D08",
+                          fontWeight: 700,
+                          padding: "14px",
+                          borderRadius: "8px",
+                          letterSpacing: "0.06em",
+                          fontSize: "14px",
+                          fontFamily: "'Inter', sans-serif",
+                          cursor: "pointer",
+                          border: "none",
+                          transition: "background 0.3s ease",
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "#b8963e")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "#C9A84C")}
+                      >
+                        Book This Room
+                      </button>
                     </div>
                   </div>
                 </motion.div>
@@ -1610,7 +1610,7 @@ const Index = () => {
                     e.currentTarget.style.color = "rgba(245,240,232,0.55)";
                     e.currentTarget.style.paddingLeft = "0";
                   }}>
-                  Secure Portal Access Required
+
                 </span>
               </div>
             </div>
