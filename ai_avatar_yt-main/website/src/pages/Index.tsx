@@ -1610,7 +1610,7 @@ const Index = () => {
                     e.currentTarget.style.color = "rgba(245,240,232,0.55)";
                     e.currentTarget.style.paddingLeft = "0";
                   }}>
-
+                  Secure Portal Access Required
                 </span>
               </div>
             </div>
