@@ -1,6 +1,5 @@
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   Plus,
@@ -26,6 +25,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format, differenceInDays, isBefore, startOfToday, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -100,6 +100,7 @@ const Booking = () => {
   // Search / result state
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [resultsOpen, setResultsOpen] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [roomData, setRoomData] = useState<RoomInventory[]>([]);
 
@@ -209,6 +210,7 @@ const Booking = () => {
     setShowResults(false);
     setSelectedRoomId(null);
     setIsSearching(true);
+    setResultsOpen(true); // open the popup immediately — no scrolling needed to see the loading state
 
     try {
       // Pull fresh data from Supabase
@@ -634,253 +636,255 @@ const Booking = () => {
           </div>
         )}
 
-        {/* ── RESULTS (STEP 1) ───────────────────────────────────────── */}
-        {!isDetailsStep && (isSearching || showResults) && (
-          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 40px 0 40px", display: "flex", gap: "32px", alignItems: "flex-start" }} className="animate-in fade-in duration-500 max-lg:flex-col max-lg:px-6 max-lg:py-8">
-            {/* Left: Rooms */}
-            <div style={{ flex: 1, maxWidth: "720px", display: "flex", flexDirection: "column", gap: "16px" }} className="w-full">
-              <div className="flex items-center justify-between mb-2 px-1">
-                <h3 className="text-xl font-extrabold tracking-tight" style={{ color: t.text }}>
-                  {isSearching ? "Finding Best Rates…" : `${safeRoomData.length} Room Types Available`}
-                </h3>
-              </div>
+        {/* ── RESULTS MODAL (STEP 1) ─────────────────────────────────
+             Opens the instant "Find Rooms" is clicked — no scrolling
+             required. Shows a loading state first, then results. ──── */}
+        {!isDetailsStep && (
+          <Dialog open={resultsOpen} onOpenChange={setResultsOpen}>
+            <DialogContent
+              className="p-0 gap-0 overflow-hidden flex flex-col w-[94vw] sm:w-full sm:max-w-2xl lg:max-w-5xl max-h-[88vh] rounded-2xl"
+              style={{ background: t.bg, border: `1px solid ${t.border}` }}
+            >
+              {/* Header */}
+              <DialogHeader className="shrink-0 text-left px-5 sm:px-8 pt-6 pb-5 border-b" style={{ borderColor: "rgba(201,168,76,0.15)" }}>
+                <DialogTitle
+                  style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(20px, 3vw, 28px)", color: t.text, fontWeight: 600, margin: 0 }}
+                >
+                  {isSearching
+                    ? "Finding Your Perfect Stay…"
+                    : showResults && safeRoomData.length === 0
+                      ? "No Rooms Found"
+                      : `${safeRoomData.length} Room Type${safeRoomData.length !== 1 ? "s" : ""} Available`}
+                </DialogTitle>
+                {checkIn && checkOut && (
+                  <p style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", margin: "4px 0 0 0" }}>
+                    {format(checkIn, "MMM dd")} → {format(checkOut, "MMM dd, yyyy")} &nbsp;·&nbsp; {nights} Night{nights !== 1 ? "s" : ""} &nbsp;·&nbsp; {numRooms} Room{numRooms !== 1 ? "s" : ""}
+                  </p>
+                )}
+              </DialogHeader>
 
-              {isSearching && (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <Card key={i} className="p-6 space-y-4 animate-pulse border-border/50">
-                      <div className="flex justify-between items-start">
-                        <div className="space-y-2 flex-1"><Skeleton className="h-6 w-1/3" /><Skeleton className="h-4 w-1/4" /></div>
-                        <Skeleton className="h-8 w-24" />
-                      </div>
-                      <Skeleton className="h-16 w-full" />
-                      <div className="flex justify-between items-center"><Skeleton className="h-6 w-32" /><Skeleton className="h-10 w-28" /></div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-
-              {showResults && !isSearching && safeRoomData.length === 0 && (
-                <div className="text-center py-20 bg-muted/20 rounded-2xl border border-dashed border-border animate-in fade-in">
-                  <p className="text-lg font-medium text-muted-foreground">No rooms found for your selected criteria.</p>
-                </div>
-              )}
-
-              {showResults && !isSearching && safeRoomData.length > 0 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                  {safeRoomData.map((room, idx) => {
-                    const isSelected = selectedRoomId === room.id;
-                    // Use date-aware remaining count when dates are selected,
-                    // falling back to flat global counter if dates haven't been applied yet
-                    const available = (checkIn && checkOut && room.id in dateAwareAvailability)
-                      ? dateAwareAvailability[room.id]
-                      : getAvailability(room);
-                    const isSoldOut = available <= 0;
-                    const onlyFewLeft = available > 0 && available <= 2;
-
-                    return (
-                      <div
-                        key={room.id}
-                        onClick={() => { if (!isSoldOut) { setSelectedRoomId(room.id); setRoomError(""); } }}
-                        className="animate-in fade-in slide-in-from-bottom-4 group"
-                        style={{
-                          padding: "24px",
-                          borderRadius: "12px",
-                          border: `1px solid ${t.border}`,
-                          marginBottom: "16px",
-                          background: isSelected ? "rgba(201,168,76,0.05)" : t.surface,
-                          cursor: isSoldOut ? "not-allowed" : "pointer",
-                          opacity: isSoldOut ? 0.5 : 1,
-                          animationDelay: `${idx * 80}ms`,
-                          transition: "all 0.3s ease",
-                          boxShadow: t.shadow
-                        }}
-                      >
-                        {/* Top: Name + Badge + Price Row */}
-                        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
-                          <div className="space-y-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h4 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", color: t.text, margin: 0, fontWeight: 600 }}>{room.name}</h4>
-                              {room.badge && !isSoldOut && (
-                                <span className={cn("px-2.5 py-0.5 text-[10px] font-black uppercase tracking-tighter rounded-full border", badgeVariant(room.badge))}>
-                                  {room.badge}
-                                </span>
-                              )}
-                              {onlyFewLeft && (
-                                <span className="flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-tighter rounded-full border border-red-500/30 bg-red-500/10 text-red-600 animate-pulse">
-                                  <AlertCircle className="h-3 w-3" />
-                                  Only {available} left
-                                </span>
-                              )}
-                              {isSoldOut && (
-                                <span className="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-tighter rounded-full border border-border bg-muted text-muted-foreground">
-                                  Sold Out
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs font-bold text-accent tracking-wide uppercase opacity-80">{room.tag}</p>
-                          </div>
-
-                          <div className="shrink-0 text-left sm:text-right">
-                            <p style={{ color: "#C9A84C", fontSize: "20px", fontWeight: 600, margin: 0 }}>{fmt(room.price)}</p>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-70">per night</p>
-                          </div>
+              {/* Scrollable Body */}
+              <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-6">
+                {isSearching && (
+                  <div className="space-y-4">
+                    {/* Nice centered loading state */}
+                    <div className="flex flex-col items-center justify-center gap-4 py-8">
+                      <div className="relative h-16 w-16 flex items-center justify-center">
+                        <div className="absolute inset-0 rounded-full animate-ping" style={{ border: "2px solid rgba(201,168,76,0.35)" }} />
+                        <div className="absolute inset-2 rounded-full animate-pulse" style={{ border: "2px solid rgba(201,168,76,0.55)" }} />
+                        <div className="relative h-9 w-9 rounded-full flex items-center justify-center" style={{ background: "rgba(201,168,76,0.12)" }}>
+                          <Search className="h-4 w-4" style={{ color: "#C9A84C" }} />
                         </div>
+                      </div>
+                      <p style={{ color: t.textMuted, fontSize: "13px", letterSpacing: "0.04em", textAlign: "center" }}>
+                        Checking live availability across all room types…
+                      </p>
+                    </div>
 
-                        {/* Middle: Description */}
-                        <p style={{ fontSize: "14px", color: t.textMuted, lineHeight: 1.7, margin: "0 0 24px 0" }}>{room.description}</p>
+                    {[1, 2, 3].map((i) => (
+                      <Card key={i} className="p-6 space-y-4 animate-pulse border-border/50" style={{ animationDelay: `${i * 100}ms` }}>
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-2 flex-1"><Skeleton className="h-6 w-1/3" /><Skeleton className="h-4 w-1/4" /></div>
+                          <Skeleton className="h-8 w-24" />
+                        </div>
+                        <Skeleton className="h-16 w-full" />
+                        <div className="flex justify-between items-center"><Skeleton className="h-6 w-32" /><Skeleton className="h-10 w-28" /></div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
 
-                        {/* Bottom: Amenities + Action */}
-                        <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mt-auto pt-4" style={{ borderTop: "1px solid rgba(201,168,76,0.15)" }}>
-                          <div className="flex flex-wrap gap-4 items-center w-full sm:w-auto">
-                            {(room.amenities || []).map((a) => <AmenityIcon key={a} name={a} />)}
-                            <Separator orientation="vertical" className="h-3 hidden sm:block bg-[rgba(201,168,76,0.3)]" />
-                            <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>Max {room.maxGuests} Guests</span>
-                          </div>
+                {showResults && !isSearching && safeRoomData.length === 0 && (
+                  <div className="text-center py-20 bg-muted/20 rounded-2xl border border-dashed border-border animate-in fade-in">
+                    <p className="text-lg font-medium text-muted-foreground">No rooms found for your selected criteria.</p>
+                  </div>
+                )}
 
-                          <button
+                {showResults && !isSearching && safeRoomData.length > 0 && (
+                  <div className="grid gap-8 lg:grid-cols-[1fr_300px] items-start">
+                    {/* Rooms */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                      {safeRoomData.map((room, idx) => {
+                        const isSelected = selectedRoomId === room.id;
+                        // Use date-aware remaining count when dates are selected,
+                        // falling back to flat global counter if dates haven't been applied yet
+                        const available = (checkIn && checkOut && room.id in dateAwareAvailability)
+                          ? dateAwareAvailability[room.id]
+                          : getAvailability(room);
+                        const isSoldOut = available <= 0;
+                        const onlyFewLeft = available > 0 && available <= 2;
+
+                        return (
+                          <div
+                            key={room.id}
+                            onClick={() => { if (!isSoldOut) { setSelectedRoomId(room.id); setRoomError(""); } }}
+                            className="animate-in fade-in slide-in-from-bottom-4 group"
                             style={{
-                              background: isSelected ? "#C9A84C" : "transparent",
-                              border: isSelected ? "1px solid #C9A84C" : "1px solid rgba(201,168,76,0.55)",
-                              color: isSelected ? "#0F0D08" : "#C9A84C",
-                              padding: "10px 24px",
-                              borderRadius: "8px",
-                              fontWeight: 700,
+                              padding: "24px",
+                              borderRadius: "12px",
+                              border: `1px solid ${isSelected ? "#C9A84C" : t.border}`,
+                              background: isSelected ? "rgba(201,168,76,0.05)" : t.surface,
                               cursor: isSoldOut ? "not-allowed" : "pointer",
-                              fontSize: "13px",
+                              opacity: isSoldOut ? 0.5 : 1,
+                              animationDelay: `${idx * 80}ms`,
                               transition: "all 0.3s ease",
-                              width: "100%",
-                              maxWidth: "160px"
                             }}
-                            disabled={isSoldOut}
                           >
-                            {isSelected ? "Selected" : isSoldOut ? "Sold Out" : "Select Room"}
-                          </button>
+                            {/* Top: Name + Badge + Price Row */}
+                            <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
+                              <div className="space-y-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", color: t.text, margin: 0, fontWeight: 600 }}>{room.name}</h4>
+                                  {room.badge && !isSoldOut && (
+                                    <span className={cn("px-2.5 py-0.5 text-[10px] font-black uppercase tracking-tighter rounded-full border", badgeVariant(room.badge))}>
+                                      {room.badge}
+                                    </span>
+                                  )}
+                                  {onlyFewLeft && (
+                                    <span className="flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-tighter rounded-full border border-red-500/30 bg-red-500/10 text-red-600 animate-pulse">
+                                      <AlertCircle className="h-3 w-3" />
+                                      Only {available} left
+                                    </span>
+                                  )}
+                                  {isSoldOut && (
+                                    <span className="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-tighter rounded-full border border-border bg-muted text-muted-foreground">
+                                      Sold Out
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs font-bold text-accent tracking-wide uppercase opacity-80">{room.tag}</p>
+                              </div>
+
+                              <div className="shrink-0 text-left sm:text-right">
+                                <p style={{ color: "#C9A84C", fontSize: "20px", fontWeight: 600, margin: 0 }}>{fmt(room.price)}</p>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-70">per night</p>
+                              </div>
+                            </div>
+
+                            {/* Middle: Description */}
+                            <p style={{ fontSize: "14px", color: t.textMuted, lineHeight: 1.7, margin: "0 0 24px 0" }}>{room.description}</p>
+
+                            {/* Bottom: Amenities + Action */}
+                            <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mt-auto pt-4" style={{ borderTop: "1px solid rgba(201,168,76,0.15)" }}>
+                              <div className="flex flex-wrap gap-4 items-center w-full sm:w-auto">
+                                {(room.amenities || []).map((a) => <AmenityIcon key={a} name={a} />)}
+                                <Separator orientation="vertical" className="h-3 hidden sm:block bg-[rgba(201,168,76,0.3)]" />
+                                <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>Max {room.maxGuests} Guests</span>
+                              </div>
+
+                              <div
+                                style={{
+                                  fontWeight: 700,
+                                  fontSize: "13px",
+                                  color: isSelected ? "#C9A84C" : t.textMuted,
+                                  letterSpacing: "0.05em",
+                                }}
+                              >
+                                {isSelected ? "✓ Selected" : isSoldOut ? "Sold Out" : "Tap to select"}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Reservation Summary (desktop) */}
+                    <div className="hidden lg:block sticky top-0">
+                      <div style={{ background: t.inputBg, border: `1px solid ${t.border}`, borderRadius: "12px", padding: "24px" }}>
+                        <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "19px", color: t.text, margin: "0 0 16px 0", fontWeight: 600 }}>Your Reservation</h3>
+
+                        <div className="space-y-4">
+                          {checkIn && checkOut && (
+                            <div className="grid grid-cols-2 gap-2">
+                              <div style={{ background: t.bg, padding: "12px", borderRadius: "8px", border: `1px solid ${t.border}` }}>
+                                <p style={{ color: "#C9A84C", fontSize: "9px", letterSpacing: "0.15em", textTransform: "uppercase", margin: "0 0 4px 0" }}>Check-In</p>
+                                <p style={{ color: t.text, fontSize: "13px", margin: 0 }}>{format(checkIn, "MMM dd, yyyy")}</p>
+                              </div>
+                              <div style={{ background: t.bg, padding: "12px", borderRadius: "8px", border: `1px solid ${t.border}` }}>
+                                <p style={{ color: "#C9A84C", fontSize: "9px", letterSpacing: "0.15em", textTransform: "uppercase", margin: "0 0 4px 0" }}>Check-Out</p>
+                                <p style={{ color: t.text, fontSize: "13px", margin: 0 }}>{format(checkOut, "MMM dd, yyyy")}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          {selectedRoom ? (
+                            <div className="animate-in fade-in slide-in-from-right-4 space-y-3">
+                              <div>
+                                <p style={{ color: "#C9A84C", fontSize: "9px", letterSpacing: "0.15em", textTransform: "uppercase", margin: "0 0 4px 0" }}>Selected Room</p>
+                                <p style={{ color: t.text, fontSize: "14px", margin: 0, fontWeight: 600 }}>{selectedRoom.name}</p>
+                              </div>
+                              <div style={{ background: t.bg, padding: "12px", borderRadius: "8px", border: `1px solid ${t.border}` }} className="space-y-2">
+                                <div className="flex justify-between">
+                                  <span style={{ color: "#C9A84C", fontSize: "9px", letterSpacing: "0.15em", textTransform: "uppercase" }}>Room × {nights}nt{numRooms > 1 ? ` × ${numRooms}` : ""}</span>
+                                  <span style={{ color: t.text, fontSize: "13px" }}>{fmt(selectedRoom.price * nights * numRooms)}</span>
+                                </div>
+                                <Separator className="bg-[rgba(201,168,76,0.15)]" />
+                                <div className="flex justify-between items-center">
+                                  <span style={{ color: "#C9A84C", fontSize: "9px", letterSpacing: "0.15em", textTransform: "uppercase" }}>Total</span>
+                                  <span style={{ color: "#C9A84C", fontSize: "19px", fontWeight: 700 }}>{fmt(totalPrice)}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-center py-6 space-y-2 opacity-40">
+                              <CreditCard className="h-8 w-8 mx-auto" style={{ color: "#C9A84C" }} strokeWidth={1} />
+                              <p style={{ color: "#C9A84C", fontSize: "9px", letterSpacing: "0.15em", textTransform: "uppercase" }}>Select a room to see total</p>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Right: Sticky Summary */}
-            <div style={{ width: "340px", flexShrink: 0, position: "sticky", top: "24px" }} className="hidden lg:block">
-              <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: "12px", padding: "28px", boxShadow: t.shadow }}>
-                <div>
-                  <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "22px", color: t.text, margin: "0 0 24px 0", fontWeight: 600 }}>Your Reservation</h3>
-                </div>
-
-                <div className="space-y-6">
-                  {checkIn && checkOut && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div style={{ background: t.inputBg, padding: "16px", borderRadius: "8px", border: `1px solid ${t.border}` }}>
-                        <p style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "8px", margin: 0 }}>Check-In</p>
-                        <p style={{ color: t.text, fontSize: "15px", margin: 0 }}>{format(checkIn, "MMM dd, yyyy")}</p>
-                      </div>
-                      <div style={{ background: t.inputBg, padding: "16px", borderRadius: "8px", border: `1px solid ${t.border}` }}>
-                        <p style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "8px", margin: 0 }}>Check-Out</p>
-                        <p style={{ color: t.text, fontSize: "15px", margin: 0 }}>{format(checkOut, "MMM dd, yyyy")}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between items-center px-1">
-                    <div className="flex flex-col gap-1 items-center">
-                      <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>Nights</span>
-                      <span style={{ color: t.text, fontSize: "15px" }}>{nights}</span>
-                    </div>
-                    <Separator orientation="vertical" className="h-8 bg-[rgba(201,168,76,0.15)]" />
-                    <div className="flex flex-col gap-1 items-center">
-                      <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>Rooms</span>
-                      <span style={{ color: t.text, fontSize: "15px" }}>{numRooms}</span>
-                    </div>
-                    <Separator orientation="vertical" className="h-8 bg-[rgba(201,168,76,0.15)]" />
-                    <div className="flex flex-col gap-1 items-center">
-                      <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>Guests</span>
-                      <span style={{ color: t.text, fontSize: "15px" }}>{totalGuests}</span>
                     </div>
                   </div>
+                )}
+              </div>
 
-                  <Separator className="bg-[rgba(201,168,76,0.15)]" />
-
-                  {selectedRoom ? (
-                    <div className="space-y-6">
-                      <div className="animate-in fade-in slide-in-from-right-4">
-                        <p style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "4px" }}>Selected Accommodation</p>
-                        <div className="flex justify-between items-end">
-                          <div>
-                            <p style={{ color: t.text, fontSize: "15px", margin: 0, fontWeight: 600 }}>{selectedRoom.name}</p>
-                            <p style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", opacity: 0.8, margin: 0 }}>{selectedRoom.tag}</p>
-                          </div>
-                          <p style={{ color: t.textMuted, fontSize: "14px", margin: 0 }}>{fmt(selectedRoom.price)}/nt</p>
-                        </div>
-                      </div>
-
-                      <div style={{ background: t.inputBg, padding: "16px", borderRadius: "8px", border: `1px solid ${t.border}` }} className="space-y-3">
-                        <div className="flex justify-between">
-                          <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>Room Charge</span>
-                          <span style={{ color: t.text, fontSize: "15px" }}>{fmt(selectedRoom.price * nights)}</span>
-                        </div>
-                        {numRooms > 1 && (
-                          <div className="flex justify-between">
-                            <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>× {numRooms} Rooms</span>
-                            <span style={{ color: t.text, fontSize: "15px" }}>{fmt(selectedRoom.price * nights * numRooms)}</span>
-                          </div>
-                        )}
-                        <div className="flex justify-between">
-                          <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>VAT & Taxes</span>
-                          <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>Included</span>
-                        </div>
-                        <Separator className="bg-[rgba(201,168,76,0.15)]" />
-                        <div className="flex justify-between items-center pt-1">
-                          <span style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>Total Price</span>
-                          <span style={{ color: "#C9A84C", fontSize: "24px", fontWeight: 700 }}>{fmt(totalPrice)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-10 space-y-3 opacity-40">
-                      <CreditCard className="h-10 w-10 mx-auto" style={{ color: "#C9A84C" }} strokeWidth={1} />
-                      <p style={{ color: "#C9A84C", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase" }}>Select a room to calculate total</p>
-                    </div>
-                  )}
-
-                  {roomError && <p className="text-red-500 text-[11px] font-bold uppercase text-center bg-red-500/10 py-2 rounded-lg">{roomError}</p>}
-
+              {/* Sticky footer CTA — identical on mobile & desktop, no scrolling needed */}
+              {showResults && !isSearching && safeRoomData.length > 0 && (
+                <div
+                  className="shrink-0 flex items-center justify-between gap-4 px-5 sm:px-8 py-4 border-t"
+                  style={{ borderColor: "rgba(201,168,76,0.15)", background: t.bg }}
+                >
+                  <div className="min-w-0">
+                    {selectedRoom ? (
+                      <>
+                        <p style={{ color: "#C9A84C", fontSize: "9px", letterSpacing: "0.15em", textTransform: "uppercase", margin: 0 }}>
+                          {selectedRoom.name} · {nights} Night{nights !== 1 ? "s" : ""}
+                        </p>
+                        <p style={{ color: "#C9A84C", fontSize: "clamp(18px, 4vw, 22px)", fontWeight: 800, margin: 0 }}>{fmt(totalPrice)}</p>
+                      </>
+                    ) : (
+                      <p style={{ color: t.textMuted, fontSize: "12px", margin: 0 }}>{roomError || "Select a room to continue"}</p>
+                    )}
+                  </div>
                   <button
-                    onClick={isDetailsStep ? handleFinalConfirm : proceedToDetails}
-                    disabled={!selectedRoom || isSubmitting}
-                    style={{ background: "#C9A84C", color: "#0F0D08", fontWeight: 700, padding: "16px", borderRadius: "8px", width: "100%", border: "none", cursor: (!selectedRoom || isSubmitting) ? "not-allowed" : "pointer", opacity: (!selectedRoom || isSubmitting) ? 0.5 : 1, transition: "background 0.3s ease" }}
+                    onClick={() => { if (!selectedRoom) { setRoomError("Please select a room before proceeding."); return; } proceedToDetails(); }}
+                    disabled={!selectedRoom}
+                    style={{
+                      background: "#C9A84C",
+                      color: "#0F0D08",
+                      fontWeight: 700,
+                      padding: "14px 28px",
+                      borderRadius: "8px",
+                      letterSpacing: "0.06em",
+                      fontSize: "13px",
+                      border: "none",
+                      cursor: !selectedRoom ? "not-allowed" : "pointer",
+                      opacity: !selectedRoom ? 0.5 : 1,
+                      whiteSpace: "nowrap",
+                      transition: "background 0.3s ease",
+                    }}
                   >
-                    {isSubmitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin inline" /> Confirming...</> : isDetailsStep ? "Confirm Reservation" : "Proceed to Details"}
+                    Reserve
                   </button>
                 </div>
-              </div>
-            </div>
-          </div>
+              )}
+            </DialogContent>
+          </Dialog>
         )}
+
       </main>
 
-      {/* Mobile Sticky Bar */}
-      {showResults && selectedRoom && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border shadow-2xl px-6 py-4 flex items-center justify-between gap-6 animate-in slide-in-from-bottom-full duration-500">
-          <div className="space-y-0.5">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-none">{selectedRoom.name} · {nights} Night{nights !== 1 ? "s" : ""}</p>
-            <p className="text-2xl font-black text-accent tracking-tighter">{fmt(totalPrice)}</p>
-          </div>
-          <Button
-            variant="luxury"
-            className="h-12 px-8 font-black text-sm tracking-wide rounded-xl shadow-lg shadow-accent/20"
-            onClick={isDetailsStep ? handleFinalConfirm : proceedToDetails}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Confirming..." : isDetailsStep ? "Confirm" : "Reserve"}
-          </Button>
-        </div>
-      )}
 
-      {showResults && selectedRoom && <div className="h-28 lg:hidden" />}
 
       {/* ── PAGE FOOTER STRIP ─────────────────────────────────────── */}
       <footer style={{ borderTop: "1px solid rgba(201,168,76,0.12)", padding: "20px", textAlign: "center", marginTop: "auto" }}>
