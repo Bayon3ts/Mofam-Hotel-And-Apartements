@@ -73,3 +73,68 @@ export async function sendBookingEmails(booking: BookingData): Promise<boolean> 
     return false;
   }
 }
+
+/**
+ * Status Update Email — Confirmed / Cancelled
+ *
+ * Notifies the guest when an admin confirms or cancels their reservation
+ * from the Staff Management panel. Uses the same /api/send-email endpoint
+ * with type: 'status_update', which routes to the confirmedTemplate or
+ * cancelledTemplate on the server side.
+ */
+export interface StatusUpdateData {
+  guest_email: string;
+  guest_name: string;
+  status: 'confirmed' | 'cancelled';
+  booking_id: string;
+  room_type: string;
+  check_in: string | Date;
+  check_out: string | Date;
+}
+
+export async function sendStatusUpdateEmail(data: StatusUpdateData): Promise<boolean> {
+  // Vercel serverless functions are unavailable in local dev (npm run dev).
+  if (import.meta.env.DEV) {
+    console.info('[Mofam] Local dev: status update email skipped (Vercel functions not available). Emails will send on the deployed site.');
+    return true;
+  }
+
+  console.log('──────────────────────────────────────────');
+  console.log(`📧 Sending "${data.status}" status email via Resend...`);
+
+  const payload = {
+    type: 'status_update',
+    ...data,
+    check_in:
+      data.check_in instanceof Date
+        ? format(data.check_in, 'EEE, MMM dd, yyyy')
+        : data.check_in,
+    check_out:
+      data.check_out instanceof Date
+        ? format(data.check_out, 'EEE, MMM dd, yyyy')
+        : data.check_out,
+  };
+
+  try {
+    const response = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error('❌ Status update email API error:', result);
+      return false;
+    }
+
+    console.log('✅ Status update email sent:', result);
+    console.log('──────────────────────────────────────────');
+    return true;
+  } catch (err) {
+    console.warn('[Mofam] Status update email delivery failed. Check RESEND_API_KEY / domain verification on Resend.');
+    console.error('❌ Failed to reach email API:', err);
+    return false;
+  }
+}

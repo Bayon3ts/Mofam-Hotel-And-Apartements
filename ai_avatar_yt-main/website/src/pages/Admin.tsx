@@ -30,21 +30,22 @@ import {
 import { useTheme } from "@/hooks/useTheme";
 import { toast } from "@/components/ui/sonner";
 import { format } from "date-fns";
+import { sendStatusUpdateEmail } from "@/lib/emailService";
 
 const Admin = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
   const t = {
-    bg:       isDark ? '#0F0D08'               : '#FAF7F2',
-    surface:  isDark ? 'rgba(255,255,255,0.03)' : '#FFFFFF',
-    border:   isDark ? 'rgba(201,168,76,0.20)'  : 'rgba(180,145,60,0.35)',
-    text:     isDark ? '#F5F0E8'               : '#1A1510',
-    textMuted:isDark ? 'rgba(245,240,232,0.45)': 'rgba(26,21,16,0.60)',
-    inputBg:  isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+    bg: isDark ? '#0F0D08' : '#FAF7F2',
+    surface: isDark ? 'rgba(255,255,255,0.03)' : '#FFFFFF',
+    border: isDark ? 'rgba(201,168,76,0.20)' : 'rgba(180,145,60,0.35)',
+    text: isDark ? '#F5F0E8' : '#1A1510',
+    textMuted: isDark ? 'rgba(245,240,232,0.45)' : 'rgba(26,21,16,0.60)',
+    inputBg: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
     inputBorder: isDark ? 'rgba(201,168,76,0.2)' : 'rgba(180,145,60,0.4)',
     inputText: isDark ? '#F5F0E8' : '#1A1510',
-    headerBg: isDark ? '#0F0D08'               : 'rgba(250,247,242,0.97)',
+    headerBg: isDark ? '#0F0D08' : 'rgba(250,247,242,0.97)',
     labelColor: isDark ? 'rgba(201,168,76,0.6)' : 'rgba(180,145,60,0.8)',
     inactiveTab: isDark ? 'rgba(245,240,232,0.4)' : 'rgba(26,21,16,0.45)',
     subtext: isDark ? 'rgba(245,240,232,0.45)' : 'rgba(26,21,16,0.55)',
@@ -68,6 +69,9 @@ const Admin = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [isBookingsLoading, setIsBookingsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Tracks guest-notification email status per booking id: 'sending' | 'sent' | 'failed'
+  const [emailStatus, setEmailStatus] = useState<Record<string, 'sending' | 'sent' | 'failed'>>({});
 
   // Booking Calendar tab state
   const [calendarRoomName, setCalendarRoomName] = useState<string>("");
@@ -123,7 +127,7 @@ const Admin = () => {
     }
   };
 
-  const handleUpdateBookingStatus = async (bookingId: string, newStatus: 'confirmed' | 'cancelled' | 'pending') => {
+  const handleUpdateBookingStatus = async (booking: any, newStatus: 'confirmed' | 'cancelled' | 'pending') => {
     if (newStatus === 'cancelled') {
       if (!confirm(`Are you sure you want to cancel this booking?`)) return;
     }
@@ -131,10 +135,32 @@ const Admin = () => {
       const { error } = await supabase
         .from('bookings')
         .update({ status: newStatus })
-        .eq('id', bookingId);
+        .eq('id', booking.id);
       if (error) throw error;
       toast.success(`Booking ${newStatus} successfully`);
       fetchBookings();
+
+      // Notify the guest by email when a booking is confirmed or cancelled.
+      // (No email is sent for "pending"/"Reinstate" — only the two guest-facing outcomes.)
+      if (newStatus === 'confirmed' || newStatus === 'cancelled') {
+        setEmailStatus((prev) => ({ ...prev, [booking.id]: 'sending' }));
+        sendStatusUpdateEmail({
+          guest_email: booking.email,
+          guest_name: booking.full_name,
+          status: newStatus,
+          booking_id: String(booking.id).slice(0, 8).toUpperCase(),
+          room_type: booking.room_type,
+          check_in: booking.check_in,
+          check_out: booking.check_out,
+        }).then((sent) => {
+          setEmailStatus((prev) => ({ ...prev, [booking.id]: sent ? 'sent' : 'failed' }));
+          if (sent) {
+            toast.success(`Guest notified by email`);
+          } else {
+            toast.warning(`Status updated, but the guest email could not be sent`);
+          }
+        });
+      }
     } catch (err) {
       console.error('[Admin] Status update error:', err);
       toast.error('Failed to update booking status');
@@ -570,159 +596,159 @@ const Admin = () => {
                     }}
                   >
                     <div className={`flex items-center justify-between ${savingThis ? 'opacity-50' : ''}`}>
-                    <div className="flex flex-col gap-2 w-1/4">
-                      <div className="flex items-center gap-3">
-                        <h3 style={{ fontSize: '16px', color: t.text, fontWeight: 600, whiteSpace: 'nowrap' }}>
-                          {room.name}
-                        </h3>
-                        {isLow && !isSoldOut && (
-                          <span style={{
-                            background: 'rgba(255,160,50,0.12)',
-                            border: '1px solid rgba(255,160,50,0.4)',
-                            color: '#FFA032',
-                            fontSize: '10px',
-                            letterSpacing: '0.15em',
-                            textTransform: 'uppercase',
-                            borderRadius: '4px',
-                            padding: '3px 10px'
-                          }}>
-                            Only {available} Left
-                          </span>
-                        )}
-                        {isSoldOut && (
-                          <span style={{
-                            background: 'rgba(255,82,82,0.12)',
-                            border: '1px solid rgba(255,82,82,0.4)',
-                            color: '#FF5252',
-                            fontSize: '10px',
-                            letterSpacing: '0.15em',
-                            textTransform: 'uppercase',
-                            borderRadius: '4px',
-                            padding: '3px 10px'
-                          }}>
-                            Sold Out
-                          </span>
-                        )}
-                      </div>
-                      {error && <p style={{ color: '#FF5252', fontSize: '11px' }}>{error}</p>}
-                    </div>
-
-                    <div className="flex items-center gap-12 flex-1 justify-end">
-                      <div className="flex flex-col gap-2">
-                        <label style={{ color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
-                          Room Price (₦)
-                        </label>
-                        <input
-                          type="number"
-                          value={state?.price ?? ""}
-                          onChange={(e) => handleChange(room.id, "price", e.target.value)}
-                          disabled={savingThis}
-                          style={{
-                            background: t.inputBg,
-                            border: `1px solid ${t.inputBorder}`,
-                            borderRadius: '6px',
-                            color: t.inputText,
-                            textAlign: 'center',
-                            fontSize: '16px',
-                            fontWeight: 600,
-                            padding: '10px',
-                            width: '120px',
-                            outline: 'none'
-                          }}
-                          className="focus:border-[#C9A84C] transition-colors"
-                        />
+                      <div className="flex flex-col gap-2 w-1/4">
+                        <div className="flex items-center gap-3">
+                          <h3 style={{ fontSize: '16px', color: t.text, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                            {room.name}
+                          </h3>
+                          {isLow && !isSoldOut && (
+                            <span style={{
+                              background: 'rgba(255,160,50,0.12)',
+                              border: '1px solid rgba(255,160,50,0.4)',
+                              color: '#FFA032',
+                              fontSize: '10px',
+                              letterSpacing: '0.15em',
+                              textTransform: 'uppercase',
+                              borderRadius: '4px',
+                              padding: '3px 10px'
+                            }}>
+                              Only {available} Left
+                            </span>
+                          )}
+                          {isSoldOut && (
+                            <span style={{
+                              background: 'rgba(255,82,82,0.12)',
+                              border: '1px solid rgba(255,82,82,0.4)',
+                              color: '#FF5252',
+                              fontSize: '10px',
+                              letterSpacing: '0.15em',
+                              textTransform: 'uppercase',
+                              borderRadius: '4px',
+                              padding: '3px 10px'
+                            }}>
+                              Sold Out
+                            </span>
+                          )}
+                        </div>
+                        {error && <p style={{ color: '#FF5252', fontSize: '11px' }}>{error}</p>}
                       </div>
 
-                      <div className="flex flex-col gap-2">
-                        <label style={{ color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
-                          Total Inv.
-                        </label>
-                        <input
-                          type="number"
-                          value={state?.totalRooms ?? ""}
-                          onChange={(e) => handleChange(room.id, "totalRooms", e.target.value)}
-                          disabled={savingThis}
-                          style={{
-                            background: t.inputBg,
-                            border: `1px solid ${t.inputBorder}`,
-                            borderRadius: '6px',
-                            color: t.inputText,
-                            textAlign: 'center',
-                            fontSize: '16px',
-                            fontWeight: 600,
-                            padding: '10px',
-                            width: '90px',
-                            outline: 'none'
-                          }}
-                          className="focus:border-[#C9A84C] transition-colors"
-                        />
-                      </div>
+                      <div className="flex items-center gap-12 flex-1 justify-end">
+                        <div className="flex flex-col gap-2">
+                          <label style={{ color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                            Room Price (₦)
+                          </label>
+                          <input
+                            type="number"
+                            value={state?.price ?? ""}
+                            onChange={(e) => handleChange(room.id, "price", e.target.value)}
+                            disabled={savingThis}
+                            style={{
+                              background: t.inputBg,
+                              border: `1px solid ${t.inputBorder}`,
+                              borderRadius: '6px',
+                              color: t.inputText,
+                              textAlign: 'center',
+                              fontSize: '16px',
+                              fontWeight: 600,
+                              padding: '10px',
+                              width: '120px',
+                              outline: 'none'
+                            }}
+                            className="focus:border-[#C9A84C] transition-colors"
+                          />
+                        </div>
 
-                      <div className="flex flex-col gap-2 items-center">
-                        <label style={{ color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
-                          Booked
-                        </label>
-                        <input
-                          type="number"
-                          value={state?.bookedRooms ?? ""}
-                          onChange={(e) => handleChange(room.id, "bookedRooms", e.target.value)}
-                          disabled={savingThis}
-                          style={{
-                            background: t.inputBg,
-                            border: `1px solid ${t.inputBorder}`,
-                            borderRadius: '6px',
-                            color: t.inputText,
-                            textAlign: 'center',
-                            fontSize: '16px',
-                            fontWeight: 600,
-                            padding: '10px',
-                            width: '90px',
-                            outline: 'none'
-                          }}
-                          className="focus:border-[#C9A84C] transition-colors"
-                        />
-                      </div>
+                        <div className="flex flex-col gap-2">
+                          <label style={{ color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                            Total Inv.
+                          </label>
+                          <input
+                            type="number"
+                            value={state?.totalRooms ?? ""}
+                            onChange={(e) => handleChange(room.id, "totalRooms", e.target.value)}
+                            disabled={savingThis}
+                            style={{
+                              background: t.inputBg,
+                              border: `1px solid ${t.inputBorder}`,
+                              borderRadius: '6px',
+                              color: t.inputText,
+                              textAlign: 'center',
+                              fontSize: '16px',
+                              fontWeight: 600,
+                              padding: '10px',
+                              width: '90px',
+                              outline: 'none'
+                            }}
+                            className="focus:border-[#C9A84C] transition-colors"
+                          />
+                        </div>
 
-                      <div className="flex flex-col gap-2 items-center w-20">
-                        <label style={{ color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
-                          Live Avail.
-                        </label>
-                        <div style={{ color: availColor, fontSize: '20px', fontWeight: 700, padding: '8px 0' }}>
-                          {available}
+                        <div className="flex flex-col gap-2 items-center">
+                          <label style={{ color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                            Booked
+                          </label>
+                          <input
+                            type="number"
+                            value={state?.bookedRooms ?? ""}
+                            onChange={(e) => handleChange(room.id, "bookedRooms", e.target.value)}
+                            disabled={savingThis}
+                            style={{
+                              background: t.inputBg,
+                              border: `1px solid ${t.inputBorder}`,
+                              borderRadius: '6px',
+                              color: t.inputText,
+                              textAlign: 'center',
+                              fontSize: '16px',
+                              fontWeight: 600,
+                              padding: '10px',
+                              width: '90px',
+                              outline: 'none'
+                            }}
+                            className="focus:border-[#C9A84C] transition-colors"
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-2 items-center w-20">
+                          <label style={{ color: t.labelColor, fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                            Live Avail.
+                          </label>
+                          <div style={{ color: availColor, fontSize: '20px', fontWeight: 700, padding: '8px 0' }}>
+                            {available}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center ml-4">
+                          <button
+                            onClick={() => handleSave(room.id)}
+                            disabled={savingThis || justSaved}
+                            style={{
+                              background: justSaved ? 'rgba(76,175,80,0.1)' : '#C9A84C',
+                              color: justSaved ? '#4CAF50' : '#0F0D08',
+                              fontWeight: 700,
+                              letterSpacing: '0.05em',
+                              padding: '10px 24px',
+                              borderRadius: '8px',
+                              fontSize: '13px',
+                              border: justSaved ? '1px solid rgba(76,175,80,0.3)' : '1px solid transparent',
+                              width: '110px',
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              transition: 'all 0.2s'
+                            }}
+                            className={justSaved ? "" : "hover:bg-[#b8963e]"}
+                          >
+                            {savingThis ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : justSaved ? (
+                              <span className="flex items-center gap-1.5">✓ Updated</span>
+                            ) : (
+                              "Update"
+                            )}
+                          </button>
                         </div>
                       </div>
-
-                      <div className="flex items-center ml-4">
-                        <button
-                          onClick={() => handleSave(room.id)}
-                          disabled={savingThis || justSaved}
-                          style={{
-                            background: justSaved ? 'rgba(76,175,80,0.1)' : '#C9A84C',
-                            color: justSaved ? '#4CAF50' : '#0F0D08',
-                            fontWeight: 700,
-                            letterSpacing: '0.05em',
-                            padding: '10px 24px',
-                            borderRadius: '8px',
-                            fontSize: '13px',
-                            border: justSaved ? '1px solid rgba(76,175,80,0.3)' : '1px solid transparent',
-                            width: '110px',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            transition: 'all 0.2s'
-                          }}
-                          className={justSaved ? "" : "hover:bg-[#b8963e]"}
-                        >
-                          {savingThis ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : justSaved ? (
-                            <span className="flex items-center gap-1.5">✓ Updated</span>
-                          ) : (
-                            "Update"
-                          )}
-                        </button>
-                      </div>
-                    </div>
                     </div>
                     {isSoldOut && (
                       <p style={{ color: 'rgba(255,160,50,0.6)', fontSize: '11px', marginTop: '6px', paddingLeft: '2px' }}>
@@ -832,25 +858,57 @@ const Admin = () => {
                               letterSpacing: '0.1em',
                               background: booking.status === 'pending' ? 'rgba(255,160,50,0.1)' :
                                 booking.status === 'confirmed' ? 'rgba(76,175,80,0.1)' :
-                                booking.status === 'cancelled' ? 'rgba(255,82,82,0.1)' :
-                                booking.status === 'expired' ? 'rgba(150,150,150,0.1)' : 'rgba(255,255,255,0.05)',
+                                  booking.status === 'cancelled' ? 'rgba(255,82,82,0.1)' :
+                                    booking.status === 'expired' ? 'rgba(150,150,150,0.1)' : 'rgba(255,255,255,0.05)',
                               color: booking.status === 'pending' ? '#FFA032' :
                                 booking.status === 'confirmed' ? '#4CAF50' :
-                                booking.status === 'cancelled' ? '#FF5252' :
-                                booking.status === 'expired' ? '#999999' : 'rgba(245,240,232,0.6)',
+                                  booking.status === 'cancelled' ? '#FF5252' :
+                                    booking.status === 'expired' ? '#999999' : 'rgba(245,240,232,0.6)',
                               border: `1px solid ${booking.status === 'pending' ? 'rgba(255,160,50,0.3)' :
                                 booking.status === 'confirmed' ? 'rgba(76,175,80,0.3)' :
-                                booking.status === 'cancelled' ? 'rgba(255,82,82,0.3)' :
-                                booking.status === 'expired' ? 'rgba(150,150,150,0.3)' : 'rgba(255,255,255,0.1)'}`
+                                  booking.status === 'cancelled' ? 'rgba(255,82,82,0.3)' :
+                                    booking.status === 'expired' ? 'rgba(150,150,150,0.3)' : 'rgba(255,255,255,0.1)'}`
                             }}>
                               {booking.status}
                             </span>
+                            {emailStatus[booking.id] && (
+                              <div style={{
+                                marginTop: '6px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                fontSize: '10px',
+                                fontWeight: 600,
+                                letterSpacing: '0.05em',
+                                color: emailStatus[booking.id] === 'sending' ? t.textMuted :
+                                  emailStatus[booking.id] === 'sent' ? '#4CAF50' : '#FF5252',
+                              }}>
+                                {emailStatus[booking.id] === 'sending' && (
+                                  <>
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                    <span>Emailing guest…</span>
+                                  </>
+                                )}
+                                {emailStatus[booking.id] === 'sent' && (
+                                  <>
+                                    <MailIcon className="h-3 w-3" />
+                                    <span>Guest emailed ✓</span>
+                                  </>
+                                )}
+                                {emailStatus[booking.id] === 'failed' && (
+                                  <>
+                                    <AlertTriangle className="h-3 w-3" />
+                                    <span>Email failed</span>
+                                  </>
+                                )}
+                              </div>
+                            )}
                           </td>
                           <td style={{ padding: '16px 24px' }}>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                               {booking.status === 'pending' && (
                                 <button
-                                  onClick={() => handleUpdateBookingStatus(booking.id, 'confirmed')}
+                                  onClick={() => handleUpdateBookingStatus(booking, 'confirmed')}
                                   style={{
                                     background: 'rgba(76,175,80,0.1)',
                                     border: '1px solid rgba(76,175,80,0.3)',
@@ -871,7 +929,7 @@ const Admin = () => {
                               )}
                               {booking.status === 'expired' && (
                                 <button
-                                  onClick={() => handleUpdateBookingStatus(booking.id, 'pending')}
+                                  onClick={() => handleUpdateBookingStatus(booking, 'pending')}
                                   style={{
                                     background: 'rgba(255,255,255,0.05)',
                                     border: '1px solid rgba(255,255,255,0.2)',
@@ -892,7 +950,7 @@ const Admin = () => {
                               )}
                               {booking.status !== 'cancelled' && (
                                 <button
-                                  onClick={() => handleUpdateBookingStatus(booking.id, 'cancelled')}
+                                  onClick={() => handleUpdateBookingStatus(booking, 'cancelled')}
                                   style={{
                                     background: 'rgba(255,160,50,0.08)',
                                     border: '1px solid rgba(255,160,50,0.25)',
