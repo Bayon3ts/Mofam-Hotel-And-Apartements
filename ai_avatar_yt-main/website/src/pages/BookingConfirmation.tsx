@@ -306,13 +306,13 @@ const BookingConfirmation = () => {
                       onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
                       onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}>
                       <Phone style={{ width: "13px", height: "13px" }} />
-                      +234 (0) 800-MOFAM-HOTEL
+                      +234 (706) 920-6935
                     </a>
-                    <a href="mailto:reservations@mofamhotel.com" style={{ color: "#C9A84C", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}
+                    <a href="mailto:info@mofamhotelandapartments.com" style={{ color: "#C9A84C", fontSize: "14px", display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}
                       onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
                       onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}>
                       <Mail style={{ width: "13px", height: "13px" }} />
-                      reservations@mofamhotel.com
+                      info@mofamhotelandapartments.com
                     </a>
                   </div>
                 </div>

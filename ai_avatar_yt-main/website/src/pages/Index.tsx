@@ -115,6 +115,11 @@ const Index = () => {
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
   const { theme, toggleTheme } = useTheme();
 
+  // Contact form state
+  const [contactForm, setContactForm] = useState({ firstName: '', lastName: '', email: '', phone: '', message: '' });
+  const [contactErrors, setContactErrors] = useState<Record<string, string>>({});
+  const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+
   const { scrollY } = useScroll();
   const parallaxY = useTransform(scrollY, [0, 1000], [0, 200]);
 
@@ -1433,7 +1438,7 @@ const Index = () => {
                   </div>
                   <div>
                     <p style={{ color: "#C9A84C", fontSize: "11px", letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "'Inter', sans-serif", margin: "0 0 4px 0", fontWeight: 500 }}>Email</p>
-                    <p style={{ color: "#F5F0E8", fontSize: "15px", lineHeight: 1.6, fontFamily: "'Inter', sans-serif", margin: 0 }}>reservations@mofamhotel.com</p>
+                    <a href="mailto:info@mofamhotelandapartments.com" style={{ color: "#F5F0E8", fontSize: "15px", lineHeight: 1.6, fontFamily: "'Inter', sans-serif", margin: 0, textDecoration: "none" }}>info@mofamhotelandapartments.com</a>
                   </div>
                 </div>
               </div>
@@ -1445,45 +1450,115 @@ const Index = () => {
                 <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "24px", color: "#F5F0E8", margin: "0 0 24px 0", lineHeight: 1.2, fontWeight: 500 }}>
                   Send us a Message
                 </h3>
-                <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                <form
+                  className="space-y-4"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    // Validate
+                    const errs: Record<string, string> = {};
+                    if (!contactForm.firstName.trim()) errs.firstName = 'First name is required.';
+                    if (!contactForm.email.trim()) errs.email = 'Email is required.';
+                    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactForm.email)) errs.email = 'Enter a valid email.';
+                    if (!contactForm.message.trim()) errs.message = 'Please enter a message.';
+                    setContactErrors(errs);
+                    if (Object.keys(errs).length > 0) return;
+
+                    setContactStatus('sending');
+                    try {
+                      const res = await fetch('/api/send-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          type: 'contact_inquiry',
+                          full_name: `${contactForm.firstName} ${contactForm.lastName}`.trim(),
+                          email: contactForm.email,
+                          phone: contactForm.phone || 'N/A',
+                          message: contactForm.message,
+                        }),
+                      });
+                      if (res.ok) {
+                        setContactStatus('success');
+                        setContactForm({ firstName: '', lastName: '', email: '', phone: '', message: '' });
+                        setContactErrors({});
+                      } else {
+                        setContactStatus('error');
+                      }
+                    } catch {
+                      setContactStatus('error');
+                    }
+                  }}
+                >
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                    <input
-                      type="text"
-                      placeholder="First Name"
-                      className="contact-luxury-input"
-                      style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", transition: "all 0.3s ease" }}
-                    />
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="First Name *"
+                        value={contactForm.firstName}
+                        onChange={e => { setContactForm(f => ({ ...f, firstName: e.target.value })); setContactErrors(er => ({ ...er, firstName: '' })); }}
+                        className="contact-luxury-input"
+                        style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: `1px solid ${contactErrors.firstName ? '#ef4444' : 'rgba(201,168,76,0.2)'}`, borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", transition: "all 0.3s ease" }}
+                      />
+                      {contactErrors.firstName && <p style={{ color: '#ef4444', fontSize: '11px', marginTop: '4px', fontFamily: "'Inter', sans-serif" }}>{contactErrors.firstName}</p>}
+                    </div>
                     <input
                       type="text"
                       placeholder="Last Name"
+                      value={contactForm.lastName}
+                      onChange={e => setContactForm(f => ({ ...f, lastName: e.target.value }))}
                       className="contact-luxury-input"
                       style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", transition: "all 0.3s ease" }}
                     />
                   </div>
-                  <input
-                    type="email"
-                    placeholder="Email Address"
-                    className="contact-luxury-input"
-                    style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", transition: "all 0.3s ease" }}
-                  />
+                  <div>
+                    <input
+                      type="email"
+                      placeholder="Email Address *"
+                      value={contactForm.email}
+                      onChange={e => { setContactForm(f => ({ ...f, email: e.target.value })); setContactErrors(er => ({ ...er, email: '' })); }}
+                      className="contact-luxury-input"
+                      style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: `1px solid ${contactErrors.email ? '#ef4444' : 'rgba(201,168,76,0.2)'}`, borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", transition: "all 0.3s ease" }}
+                    />
+                    {contactErrors.email && <p style={{ color: '#ef4444', fontSize: '11px', marginTop: '4px', fontFamily: "'Inter', sans-serif" }}>{contactErrors.email}</p>}
+                  </div>
                   <input
                     type="tel"
                     placeholder="Phone Number"
+                    value={contactForm.phone}
+                    onChange={e => setContactForm(f => ({ ...f, phone: e.target.value }))}
                     className="contact-luxury-input"
                     style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", transition: "all 0.3s ease" }}
                   />
-                  <textarea
-                    placeholder="How can we assist you?"
-                    className="contact-luxury-input"
-                    style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", minHeight: "120px", resize: "vertical", transition: "all 0.3s ease" }}
-                  />
+                  <div>
+                    <textarea
+                      placeholder="How can we assist you? *"
+                      value={contactForm.message}
+                      onChange={e => { setContactForm(f => ({ ...f, message: e.target.value })); setContactErrors(er => ({ ...er, message: '' })); }}
+                      className="contact-luxury-input"
+                      style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: `1px solid ${contactErrors.message ? '#ef4444' : 'rgba(201,168,76,0.2)'}`, borderRadius: "8px", color: "#F5F0E8", padding: "14px 16px", fontSize: "14px", fontFamily: "'Inter', sans-serif", minHeight: "120px", resize: "vertical", transition: "all 0.3s ease" }}
+                    />
+                    {contactErrors.message && <p style={{ color: '#ef4444', fontSize: '11px', marginTop: '4px', fontFamily: "'Inter', sans-serif" }}>{contactErrors.message}</p>}
+                  </div>
+
+                  {/* Status messages */}
+                  {contactStatus === 'success' && (
+                    <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.4)', borderRadius: '8px', padding: '12px 16px', color: '#4ade80', fontSize: '14px', fontFamily: "'Inter', sans-serif" }}>
+                      ✓ Message sent! We'll get back to you shortly.
+                    </div>
+                  )}
+                  {contactStatus === 'error' && (
+                    <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '8px', padding: '12px 16px', color: '#f87171', fontSize: '14px', fontFamily: "'Inter', sans-serif" }}>
+                      Something went wrong. Please email us directly at info@mofamhotelandapartments.com
+                    </div>
+                  )}
+
                   <button
                     type="submit"
-                    style={{ width: "100%", background: "#C9A84C", color: "#0F0D08", fontWeight: 700, padding: "16px", borderRadius: "8px", letterSpacing: "0.06em", fontSize: "15px", fontFamily: "'Inter', sans-serif", border: "none", cursor: "pointer", transition: "background 0.3s ease" }}
-                    onMouseEnter={e => e.currentTarget.style.background = "#b8963e"}
-                    onMouseLeave={e => e.currentTarget.style.background = "#C9A84C"}
+                    disabled={contactStatus === 'sending'}
+                    style={{ width: "100%", background: contactStatus === 'sending' ? 'rgba(201,168,76,0.6)' : "#C9A84C", color: "#0F0D08", fontWeight: 700, padding: "16px", borderRadius: "8px", letterSpacing: "0.06em", fontSize: "15px", fontFamily: "'Inter', sans-serif", border: "none", cursor: contactStatus === 'sending' ? 'not-allowed' : "pointer", transition: "background 0.3s ease" }}
+                    onMouseEnter={e => { if (contactStatus !== 'sending') e.currentTarget.style.background = "#b8963e"; }}
+                    onMouseLeave={e => { if (contactStatus !== 'sending') e.currentTarget.style.background = "#C9A84C"; }}
                   >
-                    Send Message
+                    {contactStatus === 'sending' ? 'Sending…' : 'Send Message'}
                   </button>
                 </form>
               </div>
