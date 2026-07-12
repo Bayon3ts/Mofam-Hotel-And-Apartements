@@ -107,6 +107,12 @@ const Booking = () => {
   // Date-aware availability: remaining rooms per room id, keyed by room.id
   // Populated/refreshed whenever check-in or check-out changes
   const [dateAwareAvailability, setDateAwareAvailability] = useState<Record<string, number>>({});
+  // True while the date-aware availability check is in flight — selection is
+  // locked during this window so a room can NEVER be picked before we know
+  // for certain it's actually free for the chosen dates.
+  const [isAvailabilityChecking, setIsAvailabilityChecking] = useState(false);
+  // Branded transition shown after "Reserve" is clicked, before the details form appears
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Validation errors
   const [dateError, setDateError] = useState("");
@@ -139,6 +145,33 @@ const Booking = () => {
   );
 
   const totalGuests = adults * numRooms + children;
+
+  // Single source of truth for "how many of this room are actually free" —
+  // used by the card click handler, the Reserve button, and proceedToDetails,
+  // so all three can never disagree with each other.
+  //
+  // There are two independent availability signals in this app, and a room
+  // must respect BOTH — whichever is more restrictive wins:
+  //   1. Flat/admin-managed (totalRooms - bookedRooms): what the Admin panel
+  //      and the public Rooms & Suites page show (e.g. "FULLY BOOKED").
+  //      This is a manual figure the hotel staff control directly.
+  //   2. Date-aware (real overlap check against the bookings table for the
+  //      selected check-in/check-out): catches specific date conflicts the
+  //      flat counter alone wouldn't know about.
+  // A room the admin has marked fully booked can NEVER be selected here,
+  // even if no overlapping reservation row exists for these exact dates.
+  const getRoomAvailable = (room: RoomInventory) => {
+    const flatAvailable = getAvailability(room);
+    const dateAwareAvailable = (checkIn && checkOut && room.id in dateAwareAvailability)
+      ? dateAwareAvailability[room.id]
+      : flatAvailable;
+    return Math.min(flatAvailable, dateAwareAvailable);
+  };
+
+  // A room is only genuinely selectable if there are enough free units to
+  // cover how many rooms the guest is actually requesting — not merely > 0.
+  // Requesting 2 rooms when only 1 is left must NEVER be selectable.
+  const canSelectRoom = (room: RoomInventory) => getRoomAvailable(room) >= numRooms;
 
   // Close guest dropdown on outside click
   useEffect(() => {
@@ -179,6 +212,7 @@ const Booking = () => {
     const checkInStr = format(checkIn, "yyyy-MM-dd");
     const checkOutStr = format(checkOut, "yyyy-MM-dd");
 
+    setIsAvailabilityChecking(true);
     (async () => {
       const results: Record<string, number> = {};
       for (const room of safeRoomData) {
@@ -196,8 +230,31 @@ const Booking = () => {
         }
       }
       setDateAwareAvailability(results);
+      setIsAvailabilityChecking(false);
     })();
   }, [checkIn, checkOut, safeRoomData]);
+
+  // ── Selection Safety Net ──────────────────────────────────────────────────
+  // If the room a guest has selected turns out to be unavailable — whether
+  // that's revealed by the date-aware check above, or by a live inventory
+  // refresh while they're browsing — deselect it immediately. A sold-out
+  // room, or one with fewer free units than the number of rooms requested,
+  // can never remain "selected".
+  useEffect(() => {
+    if (!selectedRoomId) return;
+    const room = safeRoomData.find((r) => r.id === selectedRoomId);
+    if (!room) return;
+    if (!isAvailabilityChecking && !canSelectRoom(room)) {
+      setSelectedRoomId(null);
+      const remaining = getRoomAvailable(room);
+      setRoomError(
+        remaining <= 0
+          ? `${room.name} just became unavailable. Please choose another room.`
+          : `Only ${remaining} ${room.name} room${remaining === 1 ? "" : "s"} left — not enough for your ${numRooms}-room request.`
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRoomId, dateAwareAvailability, safeRoomData, isAvailabilityChecking, numRooms]);
 
   // ── Search handler — reads LIVE data from Supabase ─────────────────────
   const handleSearch = async () => {
@@ -260,14 +317,44 @@ const Booking = () => {
       setRoomError("Please select a room before proceeding.");
       return;
     }
-    if (getAvailability(selectedRoom) <= 0) {
-      setRoomError("This room is currently sold out.");
+    if (isAvailabilityChecking) {
+      setRoomError("Still confirming availability for your dates — one moment.");
+      return;
+    }
+    if (!canSelectRoom(selectedRoom)) {
+      setSelectedRoomId(null);
+      setRoomError("This room no longer has enough units available. Please choose another.");
       return;
     }
     setRoomError("");
     setIsDetailsStep(true);
     // Scroll to top of the form
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Called when "Reserve" is clicked in the results popup. Re-validates
+  // availability one last time, then plays a short branded transition
+  // before handing off to the details form.
+  const handleReserveClick = () => {
+    if (!selectedRoom) {
+      setRoomError("Please select a room before proceeding.");
+      return;
+    }
+    if (isAvailabilityChecking) {
+      setRoomError("Still confirming availability for your dates — one moment.");
+      return;
+    }
+    if (!canSelectRoom(selectedRoom)) {
+      setSelectedRoomId(null);
+      setRoomError("This room no longer has enough units available. Please choose another.");
+      return;
+    }
+    setRoomError("");
+    setIsTransitioning(true);
+    window.setTimeout(() => {
+      setIsTransitioning(false);
+      proceedToDetails();
+    }, 900);
   };
 
   // ── Final Confirm handler (Database Insertion) ──────────────────────────
@@ -277,24 +364,41 @@ const Booking = () => {
 
     setIsSubmitting(true);
 
-    // ── Date-aware availability guard (last check before insert) ───────────
+    // ── Availability guard (last check before insert) ──────────────────────
     // This runs as close as possible to the insert to minimise the race-condition
     // window between two guests booking the last available room simultaneously.
+    // Checks BOTH signals — the admin's flat inventory counter AND the
+    // date-aware overlap check — so a room the admin has marked fully booked
+    // can never slip through here even without a matching bookings row.
     try {
+      // Pull the freshest flat inventory count directly from Supabase —
+      // don't trust `selectedRoom` from state, which may be stale.
+      const liveRooms = await getRooms();
+      const liveRoom = (Array.isArray(liveRooms) ? liveRooms : []).find((r) => r.id === selectedRoom.id);
+      const flatRemaining = liveRoom ? getAvailability(liveRoom) : getAvailability(selectedRoom);
+
       const checkInStr = format(checkIn!, "yyyy-MM-dd");
       const checkOutStr = format(checkOut!, "yyyy-MM-dd");
-      const { available, remaining } = await isRoomAvailableForDates(
+      const { available, remaining: dateAwareRemaining } = await isRoomAvailableForDates(
         selectedRoom.name,
         selectedRoom.totalRooms,
         checkInStr,
         checkOutStr
       );
 
-      if (!available) {
+      const remaining = Math.min(flatRemaining, dateAwareRemaining);
+
+      if (!available || remaining < numRooms) {
         toast.error(
-          `Sorry, ${selectedRoom.name} is fully booked for these dates. Please choose different dates or another room type.`
+          remaining <= 0
+            ? `Sorry, ${selectedRoom.name} is fully booked. Please choose another room type.`
+            : `Sorry, only ${remaining} ${selectedRoom.name} room${remaining === 1 ? "" : "s"} left — not enough for your ${numRooms}-room request.`
         );
+        setSelectedRoomId(null);
         setIsSubmitting(false);
+        setIsDetailsStep(false); // send them back to the picker — a details form with no room selected is a dead end
+        setResultsOpen(true);
+        refreshRoomData(); // pull fresh counts so the reopened picker isn't showing stale numbers
         return; // Stop here — do not insert the booking
       }
 
@@ -640,10 +744,12 @@ const Booking = () => {
              Opens the instant "Find Rooms" is clicked — no scrolling
              required. Shows a loading state first, then results. ──── */}
         {!isDetailsStep && (
-          <Dialog open={resultsOpen} onOpenChange={setResultsOpen}>
+          <Dialog open={resultsOpen} onOpenChange={(open) => { if (!isTransitioning) setResultsOpen(open); }}>
             <DialogContent
               className="p-0 gap-0 overflow-hidden flex flex-col w-[94vw] sm:w-full sm:max-w-2xl lg:max-w-5xl max-h-[88vh] rounded-2xl"
               style={{ background: t.bg, border: `1px solid ${t.border}` }}
+              onInteractOutside={(e) => { if (isTransitioning) e.preventDefault(); }}
+              onEscapeKeyDown={(e) => { if (isTransitioning) e.preventDefault(); }}
             >
               {/* Header */}
               <DialogHeader className="shrink-0 text-left px-5 sm:px-8 pt-6 pb-5 border-b" style={{ borderColor: "rgba(201,168,76,0.15)" }}>
@@ -704,15 +810,25 @@ const Booking = () => {
                   <div className="grid gap-8 lg:grid-cols-[1fr_300px] items-start">
                     {/* Rooms */}
                     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                      {isAvailabilityChecking && (
+                        <div className="flex items-center gap-2 px-1 pb-1" style={{ color: t.textMuted, fontSize: "12px" }}>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: "#C9A84C" }} />
+                          Confirming exact availability for your dates…
+                        </div>
+                      )}
                       {safeRoomData.map((room, idx) => {
                         const isSelected = selectedRoomId === room.id;
-                        // Use date-aware remaining count when dates are selected,
-                        // falling back to flat global counter if dates haven't been applied yet
-                        const available = (checkIn && checkOut && room.id in dateAwareAvailability)
-                          ? dateAwareAvailability[room.id]
-                          : getAvailability(room);
-                        const isSoldOut = available <= 0;
-                        const onlyFewLeft = available > 0 && available <= 2;
+                        const available = getRoomAvailable(room);
+                        const isFullySoldOut = available <= 0;
+                        // Not enough units for the number of rooms requested — distinct from
+                        // fully sold out, but equally unselectable. Under no circumstance
+                        // should a room the guest can't actually get be tappable.
+                        const isInsufficientQty = !isFullySoldOut && available < numRooms;
+                        // Selection is locked entirely while we're still confirming
+                        // date-aware availability — a room can never be tapped
+                        // before we're certain it's actually free.
+                        const isSoldOut = isAvailabilityChecking || isFullySoldOut || isInsufficientQty;
+                        const onlyFewLeft = !isAvailabilityChecking && !isFullySoldOut && !isInsufficientQty && available <= 2;
 
                         return (
                           <div
@@ -725,7 +841,7 @@ const Booking = () => {
                               border: `1px solid ${isSelected ? "#C9A84C" : t.border}`,
                               background: isSelected ? "rgba(201,168,76,0.05)" : t.surface,
                               cursor: isSoldOut ? "not-allowed" : "pointer",
-                              opacity: isSoldOut ? 0.5 : 1,
+                              opacity: isAvailabilityChecking ? 0.7 : isSoldOut ? 0.5 : 1,
                               animationDelay: `${idx * 80}ms`,
                               transition: "all 0.3s ease",
                             }}
@@ -746,7 +862,13 @@ const Booking = () => {
                                       Only {available} left
                                     </span>
                                   )}
-                                  {isSoldOut && (
+                                  {!isAvailabilityChecking && isInsufficientQty && (
+                                    <span className="flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-tighter rounded-full border border-red-500/30 bg-red-500/10 text-red-600">
+                                      <AlertCircle className="h-3 w-3" />
+                                      Only {available} left — need {numRooms}
+                                    </span>
+                                  )}
+                                  {!isAvailabilityChecking && isFullySoldOut && (
                                     <span className="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-tighter rounded-full border border-border bg-muted text-muted-foreground">
                                       Sold Out
                                     </span>
@@ -780,7 +902,15 @@ const Booking = () => {
                                   letterSpacing: "0.05em",
                                 }}
                               >
-                                {isSelected ? "✓ Selected" : isSoldOut ? "Sold Out" : "Tap to select"}
+                                {isAvailabilityChecking
+                                  ? "Checking…"
+                                  : isSelected
+                                    ? "✓ Selected"
+                                    : isFullySoldOut
+                                      ? "Sold Out"
+                                      : isInsufficientQty
+                                        ? "Not enough available"
+                                        : "Tap to select"}
                               </div>
                             </div>
                           </div>
@@ -857,8 +987,8 @@ const Booking = () => {
                     )}
                   </div>
                   <button
-                    onClick={() => { if (!selectedRoom) { setRoomError("Please select a room before proceeding."); return; } proceedToDetails(); }}
-                    disabled={!selectedRoom}
+                    onClick={handleReserveClick}
+                    disabled={!selectedRoom || isAvailabilityChecking}
                     style={{
                       background: "#C9A84C",
                       color: "#0F0D08",
@@ -868,14 +998,47 @@ const Booking = () => {
                       letterSpacing: "0.06em",
                       fontSize: "13px",
                       border: "none",
-                      cursor: !selectedRoom ? "not-allowed" : "pointer",
-                      opacity: !selectedRoom ? 0.5 : 1,
+                      cursor: (!selectedRoom || isAvailabilityChecking) ? "not-allowed" : "pointer",
+                      opacity: (!selectedRoom || isAvailabilityChecking) ? 0.5 : 1,
                       whiteSpace: "nowrap",
                       transition: "background 0.3s ease",
                     }}
                   >
                     Reserve
                   </button>
+                </div>
+              )}
+
+              {/* Branded transition — plays after "Reserve" is clicked, before the
+                details form appears. Covers the full popup so it reads cleanly
+                on both mobile and desktop. */}
+              {isTransitioning && (
+                <div
+                  className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-5 px-6 animate-in fade-in duration-300"
+                  style={{ background: t.bg }}
+                >
+                  <div className="relative h-20 w-20 sm:h-24 sm:w-24 flex items-center justify-center">
+                    <div className="absolute inset-0 rounded-full animate-ping" style={{ border: "2px solid rgba(201,168,76,0.35)" }} />
+                    <div className="absolute inset-2 rounded-full" style={{ border: "2px solid rgba(201,168,76,0.55)", animation: "mofam-spin 2.2s linear infinite" }} />
+                    <img
+                      src="/mofam.webp"
+                      alt="Mofam Hotel And Apartements"
+                      className="relative h-11 w-11 sm:h-14 sm:w-14 object-contain"
+                      style={{ animation: "mofam-breathe 1.6s ease-in-out infinite" }}
+                    />
+                  </div>
+                  <div className="text-center space-y-1">
+                    <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "clamp(18px, 3.5vw, 24px)", color: t.text, fontWeight: 600, margin: 0 }}>
+                      Preparing Your Reservation
+                    </p>
+                    <p style={{ color: t.textMuted, fontSize: "12px", margin: 0, letterSpacing: "0.03em" }}>
+                      {selectedRoom?.name} · {nights} Night{nights !== 1 ? "s" : ""} · {fmt(totalPrice)}
+                    </p>
+                  </div>
+                  <style>{`
+                  @keyframes mofam-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                  @keyframes mofam-breathe { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.08); opacity: 0.85; } }
+                `}</style>
                 </div>
               )}
             </DialogContent>
