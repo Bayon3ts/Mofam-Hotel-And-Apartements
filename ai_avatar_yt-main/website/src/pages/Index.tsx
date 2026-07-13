@@ -1218,7 +1218,7 @@ const Index = () => {
                 features: ["Spacious hall ideal for weddings, conferences & celebrations", "Professional sound & lighting system", "Dedicated event coordinator on-site"]
               },
               {
-                title: "The Jungle Lounge",
+                title: "Africana Lounge",
                 capacity: "",
                 image: greenImage,
                 features: ["Private seating nooks", "Ambient LED lighting", "Sound system on-site"]
