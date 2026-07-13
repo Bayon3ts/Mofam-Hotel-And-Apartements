@@ -7,9 +7,9 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const HOTEL_NAME  = 'Mofam Hotel And Apartments';
+const HOTEL_NAME = 'Mofam Hotel And Apartments';
 const ADMIN_EMAIL = 'info@mofamhotelandapartments.com';
-const FROM_EMAIL  = 'reservations@mofamhotelandapartments.com';
+const FROM_EMAIL = 'reservations@mofamhotelandapartments.com';
 // const FROM_EMAIL = 'onboarding@resend.dev'; // ← no longer needed, domain verified
 
 // ─── HTML Email Templates ────────────────────────────────────────────────────
@@ -93,6 +93,43 @@ function guestTemplate(b: {
                 <td style="padding:16px 0 0;font-size:24px;font-weight:900;color:#e9c349;text-align:right;">${b.total_price}</td>
               </tr>
             </table>
+          </td>
+        </tr>
+
+        <!-- Divider -->
+        <tr><td style="padding:28px 40px 0;"><hr style="border:none;border-top:1px solid #2a2a2a;margin:0;" /></td></tr>
+
+        <!-- Payment Instructions -->
+        <tr>
+          <td style="padding:28px 40px 0;">
+            <div style="background:rgba(233,195,73,0.06);border:1px solid rgba(233,195,73,0.25);border-radius:12px;padding:24px;">
+              <p style="margin:0 0 14px;font-size:11px;font-weight:800;letter-spacing:0.25em;text-transform:uppercase;color:#e9c349;">Complete Your Payment</p>
+              <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#e8e0d0;">
+                Thank you for choosing ${HOTEL_NAME}. Your reservation has been completed. Kindly proceed with payment using the details below to confirm your booking:
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#0e0e0e;border:1px solid #2a2a2a;border-radius:8px;">
+                <tr>
+                  <td style="padding:14px 18px;border-bottom:1px solid #222;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:#666;font-weight:700;">Account Number</td>
+                  <td style="padding:14px 18px;border-bottom:1px solid #222;font-size:16px;font-weight:900;color:#e9c349;text-align:right;letter-spacing:0.05em;">5045599921</td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 18px;border-bottom:1px solid #222;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:#666;font-weight:700;">Bank</td>
+                  <td style="padding:14px 18px;border-bottom:1px solid #222;font-size:15px;font-weight:800;color:#f5f0e8;text-align:right;">Moniepoint</td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 18px;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:#666;font-weight:700;">Account Name</td>
+                  <td style="padding:14px 18px;font-size:15px;font-weight:800;color:#f5f0e8;text-align:right;">Mofam Hotel and Apartments</td>
+                </tr>
+              </table>
+
+              <p style="margin:20px 0 0;font-size:11px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#e9c349;">Please Note</p>
+              <ul style="margin:10px 0 0;padding-left:18px;font-size:13px;line-height:1.8;color:#bbb;">
+                <li style="margin-bottom:8px;">Your reservation will only be held for <strong style="color:#f5f0e8;">3 hours</strong> from the time of booking. If payment is not received within this period, your reservation will be automatically cancelled and the room may be made available to other guests.</li>
+                <li>The name on your reservation must match the name on the account used to make the payment. If payment is made from a different account, please notify us and provide the account holder&rsquo;s name along with proof of payment to avoid delays in confirming your reservation.</li>
+              </ul>
+
+              <p style="margin:20px 0 0;font-size:13px;line-height:1.7;color:#e8e0d0;">Thank you for your understanding. We look forward to hosting you.</p>
+            </div>
           </td>
         </tr>
 
@@ -296,66 +333,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     return res.status(200).json({ success: true });
-  }
-
-  // ── Contact Inquiry (from the homepage contact form) ─────────────────────────
-  if (req.body.type === 'contact_inquiry') {
-    const { full_name, email, phone, message } = req.body as {
-      full_name: string;
-      email: string;
-      phone?: string;
-      message: string;
-    };
-
-    const contactHtml = `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8" /><title>Contact Inquiry – ${HOTEL_NAME}</title></head>
-<body style="margin:0;padding:0;background:#0e0e0e;font-family:'Segoe UI',Arial,sans-serif;color:#e8e0d0;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0e0e0e;padding:32px 0;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#161616;border-radius:16px;overflow:hidden;border:1px solid #2a2a2a;">
-        <tr>
-          <td style="padding:32px 40px;background:#1a1200;border-bottom:1px solid #3a2d00;text-align:center;">
-            <p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#e9c349;">New Contact Inquiry</p>
-            <h1 style="margin:0;font-size:22px;font-weight:900;color:#f5f0e8;">${HOTEL_NAME}</h1>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:28px 40px;">
-            <table width="100%" cellpadding="0" cellspacing="0">
-              <tr><td style="padding:10px 0;border-bottom:1px solid #222;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:#666;font-weight:700;width:40%;">Name</td><td style="padding:10px 0;border-bottom:1px solid #222;font-size:14px;font-weight:700;color:#f5f0e8;text-align:right;">${full_name}</td></tr>
-              <tr><td style="padding:10px 0;border-bottom:1px solid #222;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:#666;font-weight:700;">Email</td><td style="padding:10px 0;border-bottom:1px solid #222;font-size:14px;font-weight:700;color:#e9c349;text-align:right;"><a href="mailto:${email}" style="color:#e9c349;text-decoration:none;">${email}</a></td></tr>
-              <tr><td style="padding:10px 0;border-bottom:1px solid #222;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:#666;font-weight:700;">Phone</td><td style="padding:10px 0;border-bottom:1px solid #222;font-size:14px;font-weight:700;color:#f5f0e8;text-align:right;">${phone || 'Not provided'}</td></tr>
-            </table>
-            <p style="margin:24px 0 8px;font-size:10px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#666;">Message</p>
-            <p style="margin:0;font-size:15px;line-height:1.7;color:#d0c8b8;background:rgba(255,255,255,0.03);border:1px solid #2a2a2a;border-radius:8px;padding:16px 20px;">${message.replace(/\n/g, '<br/>')}</p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:24px 40px;text-align:center;border-top:1px solid #2a2a2a;">
-            <p style="color:#444;font-size:11px;margin:0;">© ${new Date().getFullYear()} ${HOTEL_NAME} · Admin Notification</p>
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
-
-    try {
-      await resend.emails.send({
-        from: `${HOTEL_NAME} <${FROM_EMAIL}>`,
-        to: [ADMIN_EMAIL],
-        replyTo: email,
-        subject: `📩 New Contact Inquiry from ${full_name} — ${HOTEL_NAME}`,
-        html: contactHtml,
-      });
-      console.log('[send-email] Contact inquiry forwarded from:', email);
-      return res.status(200).json({ success: true });
-    } catch (err) {
-      console.error('[send-email] Contact inquiry email error:', err);
-      return res.status(500).json({ error: 'Failed to send contact email', details: String(err) });
-    }
   }
 
   const booking = req.body as {
