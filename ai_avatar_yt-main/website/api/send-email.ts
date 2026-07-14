@@ -143,7 +143,7 @@ function guestTemplate(b: {
               <tr>
                 <td width="50%" style="padding-right:12px;">
                   <p style="margin:0 0 4px;font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#e9c349;">Check-In Time</p>
-                  <p style="margin:0;font-size:15px;font-weight:700;color:#f5f0e8;">From 3:00 PM</p>
+                  <p style="margin:0;font-size:15px;font-weight:700;color:#f5f0e8;">From 2:00 PM</p>
                 </td>
                 <td width="50%" style="border-left:1px solid rgba(233,195,73,0.2);padding-left:16px;">
                   <p style="margin:0 0 4px;font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#e9c349;">Check-Out Time</p>
