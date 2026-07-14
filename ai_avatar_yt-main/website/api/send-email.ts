@@ -39,6 +39,7 @@ function guestTemplate(b: {
         <!-- Header -->
         <tr>
           <td style="padding:48px 40px 32px;background:linear-gradient(135deg,#1a1a1a 0%,#0e0e0e 100%);border-bottom:1px solid #2a2a2a;text-align:center;">
+            <img src="https://mofamhotelandapartments.com/mofam.webp" alt="Mofam Hotel And Apartments Logo" width="64" style="margin-bottom:16px;display:inline-block;" />
             <p style="margin:0 0 8px;font-size:11px;font-weight:800;letter-spacing:0.35em;text-transform:uppercase;color:#e9c349;opacity:0.7;">Luxury Hospitality</p>
             <h1 style="margin:0;font-size:28px;font-weight:900;letter-spacing:-0.5px;color:#f5f0e8;">${HOTEL_NAME}</h1>
             <p style="margin:16px 0 0;font-size:13px;color:#888;letter-spacing:0.1em;">19 Ofatedo Road &middot; Osogbo &middot; Osun State, Nigeria</p>
@@ -176,6 +177,7 @@ function confirmedTemplate(b: { guest_name: string; booking_id: string; room_typ
     <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
       <table width="600" style="background:#161616;border-radius:16px;border:1px solid #2a2a2a;overflow:hidden;">
         <tr><td style="padding:40px;background:#0a1a0a;border-bottom:1px solid #1a3a1a;text-align:center;">
+          <img src="https://mofamhotelandapartments.com/mofam.webp" alt="Mofam Hotel And Apartments Logo" width="64" style="margin-bottom:16px;display:inline-block;" />
           <p style="color:#4CAF50;font-size:32px;margin:0;">✓</p>
           <h1 style="color:#f5f0e8;margin:8px 0 0;font-size:24px;">Booking Confirmed!</h1>
           <p style="color:#888;margin:8px 0 0;">Your reservation at ${HOTEL_NAME} is confirmed.</p>
@@ -205,6 +207,7 @@ function cancelledTemplate(b: { guest_name: string; booking_id: string }): strin
     <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
       <table width="600" style="background:#161616;border-radius:16px;border:1px solid #2a2a2a;overflow:hidden;">
         <tr><td style="padding:40px;background:#1a0a0a;border-bottom:1px solid #3a1a1a;text-align:center;">
+          <img src="https://mofamhotelandapartments.com/mofam.webp" alt="Mofam Hotel And Apartments Logo" width="64" style="margin-bottom:16px;display:inline-block;" />
           <h1 style="color:#f5f0e8;margin:0;font-size:24px;">Booking Update</h1>
           <p style="color:#888;margin:8px 0 0;">${HOTEL_NAME}</p>
         </td></tr>
