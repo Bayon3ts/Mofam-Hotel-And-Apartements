@@ -237,15 +237,7 @@ const SpaWellness = () => {
               <Phone style={{ width: "13px", height: "13px" }} />
               Call Spa
             </a>
-            <button
-              onClick={() => navigate("/booking")}
-              style={{ display: "flex", alignItems: "center", gap: "8px", background: "#C9A84C", color: "#0F0D08", border: "none", borderRadius: "8px", padding: "10px 20px", fontSize: "13px", fontWeight: 700, letterSpacing: "0.05em", cursor: "pointer", transition: "background 0.3s ease" }}
-              onMouseEnter={e => e.currentTarget.style.background = "#b8963e"}
-              onMouseLeave={e => e.currentTarget.style.background = "#C9A84C"}
-            >
-              <Calendar style={{ width: "13px", height: "13px" }} />
-              Book Treatment
-            </button>
+
           </div>
         </div>
       </header>
@@ -420,13 +412,13 @@ const SpaWellness = () => {
                 +234 (706) 920-6935
               </a>
               <button
-                onClick={() => navigate("/booking")}
+                onClick={() => navigate("/")}
                 style={{ display: "flex", alignItems: "center", gap: "8px", background: "transparent", border: "1px solid rgba(201,168,76,0.5)", color: "#C9A84C", borderRadius: "8px", padding: "14px 32px", fontSize: "14px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.05em", transition: "all 0.3s ease" }}
                 onMouseEnter={e => { e.currentTarget.style.background = "rgba(201,168,76,0.08)"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
               >
-                <Calendar style={{ width: "14px", height: "14px" }} />
-                Book Online
+                <ArrowLeft style={{ width: "14px", height: "14px" }} />
+                Back to Home
               </button>
             </div>
           </div>

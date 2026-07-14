@@ -949,7 +949,7 @@ const Index = () => {
               {[
                 { icon: Waves, title: "Spa & Wellness", desc: "Rejuvenate in our award-winning spa with premium treatments", link: "/spa-wellness" },
                 { icon: Dumbbell, title: "Fitness Center", desc: "State-of-the-art equipment available 24/7", link: "/fitness-center" },
-                { icon: Wifi, title: "High-Speed WiFi", desc: "Complimentary internet throughout the property", link: "/wifi-connectivity" },
+                { icon: Wifi, title: "High-Speed WiFi", desc: "Complimentary internet throughout the property", link: null, staticText: "Learn more →" },
               ].map((amenity, index, arr) => (
                 <div
                   key={index}
@@ -999,7 +999,7 @@ const Index = () => {
                     }}>
                       {amenity.desc}
                     </p>
-                    {amenity.link && (
+                    {amenity.link ? (
                       <a
                         href={amenity.link}
                         onClick={e => e.preventDefault()}
@@ -1018,7 +1018,22 @@ const Index = () => {
                       >
                         Learn more →
                       </a>
-                    )}
+                    ) : amenity.staticText ? (
+                      <span
+                        style={{
+                          color: "rgba(201,168,76,0.6)",
+                          fontSize: "12px",
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                          fontFamily: "'Inter', sans-serif",
+                          textDecoration: "none",
+                          fontWeight: 500,
+                          cursor: "default"
+                        }}
+                      >
+                        {amenity.staticText}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
               ))}

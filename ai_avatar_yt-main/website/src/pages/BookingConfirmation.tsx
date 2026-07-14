@@ -224,7 +224,7 @@ const BookingConfirmation = () => {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "20px" }}>
                 <div>
                   <Field label="Check-In" value={format(checkInDate, "EEE, MMM dd yyyy")} t={t} />
-                  <p style={{ color: "rgba(201,168,76,0.6)", fontSize: "12px", marginTop: "4px" }}>From 3:00 PM</p>
+                  <p style={{ color: "rgba(201,168,76,0.6)", fontSize: "12px", marginTop: "4px" }}>From 2:00 PM</p>
                 </div>
                 <div>
                   <Field label="Check-Out" value={format(checkOutDate, "EEE, MMM dd yyyy")} t={t} />
@@ -323,7 +323,7 @@ const BookingConfirmation = () => {
               <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "16px", background: "rgba(201,168,76,0.04)", border: "1px solid rgba(201,168,76,0.1)", borderRadius: "8px" }}>
                 <Clock style={{ width: "14px", height: "14px", color: "#C9A84C", flexShrink: 0, marginTop: "2px" }} />
                 <div style={{ fontSize: "13px", color: t.textMuted, lineHeight: 1.8 }}>
-                  <p style={{ margin: 0 }}><span style={{ color: t.text, fontWeight: 600 }}>Check-In:</span> From 3:00 PM</p>
+                  <p style={{ margin: 0 }}><span style={{ color: t.text, fontWeight: 600 }}>Check-In:</span> From 2:00 PM</p>
                   <p style={{ margin: 0 }}><span style={{ color: t.text, fontWeight: 600 }}>Check-Out:</span> By 11:00 AM</p>
                   <p style={{ margin: "4px 0 0 0", color: "rgba(201,168,76,0.6)" }}>Early check-in and late check-out may be available upon request.</p>
                 </div>
