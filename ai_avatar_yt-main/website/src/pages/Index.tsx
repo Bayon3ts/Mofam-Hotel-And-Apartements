@@ -1720,7 +1720,7 @@ const Index = () => {
         </div>
       </footer>
 
-      {/* Floating AI Concierge Button */}
+      {/* Floating AI Concierge Button
       <div className="fixed bottom-6 right-6 z-50">
         <button
           className="rounded-full flex items-center gap-2 px-6 py-3 transition-all duration-300 hover:scale-105"
@@ -1735,15 +1735,16 @@ const Index = () => {
           <MessageCircle className="h-5 w-5 text-[#C9A84C]" />
           <span className="font-medium text-white text-sm">Talk to AI Concierge</span>
         </button>
-      </div>
-      {/* LiveKit Widget */}
+      </div> */}
+      
+      {/* LiveKit Widget
       {showSupport && (
         <div className="fixed inset-0 z-50 flex items-end justify-end p-6 pointer-events-none">
           <div className="pointer-events-auto">
             <LiveKitWidget setShowSupport={setShowSupport} />
           </div>
         </div>
-      )}
+      )} */}
 
     </div>
   );
