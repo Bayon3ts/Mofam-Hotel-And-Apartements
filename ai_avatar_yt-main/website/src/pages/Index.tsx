@@ -29,7 +29,6 @@ import {
   Loader2,
   Instagram,
   Facebook,
-  Twitter,
   Sun,
   Moon
 } from "lucide-react";
@@ -1604,8 +1603,12 @@ const Index = () => {
               </p>
               {/* Social Icons */}
               <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
-                {[Instagram, Facebook, Twitter].map((Icon, idx) => (
-                  <a key={idx} href="#" target="_blank" style={{
+                {[
+                  { Icon: Instagram, href: "https://www.instagram.com/mofamhotelandapartments?igsh=MXVrNWl1a2lsczRtcw%3D%3D&utm_source=qr" },
+                  { Icon: Facebook, href: "https://www.facebook.com/share/19CeKxqrAr/?mibextid=wwXIfr" },
+                  { Icon: ({ style }: { style?: React.CSSProperties }) => <svg style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" /></svg>, href: "https://www.tiktok.com/@mofamhotelandapartments?_r=1&_t=ZS-9835rLDyjx2" }
+                ].map(({ Icon, href }, idx) => (
+                  <a key={idx} href={href} target="_blank" rel="noopener noreferrer" style={{
                     width: "36px", height: "36px", borderRadius: "50%", border: "1px solid rgba(201,168,76,0.35)",
                     display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none",
                     transition: "all 0.3s ease"
